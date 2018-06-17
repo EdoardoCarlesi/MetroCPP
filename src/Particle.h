@@ -8,7 +8,11 @@ public:
 	Particle();
 	~Particle();
 
-	float X[3];
+	float *getPos(void) { return X; };
+	int getType(void) { return Type; };
+
+private:
+	float *X;
 	//float V[3];
 	short int Type;	
 	long int ID;

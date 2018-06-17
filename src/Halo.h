@@ -8,19 +8,22 @@ class Halo {
 public:
 	Halo();
 	~Halo();
+
+	float Distance(float *);
+	float *getPos(void) { return X; };
+	float *getVel(void) { return V; };
+
 	
-	float X[3];
-	float V[3];
+private:
+	float *X;
+	float *V;
 	float M;
 	float R;
 
 	int NPart;
 	long int ID;
 
-	Particle *P;
-
-	float Distance(float *);
-
+	Particle *Part;
 };
 
 #endif

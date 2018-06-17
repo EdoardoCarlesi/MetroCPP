@@ -7,3 +7,15 @@
 
 //using namespace std
 
+
+Particle::Particle()
+{
+	X = new float[3];
+}
+
+
+Particle::~Particle()
+{
+	delete X;
+}
+
