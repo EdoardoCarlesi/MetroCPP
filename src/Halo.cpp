@@ -1,19 +1,22 @@
 #include <math.h>
+#include <iostream>
 
+using namespace std;
+
+#include "Particle.h"
 #include "Halo.h"
 
 
 Halo::Halo()
 {
-	X = new float[3];
-	V = new float[3];
+	Mtot = 0.0; 	Mgas = 0.0; 	Mdm = 0.0; 	NPart = 0;
+	Rvir = 0.0;	Spin = 0.0;
+	ID = 0;
 };
 
 
 Halo::~Halo()
 {
-	delete X;
-	delete V;
 	delete Part;
 };
 
@@ -31,5 +34,13 @@ float Halo::Distance(float *Pos)
 	dX = sqrt(dX);
 	
 	return dX;
+};
+
+
+void Halo::Info(void)
+{
+	cout << "Task " << locTask << " Halo ID " << ID << endl;
+	printf("Mdm: %.3e, Mgas: %.3e, Npart: %d\n", Mdm, Mgas, NPart);
+
 };
 

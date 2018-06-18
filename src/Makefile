@@ -7,11 +7,13 @@ include ../Makefile.config
 #CXXFLAGS += -g -O0           # debug mode
 CXXFLAGS += -O3               # normal mode
 EXEC = PTrees
+EXEC_T = test
 
 #=============================================================================#
 
-SOURCE = Particle.cpp Halo.cpp Grid.cpp \
-	IO.cpp general.cpp
+SOURCE =\
+	IOSettings.cpp general.cpp \
+	Particle.cpp Halo.cpp Grid.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
 
@@ -25,8 +27,17 @@ OBJS  =  $(SOURCE:.cpp=.o)
 .cpp.o :
 	$(CXX) $(CXXFLAGS) -c $<
 
+#all :
+#	make PTrees; make test
+
 PTrees : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
+	mv PTrees ../bin/
+
+#test : $(OBJS)
+#	$(CXX) $(CXXFLAGS) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
+
 
 clean :
-	rm *.o
+	rm *.o;	rm $(EXEC); rm $(EXEC_T) 
+	rm ../bin/$(EXEC); rm ../bin/$(EXEC_T) 

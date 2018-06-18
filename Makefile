@@ -5,10 +5,14 @@
 include Makefile.config
 
 EXEC=PTrees
+EXEC_T=test
 
 PTrees :
 	cd src/; make ${EXEC}
-	mv src/${EXEC} bin/
+
+test :
+	cd src/; make ${EXEC_T}
 
 clean  :
-	cd src; rm *.o
+	rm bin/*
+	cd src; rm *.o; 

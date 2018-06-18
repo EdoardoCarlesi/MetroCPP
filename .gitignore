@@ -5,4 +5,4 @@
 PTrees
 bin/Ptrees
 output/*
-scripts/*
+mpirun
