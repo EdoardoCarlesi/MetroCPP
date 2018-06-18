@@ -53,7 +53,8 @@ int main(int argv, char **argc)
 		locHalosSize = sizeof(locHalos[iHalo]);
 		totHalosSize += locHalosSize;
 
-		cout << "ThisTask: " << locTask << ", halo=" << iHalo << ", HaloSize: " << locHalosSize << ", totSize : " << totHalosSize << endl; 
+		cout << "ThisTask: " << locTask << ", halo=" << iHalo << ", HaloSize: " << locHalosSize
+			<< ", totSize : " << totHalosSize << endl; 
 	}
 
 	// Read the halo files - one per task
