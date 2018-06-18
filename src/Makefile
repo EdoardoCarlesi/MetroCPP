@@ -13,7 +13,7 @@ EXEC_T = test
 
 SOURCE =\
 	IOSettings.cpp general.cpp \
-	Particle.cpp Halo.cpp Grid.cpp
+	Particle.cpp Halo.cpp Grid.cpp MergerTree.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
 

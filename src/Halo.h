@@ -5,10 +5,11 @@
 #include <cstddef>
 #include <iostream>
 
-//#include "general.h"
 #include "Particle.h"
 
 using namespace std;
+
+
 
 class Particle;
 
@@ -31,6 +32,9 @@ public:
 
 	float Spin;
 	float Vmax;
+
+	// Token halos keeping track of "lost" subhalos need to set this to TRUE
+	bool isToken;
 
 	unsigned int NPart;
 	unsigned long long int ID;

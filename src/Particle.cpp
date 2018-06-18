@@ -7,18 +7,15 @@
 
 using namespace std;
 
+
+
 Particle::Particle()
 {
-#ifdef PART_SNAPSHOT
-	X = new float[3];
-#endif
-}
+	ID = 0; 	Type = -1; 
+};
 
 
 Particle::~Particle()
 {
-#ifdef PART_SNAPSHOT
-	delete X;
-#endif
-}
+};
 

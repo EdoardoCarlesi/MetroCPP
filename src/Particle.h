@@ -4,6 +4,8 @@
 #include <cmath>
 #include "general.h"
 
+
+
 class Particle {
 
 public:
@@ -14,8 +16,8 @@ public:
 	unsigned long long int ID;
 
 #ifdef PART_SNAPSHOT
-	float *X;
-	float *V;
+	float X[3];
+	float V[3];
 #endif
 };
 
