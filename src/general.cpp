@@ -1,6 +1,13 @@
 #include "general.h"
 #include <mpi.h>
 
+#include <iostream>
+#include <sstream>
+#include <fstream>
+
+using namespace std;
+
+
 int locTask;
 int totTask;
 MPI_Status status;
@@ -17,19 +24,45 @@ size_t locHalosBufferRecvSize;
 int nTotHalos;
 int nLocHalos;
 
-Particle *locParticles;
-Particle *locParticlesBufferSend;
-Particle *locParticlesBufferRecv;
+Particle **locParts;
+Particle **locPartsBufferSend;
+Particle **locPartsBufferRecv;
 
-size_t locParticlesSize;
-size_t totParticlesSize;
-size_t locParticlesBufferSendSize;
-size_t locParticlesBufferRecvSize;
+size_t locPartsSize;
+size_t totPartsSize;
+size_t locPartsBufferSendSize;
+size_t locPartsBufferRecvSize;
 
-int nTotParticles;
-int nLocParticles;
+int nTotParts;
+int nLocParts;
 
 float totVmax;
 float locVmax;
 float bufferThickness;
+
+
+/* 
+ * 	General functions
+ */
+
+unsigned int NumLines(const char * fileName)
+{
+	unsigned int nLines = 0;
+	string lineIn;
+
+	ifstream fileIn(fileName);
+
+	if (fileIn)
+	{
+		while (getline(fileIn, lineIn))
+			nLines++;
+
+		return nLines;
+	}
+	else
+	{ 
+		cout << "File " <<  fileName << " not found on task: " << locTask << endl;
+		return -1;
+	}
+};
 

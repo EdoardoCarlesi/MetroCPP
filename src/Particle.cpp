@@ -19,3 +19,8 @@ Particle::~Particle()
 {
 };
 
+
+void Particle::ReadLineAHF(const char * lineRead)
+{
+	        sscanf(lineRead, "%llu %d", &ID, &Type); 
+};

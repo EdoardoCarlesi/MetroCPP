@@ -15,6 +15,8 @@ public:
 	short int Type;	
 	unsigned long long int ID;
 
+	void ReadLineAHF(const char *);
+
 #ifdef PART_SNAPSHOT
 	float X[3];
 	float V[3];

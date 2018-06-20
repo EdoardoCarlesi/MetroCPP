@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <iostream>
 
+#include <malloc.h>
+
 #include "Particle.h"
 
 using namespace std;
@@ -20,24 +22,16 @@ public:
 	Halo();
 	~Halo();
 
-	float X[3];
-	float V[3];
-	float L[3];
+	float X[3], V[3], L[3];
+	float mTot, mDM, mGas, mFM, mStar, rVir;
 
-	float Mtot;
-	float Mgas;
-	float Mdm;
-	float Mstar;
-	float Rvir;
-
-	float Spin;
-	float Vmax;
+	float lambda, vMax, sigV;
 
 	// Token halos keeping track of "lost" subhalos need to set this to TRUE
 	bool isToken;
 
-	unsigned int NPart;
-	unsigned long long int ID;
+	int nPart, nStar, nGas, nDM, nSub;
+	unsigned long long int ID, hostID;
 
 	Particle *Part;
 
@@ -48,8 +42,8 @@ public:
 	float RelativeVelocity(float *);
 
 	// Set methods: sets the halo properties reading from different formats of halo catalogs
-	void readLineAHF(string);
-	void readLineFOF(string);
+	void ReadLineAHF(const char *);
+	void ReadLineFOF(const char *);
 
 	void Info(void);
 };

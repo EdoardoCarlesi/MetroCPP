@@ -21,7 +21,8 @@ int main(int argv, char **argc)
 	int iHalo = 0, jHalo = 0, kHalo = 0;
 	
 	size_t locHaloSize = 0;
-
+	size_t sizeP = 0;
+	
 	string partFilesInfo;
 	string haloFilesInfo;
 
@@ -38,24 +39,21 @@ int main(int argv, char **argc)
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
+	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
+
+	string fileRoot = "snapshot_054.000";
+	string fileSuffHalo = ".z0.000.AHF_halos";
+	string fileSuffPart = ".z0.000.AHF_particles";
+	string nameTask = to_string(locTask);
+
+	SettingsIO.urlTestFileHalo = fileRoot + nameTask + fileSuffHalo;
+	SettingsIO.urlTestFilePart = fileRoot + nameTask + fileSuffPart;
+
+	cout << SettingsIO.urlTestFileHalo << endl;
+	cout << SettingsIO.urlTestFilePart << endl;
 
 	SettingsIO.ReadHalos();
-
-	locHalos = new Halo[nLocHalos];
-	
-	Particle *p;
-	p = new Particle[10];
-
-	for (iHalo = 0; iHalo < nLocHalos; iHalo++)
-	{
-		locHalos[iHalo].Part = new Particle[iHalo+1];
-
-		locHalosSize = sizeof(locHalos[iHalo]);
-		totHalosSize += locHalosSize;
-
-		cout << "ThisTask: " << locTask << ", halo=" << iHalo << ", HaloSize: " << locHalosSize
-			<< ", totSize : " << totHalosSize << endl; 
-	}
+	SettingsIO.ReadParticles();	
 
 	// Read the halo files - one per task
 

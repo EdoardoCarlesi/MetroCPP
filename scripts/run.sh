@@ -1,4 +1,8 @@
 #!/bin/bash
 
-make clean; make
-mpirun -n 2 ./bin/PTrees
+#make clean; make
+n_cpus=4
+
+rm bin/*
+make
+mpirun -n $n_cpus ./bin/PTrees

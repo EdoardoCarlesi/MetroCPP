@@ -7,11 +7,12 @@
 #include "Halo.h"
 #include "Particle.h"
 
-//typedef unsigned long long int 	ullint;
-//typedef std::map<ullint, unsigned int> idIndex;
 
 class Halo;
 class Particle;
+
+// General variables and functions
+unsigned int NumLines(const char *);
 
 // MPI variables
 extern int locTask;
@@ -31,17 +32,17 @@ extern size_t locHalosBufferRecvSize;
 extern int nTotHalos;
 extern int nLocHalos;
 
-extern Particle *locParticles;
-extern Particle *locParticlesBufferSend;
-extern Particle *locParticlesBufferRecv;
+extern Particle **locParts;
+extern Particle **locPartsBufferSend;
+extern Particle **locPartsBufferRecv;
 
-extern size_t totParticlesSize;
-extern size_t locParticlesSize;
-extern size_t locParticlesBufferSendSize;
-extern size_t locParticlesBufferRecvSize;
+extern size_t totPartsSize;
+extern size_t locPartsSize;
+extern size_t locPartsBufferSendSize;
+extern size_t locPartsBufferRecvSize;
 
-extern int nTotParticles;
-extern int nLocParticles;
+extern int nTotParts;
+extern int nLocParts;
 
 // These quantities are useful to compute the buffer region
 extern float totVmax;

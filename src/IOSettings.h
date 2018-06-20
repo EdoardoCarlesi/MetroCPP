@@ -11,12 +11,18 @@ public:
 	IOSettings();
 	~IOSettings();
 
+	int nLinesHeader = 1;
+
 	int iniStep;
 	int endStep;
 	int totStep;
 
-	string outputPath;
-	string inputPath;
+	// Temporary storage for test URLs
+	string urlTestFileHalo; 
+	string urlTestFilePart; 
+	
+	string pathInput;
+	string pathOutput;
 
 	void Init(void);
 	void DistributeFilesAmongTasks(void);

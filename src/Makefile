@@ -5,14 +5,15 @@ include ../Makefile.config
 
 # compiler optimization:
 #CXXFLAGS += -g -O0           # debug mode
-CXXFLAGS += -O3               # normal mode
+CXXFLAGS += -O3 -std=c++11               # normal mode
+CXXFLAGS += -Wunused-result -fpermissive
 EXEC = PTrees
 EXEC_T = test
 
 #=============================================================================#
 
 SOURCE =\
-	IOSettings.cpp general.cpp \
+	IOSettings.cpp Comm.cpp general.cpp \
 	Particle.cpp Halo.cpp Grid.cpp MergerTree.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
