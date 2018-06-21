@@ -3,16 +3,21 @@
 
 #include <mpi.h>
 #include <map>
+#include <vector>
 
 #include "Halo.h"
 #include "Particle.h"
+
+using namespace std;
 
 
 class Halo;
 class Particle;
 
 // General variables and functions
+void InitLocVariables(void);
 unsigned int NumLines(const char *);
+float VectorModule(float *);
 
 // MPI variables
 extern int locTask;
@@ -20,9 +25,9 @@ extern int totTask;
 extern MPI_Status status;
 
 // Halo & particle related variables for each task
-extern Halo *locHalos;
-extern Halo *locHalosBufferSend;
-extern Halo *locHalosBufferRecv;
+extern vector<Halo> locHalos;
+extern vector<Halo> locHalosBufferSend;
+extern vector<Halo> locHalosBufferRecv;
 
 extern size_t totHalosSize;
 extern size_t locHalosSize;
@@ -32,10 +37,12 @@ extern size_t locHalosBufferRecvSize;
 extern int nTotHalos;
 extern int nLocHalos;
 
-extern Particle **locParts;
-extern Particle **locPartsBufferSend;
-extern Particle **locPartsBufferRecv;
+extern vector<vector <Particle>> locParts;
+extern void *locPartsBufferSend;
+extern void *locPartsBufferRecv;
 
+extern size_t sizePart;
+extern size_t sizeHalo;
 extern size_t totPartsSize;
 extern size_t locPartsSize;
 extern size_t locPartsBufferSendSize;
@@ -45,8 +52,12 @@ extern int nTotParts;
 extern int nLocParts;
 
 // These quantities are useful to compute the buffer region
+extern float locXmin[3];
+extern float locXmax[3];
+
 extern float totVmax;
 extern float locVmax;
 extern float bufferThickness;
+extern int nChunksPerFile;	// Each halo catalog / particle file is split into this number of files
 
 #endif 

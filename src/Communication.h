@@ -1,12 +1,12 @@
 #include <mpi.h>
 
 
-class Comm {
+class Communication {
 
 public:
 	// Empty constructor and destructor
-	Comm() { };
-	~Comm() { };	
+	Communication() { };
+	~Communication() { };	
 
 	void ComputeBufferSize(void);
 	void BufferSendRecv(void);

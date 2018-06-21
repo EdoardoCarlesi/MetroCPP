@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+#include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
 #include "Particle.h"
@@ -27,15 +28,15 @@ int main(int argv, char **argc)
 	string haloFilesInfo;
 
 	IOSettings SettingsIO;
+	Communication CommTasks;
+
+	nChunksPerFile = 8;
 
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 
-	locHalosSize = 0;
-	totHalosSize = 0;
-
-	nLocHalos = 10;
+	InitLocVariables();
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
@@ -52,12 +53,17 @@ int main(int argv, char **argc)
 	cout << SettingsIO.urlTestFileHalo << endl;
 	cout << SettingsIO.urlTestFilePart << endl;
 
-	SettingsIO.ReadHalos();
-	SettingsIO.ReadParticles();	
-
 	// Read the halo files - one per task
+	SettingsIO.ReadHalos();
+
+	cout << " On task " << locTask << " Vmax is: " << locVmax << endl;
+	cout << " On task " << locTask << " Xmax is: " << locXmax[0] << " " << locXmax[1] << " " << locXmax[2] << endl;
+	cout << " On task " << locTask << " Xmin is: " << locXmin[0] << " " << locXmin[1] << " " << locXmin[2] << endl;
 
 	// Read the particle files - one per task
+	SettingsIO.ReadParticles();	
+
+	CommTasks.BufferSendRecv();
 
 	// Get the maximum halo velocity to compute buffer size
 
@@ -65,7 +71,14 @@ int main(int argv, char **argc)
 	// - compute the optimal size of the splitting region according to the buffer size
 	// - if ntask > nfiles read in then distribute the halos 
 	
+
+	cout << "Finished on task=" << locTask << endl;
+	locHalos.clear();
+
 	MPI_Finalize();
+		
+	cout << "Done." << endl;
+	exit(0);
 }
 
 

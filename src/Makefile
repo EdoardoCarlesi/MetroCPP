@@ -13,7 +13,7 @@ EXEC_T = test
 #=============================================================================#
 
 SOURCE =\
-	IOSettings.cpp Comm.cpp general.cpp \
+	IOSettings.cpp Communication.cpp general.cpp \
 	Particle.cpp Halo.cpp Grid.cpp MergerTree.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
