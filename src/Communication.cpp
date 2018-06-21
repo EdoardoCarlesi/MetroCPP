@@ -39,7 +39,6 @@ void Communication::BufferSendRecv()
 	locHalosBufferSend.resize(nHalosBufferSend);
 	locPartsBufferSendSize = 0;
 
-#ifdef TEST_BLOCK
 	for (int iP = 0; iP < nHalosBufferSend; iP ++)
 	{
 		locHalosBufferSend[iP] = locHalos[iP];
@@ -60,7 +59,7 @@ void Communication::BufferSendRecv()
 	recvTask = (locTask + totTask - 1) % (totTask);
 	sendTask = (locTask + 1) % (totTask);
 
-	cout << "On task=" << locTask << " MPI_Pack-ing " << locHalosBufferSendSize << " bytes of halos to task=" << recvTask << endl;
+	cout << "On task=" << locTask << " sending " << locHalosBufferSendSize << " bytes of halos to task=" << recvTask << endl;
 	//cout << "On task=" << locTask << " MPI_Pack-ing " << locPartsBufferSend.size() << " bytes of parts to task=" << recvTask << endl;
  
 	/* Communicate halo and particle numbers to be sent across tasks */
@@ -69,6 +68,7 @@ void Communication::BufferSendRecv()
 	MPI_Sendrecv(&locHalosBufferSendSize, sizeof(size_t), MPI_BYTE, recvTask, 0, 
 		     &locHalosBufferRecvSize, sizeof(size_t), MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &status);
 
+#ifdef TEST_BLOCK
 	cout << "On task=" << locTask << ", expecting =" << nHalosBufferRecv << " halos from task=" << sendTask << endl;
 
 	MPI_Sendrecv(&locPartsBufferSendSize, sizeof(size_t), MPI_BYTE, recvTask, 0, 

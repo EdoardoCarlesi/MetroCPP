@@ -61,7 +61,7 @@ int main(int argv, char **argc)
 	cout << " On task " << locTask << " Xmin is: " << locXmin[0] << " " << locXmin[1] << " " << locXmin[2] << endl;
 
 	// Read the particle files - one per task
-	SettingsIO.ReadParticles();	
+	//SettingsIO.ReadParticles();	
 
 	CommTasks.BufferSendRecv();
 

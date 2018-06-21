@@ -43,6 +43,8 @@ extern void *locPartsBufferRecv;
 
 extern size_t sizePart;
 extern size_t sizeHalo;
+
+/* Particle and halo sizes are communicated to check for integrity */
 extern size_t totPartsSize;
 extern size_t locPartsSize;
 extern size_t locPartsBufferSendSize;
