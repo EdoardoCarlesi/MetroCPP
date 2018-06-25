@@ -35,10 +35,11 @@ void IOSettings::ReadParticles(void)
 	// TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
 	string strUrlPart = pathInput + urlTestFilePart;	// FIXME : this is only a test url for the moment
 	const char *urlPart = strUrlPart.c_str();
-	unsigned int iLocHalos = 0, iLocParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0, nFileHalos = 0;		
+	unsigned int iLocParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0, nFileHalos = 0;		
 	unsigned long long int locHaloID;
 	string lineIn;
 
+	iLocHalos = 0;
 	ifstream fileIn(urlPart);
 		
 	if (!fileIn.good())
@@ -95,7 +96,8 @@ void IOSettings::ReadHalos()
 	const char *lineHead = "#";
 	string lineIn;
 
-	unsigned int iLocHalos = 0, nPartHalo = 0;
+	int nPartHalo = 0;
+	iLocHalos = 0; 
 	
 	nLocHalos = NumLines(urlHalo);	
 	
@@ -123,6 +125,10 @@ void IOSettings::ReadHalos()
 			locParts[iLocHalos].resize(nPartHalo);
 			locPartsSize += nPartHalo * sizePart;
 			nLocParts += nPartHalo; 
+
+			// Assign halo to its nearest grid point
+			GlobalGrid.AssignToGrid(locHalos[iLocHalos].X, iLocHalos);
+
 			iLocHalos++;
 		}
 	}

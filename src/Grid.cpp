@@ -15,24 +15,53 @@ using namespace std;
 
 Grid::Grid(){};
 
+
 Grid::~Grid()
 {
-	//cout << "Clearing grid..." << endl;
+	if (locTask == 0)
+		cout << "Clearing grid..." << endl;
+
 	taskOnGridNode.clear();
 	taskOnGridNode.shrink_to_fit();
+
+	for (int iN = 0; iN < nNodes; iN++)
+	{
+		haloOnGridNode[iN].clear();
+		haloOnGridNode[iN].shrink_to_fit();
+	}
+
+	haloOnGridNode.clear();
+	haloOnGridNode.shrink_to_fit();
+
+	if (locTask == 0)
+		cout << "Done." << endl;
+
 };
 
 
 void Grid::Init(int n, float size)
 {
 	N = n; boxSize = size;
-	cellSize = (boxSize/N);
+	cellSize = (boxSize/n);	// The size of the cell is divided by the total N
 
 	if (locTask == 0)
 		cout << "Initialized grid with N=" << N << " nodes in a box of " << boxSize << " Mpc/h" << endl; 
 
-	/* This N^3 vector matrix tracks the */
-	taskOnGridNode.resize(N * N * N);
+	nNodes = N * N * N;
+
+	/* This N^3 vector matrix keeps track on which task holds which part of the grid */
+	taskOnGridNode.resize(nNodes);
+
+/*
+	for (int i = 0; i < nNodes; i++)
+	{
+		taskOnGridNode[i].resize(1);
+		taskOnGridNode[i][0] = 0;		
+	}
+*/
+
+	/* This vector holds a list of all halos within a given grid cell */
+	haloOnGridNode.resize(nNodes);
 
 };
 
@@ -59,9 +88,11 @@ int * Grid::GridCoord(float *X)
 };
 
 
-/* This function specifies on which task is located each node of the global grid */
+/* This function specifies on which task is located each node of the global grid */	// DEPRECATED
 void Grid::FindPatchOnTask()
 {
+
+/*
 	int *ixMax, *ixMin;
 	ixMax = new int[3];	ixMin = new int[3];	
 	
@@ -71,7 +102,28 @@ void Grid::FindPatchOnTask()
 	for (int i = ixMin[0]; i < ixMax[0]; i++)
 		for (int j = ixMin[1]; j < ixMax[1]; j++)
 			for (int k = ixMin[2]; k < ixMax[2]; k++)
-				taskOnGridNode[Index(i, j, k)] = locTask;
+				taskOnGridNode[Index(i, j, k)] = locTask + 1;	// distinguish from the "null" nodes
+
+	free(ixMax); free(ixMin);
+
+*/
+};
+
+
+void Grid::AssignToGrid(float *X, int index)
+{
+	int *iX, thisNode = 0;
+	iX = new int[3];	
+
+	iX = GridCoord(X);
+	thisNode = Index(iX[0], iX[1], iX[2]);
+	haloOnGridNode[thisNode].push_back(index);
+	taskOnGridNode[thisNode] = locTask;
+
+//	if (index < 50) 	// Sanity check
+//		printf("%d) Halo=%d grid=(%d, %d, %d) x=(%.2f, %.2f, %.2f) node=%d\n", 
+//			locTask, index, iX[0], iX[1], iX[2], X[0], X[1], X[2], thisNode);
+	free(iX);
 };
 
 
@@ -85,13 +137,13 @@ void Grid::RecvBufferNodes()
 	// recvNodes[0] = [18922929, 10238933, 192929] ---> these are the nodes that locTask will request from task 0
 	// do a push_back() for each new node encountered
 
+	// PSEUDO-CODE FIXME TODO
 	vector <vector <int>> recvNodes;
 	recvNodes.resize(totTask);
 
 	nCellsBuffer = VmaxTot * timeStep / cellSize;
 
 	xMinBuff = xMin - nCellsBuff;
-
 	for (ix = xMinBuff; ix < xMin; ix ++)
 	// Take a slab - fix the ix and then loop over all 
 	//r (iy...)
@@ -103,7 +155,6 @@ void Grid::RecvBufferNodes()
  
 #endif
 };
-
 
 
 void Grid::Info()

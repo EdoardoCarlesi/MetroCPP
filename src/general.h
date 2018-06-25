@@ -29,20 +29,15 @@ extern MPI_Status status;
 
 // Halo & particle related variables for each task
 extern vector<Halo> locHalos;
-extern vector<Halo> locHalosBufferSend;
-extern vector<Halo> locHalosBufferRecv;
 
 extern size_t totHalosSize;
 extern size_t locHalosSize;
-extern size_t locHalosBufferSendSize;
-extern size_t locHalosBufferRecvSize;
 
 extern int nTotHalos;
 extern int nLocHalos;
+extern int iLocHalos;
 
 extern vector<vector <Particle>> locParts;
-extern vector<vector <Particle>> locPartsBufferSend;
-extern vector<vector <Particle>> locPartsBufferRecv;
 
 extern size_t sizePart;
 extern size_t sizeHalo;
@@ -50,8 +45,6 @@ extern size_t sizeHalo;
 /* Particle and halo sizes are communicated to check for integrity */
 extern size_t totPartsSize;
 extern size_t locPartsSize;
-extern size_t locPartsBufferSendSize;
-extern size_t locPartsBufferRecvSize;
 
 extern int nTotParts;
 extern int nLocParts;

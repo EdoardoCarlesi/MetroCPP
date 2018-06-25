@@ -37,13 +37,9 @@ int main(int argv, char **argc)
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
-
-	GlobalGrid.Init(nGrid, boxSize);
+	
 	InitLocVariables();
-
-	float *xtest; xtest = new float[3]; xtest[0]=3000.; xtest[1]=10000.; xtest[2] = locTask * 10000.;
-	int *itest; itest = new int[3]; itest = GlobalGrid.GridCoord(xtest); 
-	cout << "Test: " << itest[0] << " " << itest[1] << " " << itest[2] << endl;
+	GlobalGrid.Init(nGrid, boxSize);
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
@@ -57,26 +53,23 @@ int main(int argv, char **argc)
 	SettingsIO.urlTestFileHalo = fileRoot + nameTask + fileSuffHalo;
 	SettingsIO.urlTestFilePart = fileRoot + nameTask + fileSuffPart;
 
-	cout << SettingsIO.urlTestFileHalo << endl;
-	cout << SettingsIO.urlTestFilePart << endl;
-
 	// Read the halo files - one per task
+	// This is also assigning the halo list to each grid node
 	SettingsIO.ReadHalos();
 
-	GlobalGrid.FindPatchOnTask();
+	// Determine which task holds which sub-volume of the box
+	//GlobalGrid.FindPatchOnTask();
 
-	GlobalGrid.Info();
+	// Now every task knows which nodes belongs to which task
+	CommTasks.BroadcastAndGatherGrid();
 
-#ifdef TEST_BLOCK
-	cout << " On task " << locTask << " Vmax is: " << locVmax << endl;
-	cout << " On task " << locTask << " Xmax is: " << locXmax[0] << " " << locXmax[1] << " " << locXmax[2] << endl;
-	cout << " On task " << locTask << " Xmin is: " << locXmin[0] << " " << locXmin[1] << " " << locXmin[2] << endl;
+	//GlobalGrid.Info();
 
 	// Read the particle files - one per task
-	SettingsIO.ReadParticles();	
+	//SettingsIO.ReadParticles();	
 
 	// Now exchange the halos in the requested buffer zones among the different tasks
-	CommTasks.BufferSendRecv();
+	//CommTasks.BufferSendRecv();
 
 	// Get the maximum halo velocity to compute buffer size
 
@@ -84,14 +77,19 @@ int main(int argv, char **argc)
 	// - compute the optimal size of the splitting region according to the buffer size
 	// - if ntask > nfiles read in then distribute the halos 
 
-	cout << "Finished on task=" << locTask << endl;
+	//cout << "Finished on task=" << locTask << endl;
+
+#ifdef TEST_BLOCK
 	locHalos.clear();
 	locHalos.shrink_to_fit();
 #endif
+
 	MPI_Finalize();
-		
-	//cout << "Done." << endl;
-	//exit(0);
+	
+	if (locTask == 0)	
+		cout << "Done." << endl;
+
+	exit(0);
 }
 
 

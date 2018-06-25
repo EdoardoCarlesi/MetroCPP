@@ -16,30 +16,22 @@ int locTask;
 int totTask;
 MPI_Status status;
 
-vector <Halo> locHalos;
-vector <Halo> locHalosBufferSend;
-vector <Halo> locHalosBufferRecv;
-
 Grid GlobalGrid;
 
+vector <Halo> locHalos;
 size_t locHalosSize;
 size_t totHalosSize;
-size_t locHalosBufferSendSize;
-size_t locHalosBufferRecvSize;
 
 int nTotHalos;
 int nLocHalos;
+int iLocHalos;
 
 vector <vector <Particle>> locParts;
-vector <vector <Particle>> locPartsBufferSend;
-vector <vector <Particle>> locPartsBufferRecv;
+size_t locPartsSize;
+size_t totPartsSize;
 
 size_t sizeHalo;
 size_t sizePart;
-size_t locPartsSize;
-size_t totPartsSize;
-size_t locPartsBufferSendSize;
-size_t locPartsBufferRecvSize;
 
 int nTotParts;
 int nLocParts;
@@ -57,7 +49,6 @@ int nChunksPerFile;
 /* 
  * 	General functions
  */
-
 void InitLocVariables(void)
 {
         locVmax = 0.0; 

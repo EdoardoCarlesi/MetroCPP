@@ -8,9 +8,8 @@ public:
 	Communication() { };
 	~Communication() { };	
 
+	void BroadcastAndGatherGrid(void);
 	void ComputeBufferSize(void);
 	void BufferSendRecv(void);
-
-
 };
 
