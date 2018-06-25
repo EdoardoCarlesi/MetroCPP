@@ -5,12 +5,13 @@
 #include <map>
 #include <vector>
 
+#include "Grid.h"
 #include "Halo.h"
 #include "Particle.h"
 
 using namespace std;
 
-
+class Grid;
 class Halo;
 class Particle;
 
@@ -18,6 +19,8 @@ class Particle;
 void InitLocVariables(void);
 unsigned int NumLines(const char *);
 float VectorModule(float *);
+
+extern Grid GlobalGrid;
 
 // MPI variables
 extern int locTask;
@@ -38,8 +41,8 @@ extern int nTotHalos;
 extern int nLocHalos;
 
 extern vector<vector <Particle>> locParts;
-extern void *locPartsBufferSend;
-extern void *locPartsBufferRecv;
+extern vector<vector <Particle>> locPartsBufferSend;
+extern vector<vector <Particle>> locPartsBufferRecv;
 
 extern size_t sizePart;
 extern size_t sizeHalo;

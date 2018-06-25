@@ -12,7 +12,7 @@ public:
 	Particle();
 	~Particle();
 
-	short int Type;	
+	unsigned short int Type;	
 	unsigned long long int ID;
 
 	void ReadLineAHF(const char *);

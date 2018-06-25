@@ -1,4 +1,3 @@
-#include "general.h"
 #include <mpi.h>
 
 #include <math.h>
@@ -6,6 +5,9 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+
+#include "Grid.h"
+#include "general.h"
 
 using namespace std;
 
@@ -18,6 +20,8 @@ vector <Halo> locHalos;
 vector <Halo> locHalosBufferSend;
 vector <Halo> locHalosBufferRecv;
 
+Grid GlobalGrid;
+
 size_t locHalosSize;
 size_t totHalosSize;
 size_t locHalosBufferSendSize;
@@ -27,8 +31,8 @@ int nTotHalos;
 int nLocHalos;
 
 vector <vector <Particle>> locParts;
-void *locPartsBufferSend;
-void *locPartsBufferRecv;
+vector <vector <Particle>> locPartsBufferSend;
+vector <vector <Particle>> locPartsBufferRecv;
 
 size_t sizeHalo;
 size_t sizePart;

@@ -11,7 +11,7 @@ using namespace std;
 
 Particle::Particle()
 {
-	ID = 0; 	Type = -1; 
+	ID = 0; 	Type = 9; 
 };
 
 
@@ -22,5 +22,5 @@ Particle::~Particle()
 
 void Particle::ReadLineAHF(const char * lineRead)
 {
-	        sscanf(lineRead, "%llu %d", &ID, &Type); 
+	        sscanf(lineRead, "%llu %hu", &ID, &Type); 
 };

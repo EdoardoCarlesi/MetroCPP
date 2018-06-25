@@ -24,6 +24,8 @@ int main(int argv, char **argc)
 	size_t locHaloSize = 0;
 	size_t sizeP = 0;
 	
+	float boxSize = 1.0e+5; int nGrid = 100;	// Unsing kpc/h units
+
 	string partFilesInfo;
 	string haloFilesInfo;
 
@@ -36,7 +38,12 @@ int main(int argv, char **argc)
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 
+	GlobalGrid.Init(nGrid, boxSize);
 	InitLocVariables();
+
+	float *xtest; xtest = new float[3]; xtest[0]=3000.; xtest[1]=10000.; xtest[2] = locTask * 10000.;
+	int *itest; itest = new int[3]; itest = GlobalGrid.GridCoord(xtest); 
+	cout << "Test: " << itest[0] << " " << itest[1] << " " << itest[2] << endl;
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
@@ -56,13 +63,19 @@ int main(int argv, char **argc)
 	// Read the halo files - one per task
 	SettingsIO.ReadHalos();
 
+	GlobalGrid.FindPatchOnTask();
+
+	GlobalGrid.Info();
+
+#ifdef TEST_BLOCK
 	cout << " On task " << locTask << " Vmax is: " << locVmax << endl;
 	cout << " On task " << locTask << " Xmax is: " << locXmax[0] << " " << locXmax[1] << " " << locXmax[2] << endl;
 	cout << " On task " << locTask << " Xmin is: " << locXmin[0] << " " << locXmin[1] << " " << locXmin[2] << endl;
 
 	// Read the particle files - one per task
-	//SettingsIO.ReadParticles();	
+	SettingsIO.ReadParticles();	
 
+	// Now exchange the halos in the requested buffer zones among the different tasks
 	CommTasks.BufferSendRecv();
 
 	// Get the maximum halo velocity to compute buffer size
@@ -70,15 +83,15 @@ int main(int argv, char **argc)
 	// Split the files among the tasks:
 	// - compute the optimal size of the splitting region according to the buffer size
 	// - if ntask > nfiles read in then distribute the halos 
-	
 
 	cout << "Finished on task=" << locTask << endl;
 	locHalos.clear();
-
+	locHalos.shrink_to_fit();
+#endif
 	MPI_Finalize();
 		
-	cout << "Done." << endl;
-	exit(0);
+	//cout << "Done." << endl;
+	//exit(0);
 }
 
 

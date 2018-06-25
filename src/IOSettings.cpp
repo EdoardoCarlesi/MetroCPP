@@ -60,30 +60,25 @@ void IOSettings::ReadParticles(void)
 				iLine++;
 			} else {
 				cout << "Particle file contains " << nLocHalos << " halos." << endl; 
-				iLocHalos++;
 				iLine++;
 			}
 
 		} else if (iLine == 1) {
 
 	                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-			//locParts[iLocHalos-1].resize(nPartHalo); // This way seems to be slightly slower
 			iLine++;
-			
+
 		} else {
 
-			Particle thisPart;
-			thisPart.ReadLineAHF(lineRead);
-			locParts[iLocHalos-1].push_back(thisPart); 
-			//locParts[iLocHalos-1][iLocParts].ReadLineAHF(lineRead);
+			locParts[iLocHalos][iLocParts].ReadLineAHF(lineRead);
 			totLocParts++;
 			iLocParts++;
 
-			if (iLocParts == locHalos[iLocHalos-1].nPart)
+			if (iLocParts == locHalos[iLocHalos].nPart)
 			{
-				//locHalos[iLocHalos-1].Part = locParts[iLocHalos-1];
-				iLine = 1;	// Reset some indicators
 				iLocParts = 0;
+				iLocHalos++;
+				iLine = 1;	// Reset some indicators
 			}
 		} // else iLine not 0 or 1
 	} // end while
@@ -100,11 +95,12 @@ void IOSettings::ReadHalos()
 	const char *lineHead = "#";
 	string lineIn;
 
-	unsigned int iLocHalos = 0;
+	unsigned int iLocHalos = 0, nPartHalo = 0;
 	
 	nLocHalos = NumLines(urlHalo);	
 	
 	locParts.resize(nLocHalos); 
+	locHalos.resize(nLocHalos); 
 
 	locPartsSize = 0;	// This will be increased while reading the file
 	locHalosSize = sizeHalo * nLocHalos;
@@ -122,11 +118,11 @@ void IOSettings::ReadHalos()
 	
 		if (lineRead[0] != lineHead[0])
 		{
-			Halo thisHalo; 
-			thisHalo.ReadLineAHF(lineRead);
-			locHalos.push_back(thisHalo);
-			locPartsSize += locHalos[iLocHalos].nPart * sizePart;
-			nLocParts += locHalos[iLocHalos].nPart;
+			locHalos[iLocHalos].ReadLineAHF(lineRead);
+			nPartHalo = locHalos[iLocHalos].nPart;
+			locParts[iLocHalos].resize(nPartHalo);
+			locPartsSize += nPartHalo * sizePart;
+			nLocParts += nPartHalo; 
 			iLocHalos++;
 		}
 	}
