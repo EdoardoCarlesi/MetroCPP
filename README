@@ -1,5 +1,8 @@
 ==================================================
-			PTrees 
+	METROO C++ MErgerTRees ObjectOriented 
+	A C++/MPI code to generate MergerTrees 
+	    from cosmological simulations.
+
 		Edoardo Carlesi 2018
 ==================================================
 
@@ -10,12 +13,11 @@ TODO:
 
 - Fix the P-Mtree code and / or port the python code to MPI:
 	use the P-Mtree code for the basic DM tree:
-		- create a distributed grid among all the tasks
+		- create a distributed grid among all the tasks	........ DONE!
 		- add hash function / tables for particle comparison between halos
 		- PM grid computed at each step for ALL halos, approximate halo-induced gravity at each step on each gridpoint
 		- For subhalos think of something else:
-		- the grid should also retain informations about all the halos in each cell ---> make border cells also buffer zones for 
-			easier communication
+		- the grid should also retain informations about all the halos in each cell ---> make border cells also buffer zones for easier communication
 		- improve the dependence of search-radius on redshift
 		- eliminate the need for communication between processors to swap the halos: simply swap a few buffer halos.
 			each processor must know which volume has been assigned to each other processor.
@@ -32,7 +34,6 @@ TODO:
 Assign halo IDs at each grid cell. Each grid cell holds a list of IDs (that is created at file-read in time)
 
 How to compute the buffer: take the maximum halo velocity in the box times the delta_time in the time step 
-
 
 TEST the P-MTree using:
 
