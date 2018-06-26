@@ -1,0 +1,1 @@
+This folder should contain extra data (e.g. Power spectra) that could be needed for interpolation without being computed at runtime
