@@ -6,3 +6,5 @@ PTrees
 bin/Ptrees
 output/*
 mpirun
+*.tmp
+*.swo

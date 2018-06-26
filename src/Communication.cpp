@@ -25,67 +25,88 @@ void Comm::Optimize()	// Write some function that optimizes the memory distribut
 {};
 */
 
+/* This function collects all the non-empty grid nodes and broadcasts them to all the tasks.
+ * Some nodes may be shared among several tasks, so we need to be careful when MPI_Gather-ing them.
+ * In the end, a list of all the nodes of the grid and the tasks that hold them is shared among all the
+ * tasks, so that everytime a task needs to access a chunk of the box knows where it needs to look for it. 
+ */
 void Communication::BroadcastAndGatherGrid()
 {
-	size_t gridSize = GlobalGrid.nNodes;
-	vector <vector <int>> tmpTaskOnGridNode;
-	//vector <int> tmpTaskOnGridNode;
- 
-	//if (locTask == 0)
-	{
-		tmpTaskOnGridNode.resize(totTask);
+	size_t gridSize = GlobalGrid.nNodes, globalGridSize = 0;
+	vector <int> tmpTaskOnGridNode, allNonZeroTasks, allNonZeroNodes;
+	int iNonZero = 0, nNonZero = 0, thisTask = 0, thisNode = 0;
 
-		//tmpTaskOnGridNode.resize(gridSize);
-		for (int i = 0; i < totTask; i++)
-			tmpTaskOnGridNode[i].resize(gridSize);
-	}
+	if (locTask == 0)
+		tmpTaskOnGridNode.resize(totTask * gridSize);
+	
+	/* Gather all the nodes on totTask * gridSize array, which can be large, but we need to check for nodes shared between
+	 * several processors so first we collect everything separately
+	 */
+	MPI_Gather(&GlobalGrid.taskOnGridNode[0], gridSize, MPI_INT, &tmpTaskOnGridNode[0], gridSize, MPI_INT, 0, MPI_COMM_WORLD);
 
-//MPI_Reduce(&GlobalGrid.taskOnGridNode[0], &tmpTaskOnGridNode[locTask][0], gridSize, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-//MPI_Allreduce(&GlobalGrid.taskOnGridNode[0], &tmpTaskOnGridNode[0], gridSize, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-//MPI_Allreduce(&GlobalGrid.taskOnGridNode[0], &tmpTaskOnGridNode[0], gridSize, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-//MPI_Gather(&GlobalGrid.taskOnGridNode[0], gridSize, MPI_INT, &tmpTaskOnGridNode[locTask][0], gridSize, MPI_INT, 0, MPI_COMM_WORLD);
-
-#ifdef TEST_BLOCK
+	/* Loop on all the huge grid to take care of the nodes which might be assigned to several tasks */
 	if (locTask == 0)
 	{
-		int *iTasksAll; iTasksAll = new int[totTask];
-		//GlobalGrid.globalTaskOnGridNode.resize(gridSize);
-		
 		for (int j = 0; j < totTask; j++)
-			iTasksAll[j] = 0;	
-
-		for (int i = 0; i < gridSize; i++)
-		{
-			//for (int j = 0; j < totTask; j++)
+			for (int i = 0; i < gridSize; i++)
 			{
-				//int thisTask = tmpTaskOnGridNode[j][i];
-				int thisTask = tmpTaskOnGridNode[i];
-	
+				thisTask = tmpTaskOnGridNode[i + gridSize * j];
+
 				if (thisTask > 0)
 				{
-					//GlobalGrid.globalTaskOnGridNode[i].push_back(thisTask);				
-					//iTasksAll[j]++;
-
-					//if (iTasksAll[j] < 10)
-					if (thisTask > totTask)
-						cout << "node=" << i << " N = " << thisTask << endl;
-						//cout << j << ",node=" << i << " N = " << iTasksAll[j] << " " << thisTask << endl;
+				//	cout << "task=" << thisTask << " " << i << endl;
+					allNonZeroTasks.push_back(thisTask);	
+					allNonZeroNodes.push_back(i);	
 				}
 			}	
-		}
 
-#ifdef TEST_BLOCK
-		for (int i = 0; i < gridSize; i++)
-		{
-			GlobalGrid.globalTaskOnGridNode[i].shrink_to_fit();
-			int nHalosNode = GlobalGrid.globalTaskOnGridNode[i].size();
-	
-			if (nHalosNode > 1)		
-				cout << "On node = " << i << " N tasks = " << nHalosNode << endl;
-		}		
-#endif
+		nNonZero = allNonZeroTasks.size();
+	}	// if (locTask == 0)
+
+	MPI_Bcast(&nNonZero, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// Allocate the receiving buffers on all tasks
+	if (locTask != 0)
+	{
+		cout << "Recving: " << nNonZero << " nodes on task " << locTask << endl;
+		allNonZeroTasks.resize(nNonZero);
+		allNonZeroNodes.resize(nNonZero);
 	}
-#endif
+
+	MPI_Bcast(&allNonZeroNodes[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
+	MPI_Bcast(&allNonZeroTasks[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
+	
+	if (locTask == 0)
+		cout << "MPI_BCast done." << endl;
+
+	/* Now allocate the GLOBAL grid informations and assign the task/node connection on every task */
+	GlobalGrid.globalTaskOnGridNode.resize(gridSize);
+
+	for (int i = 0; i < nNonZero; i++)
+	{
+		thisNode = allNonZeroNodes[i];
+		thisTask = allNonZeroTasks[i];
+		GlobalGrid.globalTaskOnGridNode[thisNode].push_back(thisTask);
+
+		//cout << i << " " <<  thisNode << " task=" << thisTask << endl;
+
+		// Sanity check // all the nodes are 0 by default
+/*		if (GlobalGrid.globalTaskOnGridNode[i].size() > 1)
+		{
+			int taskOne = GlobalGrid.globalTaskOnGridNode[thisNode][0];
+			int taskTwo = GlobalGrid.globalTaskOnGridNode[thisNode][1];
+			
+			iNonZero++;
+			//cout << "Task=" << locTask << " node=" << thisNode << " is shared on " << taskOne << " and " << taskTwo << endl;
+		}
+*/
+	}
+
+	//cout << iNonZero << " duplicate nodes on task=" << locTask << endl;
+
+	// Release some memory from the buffers 
+	allNonZeroNodes.clear();	allNonZeroNodes.shrink_to_fit();
+	allNonZeroTasks.clear();	allNonZeroTasks.shrink_to_fit();
 };
 
 
@@ -141,10 +162,9 @@ void Communication::BufferSendRecv()
 		     &locHalosBufferRecvSize, sizeof(size_t), MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &status);
 	
 	/* Resize the receiving buffer accordingly */
-	//locHalosBufferRecv.resize(locHalosBufferRecvSize);
 	locHalosBufferRecv.resize(nHalosBufferRecv);
 
-	barrMpi = MPI_Barrier(MPI_COMM_WORLD);
+	//barrMpi = MPI_Barrier(MPI_COMM_WORLD); // Maybe it's useless...
 	
 	/* Now get the actual message, the halos */
 	MPI_Sendrecv(&locHalosBufferSend[0], locHalosBufferSendSize, MPI_BYTE, recvTask, 0, 
@@ -172,12 +192,11 @@ void Communication::BufferSendRecv()
 	/* This is a vector <vector <Particles>> - type object and needs to be allocated*/
 	tmpPartsBuffer.resize(nHalosBufferRecv);
 
-	/* Unpack the */
+	/* Unpack the particle buffer */
 	for (int iP = 0; iP < nHalosBufferRecv; iP ++)
 	{
 		int tmpNParts = locHalosBufferRecv[iP].nPart;
 		tmpPartsBuffer[iP].resize(tmpNParts);
-
 		MPI_Unpack(locPartsBufferRecv, locPartsBufferRecvSize, &bufferPosPartRecv, &tmpPartsBuffer[iP][0], 
 				tmpNParts * sizePart, MPI_BYTE, MPI_COMM_WORLD);
 	}

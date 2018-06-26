@@ -42,8 +42,16 @@ int main(int argv, char **argc)
 	GlobalGrid.Init(nGrid, boxSize);
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
-	SettingsIO.DistributeFilesAmongTasks();
+	//SettingsIO.DistributeFilesAmongTasks();
+
+	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
+	SettingsIO.catFormat = "AHF_halos";
+	SettingsIO.thisPath = "/home/eduardo/CLUES/PTrees/";
+	SettingsIO.haloSuffix = "AHF_halos";
+	SettingsIO.partSuffix = "AHF_particles";
+	SettingsIO.haloPrefix = "snapshot_";
+	SettingsIO.partPrefix = "snapshot_";
 
 	string fileRoot = "snapshot_054.000";
 	string fileSuffHalo = ".z0.000.AHF_halos";
@@ -52,6 +60,10 @@ int main(int argv, char **argc)
 
 	SettingsIO.urlTestFileHalo = fileRoot + nameTask + fileSuffHalo;
 	SettingsIO.urlTestFilePart = fileRoot + nameTask + fileSuffPart;
+
+	SettingsIO.Init();
+
+	SettingsIO.DistributeFilesAmongTasks();
 
 	// Read the halo files - one per task
 	// This is also assigning the halo list to each grid node

@@ -35,7 +35,6 @@ Grid::~Grid()
 
 	if (locTask == 0)
 		cout << "Done." << endl;
-
 };
 
 
@@ -45,24 +44,15 @@ void Grid::Init(int n, float size)
 	cellSize = (boxSize/n);	// The size of the cell is divided by the total N
 
 	if (locTask == 0)
-		cout << "Initialized grid with N=" << N << " nodes in a box of " << boxSize << " Mpc/h" << endl; 
+		cout << "Initialized grid with N=" << N << " nodes in a box of " << boxSize << " kpc/h" << endl; 
 
 	nNodes = N * N * N;
 
 	/* This N^3 vector matrix keeps track on which task holds which part of the grid */
 	taskOnGridNode.resize(nNodes);
 
-/*
-	for (int i = 0; i < nNodes; i++)
-	{
-		taskOnGridNode[i].resize(1);
-		taskOnGridNode[i][0] = 0;		
-	}
-*/
-
 	/* This vector holds a list of all halos within a given grid cell */
 	haloOnGridNode.resize(nNodes);
-
 };
 
 
@@ -118,7 +108,7 @@ void Grid::AssignToGrid(float *X, int index)
 	iX = GridCoord(X);
 	thisNode = Index(iX[0], iX[1], iX[2]);
 	haloOnGridNode[thisNode].push_back(index);
-	taskOnGridNode[thisNode] = locTask;
+	taskOnGridNode[thisNode] = locTask + 1;	// Add one to distinguish from empty node!
 
 //	if (index < 50) 	// Sanity check
 //		printf("%d) Halo=%d grid=(%d, %d, %d) x=(%.2f, %.2f, %.2f) node=%d\n", 
