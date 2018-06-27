@@ -1,13 +1,15 @@
 #include <mpi.h>
 
+#include <vector>
 #include <iostream>
 #include <string>
+#include <ctime>
 
+#include "general.h"
 #include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
-#include "Particle.h"
-#include "general.h"
+#include "Methods.h"
 
 using namespace std;
 
@@ -20,7 +22,8 @@ int main(int argv, char **argc)
 	int iStep = 0;	// Step of the iteration	
 	
 	int iHalo = 0, jHalo = 0, kHalo = 0;
-	
+		
+	vector <int> nCommon;
 	size_t locHaloSize = 0;
 	size_t sizeP = 0;
 	
@@ -31,6 +34,7 @@ int main(int argv, char **argc)
 
 	IOSettings SettingsIO;
 	Communication CommTasks;
+	Methods GeneralMethods;
 
 	nChunksPerFile = 8;
 
@@ -47,7 +51,7 @@ int main(int argv, char **argc)
 	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
 	SettingsIO.catFormat = "AHF_halos";
-	SettingsIO.thisPath = "/home/eduardo/CLUES/PTrees/";
+	SettingsIO.thisPath = "/home/eduardo/CLUES/MetroC++/";
 	SettingsIO.haloSuffix = "AHF_halos";
 	SettingsIO.partSuffix = "AHF_particles";
 	SettingsIO.haloPrefix = "snapshot_";
@@ -65,20 +69,40 @@ int main(int argv, char **argc)
 
 	SettingsIO.DistributeFilesAmongTasks();
 
-	// Read the halo files - one per task
-	// This is also assigning the halo list to each grid node
-	SettingsIO.ReadHalos();
+	int totCat = 1;	// Only read the 
 
-	// Determine which task holds which sub-volume of the box
-	//GlobalGrid.FindPatchOnTask();
+	for (int iCat = 0; iCat < totCat; iCat++)
+	{
+		// Read the halo files - one per task
+		// This is also assigning the halo list to each grid node
+		SettingsIO.ReadHalos();
+
+		// Read the particle files - one per task
+		SettingsIO.ReadParticles();	
+
+		nCommon.resize(locHalos[0].nTypes);
+		//cout << "Print part= " << locParts[0][1][1] << endl;
+
+		clock_t iniTime = clock();
+		nCommon = GeneralMethods.CommonParticles(locParts[0], locParts[0]);
+		clock_t endTime = clock();
+
+		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+	
+		//cout << locParts[0][0].first << " " << locParts[0][0].second << " on task " << locTask << endl; 
+		//cout << "Npart: " << locParts[0].size() << " on task " << locTask << endl; 
+		//cout << "Npart: " << locHalos[0].nPart << " on task " << locTask << endl; 
+
+		cout << "Process took " << elapsed << " s on task "<< locTask << endl;
+	}
+
 
 	// Now every task knows which nodes belongs to which task
-	CommTasks.BroadcastAndGatherGrid();
+	//CommTasks.BroadcastAndGatherGrid();
 
+	// Retrieve some informations on the grid - sanity check
 	//GlobalGrid.Info();
 
-	// Read the particle files - one per task
-	//SettingsIO.ReadParticles();	
 
 	// Now exchange the halos in the requested buffer zones among the different tasks
 	//CommTasks.BufferSendRecv();
@@ -91,10 +115,7 @@ int main(int argv, char **argc)
 
 	//cout << "Finished on task=" << locTask << endl;
 
-#ifdef TEST_BLOCK
-	locHalos.clear();
-	locHalos.shrink_to_fit();
-#endif
+	CleanMemory();
 
 	MPI_Finalize();
 	

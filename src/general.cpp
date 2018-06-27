@@ -22,11 +22,14 @@ vector <Halo> locHalos;
 size_t locHalosSize;
 size_t totHalosSize;
 
+int nTypePart;
 int nTotHalos;
 int nLocHalos;
 int iLocHalos;
 
-vector <vector <Particle>> locParts;
+//vector <vector <Particle>> locParts;
+//vector <unordered_map<unsigned long long int, short int>> locParts;
+vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
 size_t locPartsSize;
 size_t totPartsSize;
 
@@ -63,8 +66,8 @@ void InitLocVariables(void)
 	}
 
 	sizeHalo = sizeof(Halo);
-        sizePart = sizeof(Particle);
-	
+	sizePart = sizeof(unsigned long long int) + sizeof(short int);	
+
 	nTotParts = 0; nLocParts = 0;
 };
 
@@ -95,6 +98,30 @@ unsigned int NumLines(const char * fileName)
 		cout << "File " <<  fileName << " not found on task: " << locTask << endl;
 		return -1;
 	}
+};
+
+
+void CleanMemory()
+{
+
+	locHalos.clear();
+	locHalos.shrink_to_fit();
+
+		for (int iH = 0; iH < nLocHalos; iH++)
+		{
+			for (int iT = 0; iT < 6; iT++)
+			{
+				locParts[iH][iT].clear();
+				locParts[iH][iT].shrink_to_fit();
+			}
+				
+			locParts[iH].clear();
+			locParts[iH].shrink_to_fit();
+		}
+
+		locParts.clear();
+		locParts.shrink_to_fit();
+
 };
 
 

@@ -4,7 +4,6 @@
 #include <string>
 
 #include "general.h"
-#include "Particle.h"
 #include "Halo.h"
 #include "Grid.h"
 
@@ -15,7 +14,7 @@ Halo::Halo()
 {
 	mTot = 0.0; 	mGas = 0.0; 	mDM = 0.0; 	
 	rVir = 0.0;	lambda = 0.0;
-	isToken = false;
+	isToken = false; nTypes = PTYPES;
 };
 
 
@@ -51,12 +50,16 @@ void Halo::ReadLineAHF(const char * lineRead)
 	sscanf(lineRead, "%llu %llu %d %f %d %f %f %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f\
 			  %f   %f   %f", 
-			&ID, &hostID, &nSub, &mTot, &nPart, &X[0], &X[1], &X[2], &V[0], &V[1], &V[2], 	// 11
+			&ID, &hostID, &nSub, &mTot, &nPart[PTYPES], &X[0], &X[1], &X[2], &V[0], &V[1], &V[2], 	// 11
 			&rVir, &dummy, &dummy, &dummy, &dummy, &vMax, &dummy, &sigV, &lambda, &dummy, // 21
 			&L[0], &L[1], &L[2]); 
 
 	// Compute max velocity and sub box edges while reading the halo file
 	vHalo = VectorModule(V);
+
+	// nPart[0] = nGas //44
+	// nPart[4] = nStar //64
+	// nPart[1] = DM // subtract gas & star from the total
 
 	if (vHalo > locVmax)
 		locVmax = vHalo;

@@ -5,4 +5,4 @@ n_cpus=4
 
 rm bin/*
 make
-mpirun -n $n_cpus ./bin/PTrees
+mpirun -n $n_cpus ./bin/MetroCPP

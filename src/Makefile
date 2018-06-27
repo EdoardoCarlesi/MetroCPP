@@ -1,4 +1,5 @@
-# Makefile
+# Makefile for METRO C++ 
+# MErger TRees On C++
 # Edoardo Carlesi 2018
 
 include ../Makefile.config
@@ -7,14 +8,15 @@ include ../Makefile.config
 #CXXFLAGS += -g -O0           # debug mode
 CXXFLAGS += -O3 -std=c++11               # normal mode
 CXXFLAGS += -Wunused-result -fpermissive
-EXEC = PTrees
+EXEC = MetroCPP
 EXEC_T = test
 
 #=============================================================================#
 
 SOURCE =\
 	IOSettings.cpp Communication.cpp general.cpp \
-	Particle.cpp Halo.cpp Grid.cpp MergerTree.cpp
+	Halo.cpp Grid.cpp MergerTree.cpp Methods.cpp
+#	Particle.cpp Halo.cpp Grid.cpp MergerTree.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
 
@@ -29,11 +31,11 @@ OBJS  =  $(SOURCE:.cpp=.o)
 	$(CXX) $(CXXFLAGS) -c $<
 
 #all :
-#	make PTrees; make test
+#	make MetroCPP; make test
 
-PTrees : $(OBJS)
+MetroCPP : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
-	mv PTrees ../bin/
+	mv MetroCPP ../bin/
 
 #test : $(OBJS)
 #	$(CXX) $(CXXFLAGS) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)

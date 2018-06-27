@@ -4,21 +4,23 @@
 #include <mpi.h>
 #include <map>
 #include <vector>
+#include <unordered_map>
 
 #include "Grid.h"
 #include "Halo.h"
-#include "Particle.h"
+//#include "Particle.h"
 
 using namespace std;
 
 class Grid;
 class Halo;
-class Particle;
+//class Particle;
 
 // General variables and functions
 void InitLocVariables(void);
 unsigned int NumLines(const char *);
 float VectorModule(float *);
+void CleanMemory(void);
 
 extern Grid GlobalGrid;
 
@@ -37,8 +39,11 @@ extern int nTotHalos;
 extern int nLocHalos;
 extern int iLocHalos;
 
-extern vector<vector <Particle>> locParts;
+//extern vector<vector <Particle>> locParts;
 
+//extern vector<unordered_map<unsigned long long int, short int>> locParts;
+
+extern vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
 extern size_t sizePart;
 extern size_t sizeHalo;
 

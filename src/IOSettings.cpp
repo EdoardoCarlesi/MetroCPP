@@ -1,6 +1,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 #include <array>
 #include <cstdio>
@@ -245,8 +246,9 @@ void IOSettings::ReadParticles(void)
 	// TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
 	string strUrlPart = pathInput + urlTestFilePart;	// FIXME : this is only a test url for the moment
 	const char *urlPart = strUrlPart.c_str();
+	unsigned long long int locHaloID = 0, partID = 0;
 	unsigned int iLocParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0, nFileHalos = 0;		
-	unsigned long long int locHaloID;
+	short int partType = 0, nPTypes = locHalos[0].nTypes;
 	string lineIn;
 
 	iLocHalos = 0;
@@ -277,16 +279,25 @@ void IOSettings::ReadParticles(void)
 		} else if (iLine == 1) {
 
 	                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
+			locParts[iLocHalos].resize(nPTypes);
 			iLine++;
 
 		} else {
-
-			locParts[iLocHalos][iLocParts].ReadLineAHF(lineRead);
+			// TODO this is all AHF format dependent!
+	                sscanf(lineRead, "%llu %hd", &partID, &partType);
+			locParts[iLocHalos][partType].push_back(partID);
 			totLocParts++;
 			iLocParts++;
 
-			if (iLocParts == locHalos[iLocHalos].nPart)
-			{
+			if (iLocParts == locHalos[iLocHalos].nPart[nPTypes])
+			{	
+				// Sort the ordered IDs
+				for (int iT = 0; iT < nPTypes; iT++)
+				{	
+					if (locParts[iLocHalos][iT].size() > 0)
+						sort(locParts[iLocHalos][iT].begin(), locParts[iLocHalos][iT].end());
+				}
+
 				iLocParts = 0;
 				iLocHalos++;
 				iLine = 1;	// Reset some indicators
@@ -331,8 +342,7 @@ void IOSettings::ReadHalos()
 		if (lineRead[0] != lineHead[0])
 		{
 			locHalos[iLocHalos].ReadLineAHF(lineRead);
-			nPartHalo = locHalos[iLocHalos].nPart;
-			locParts[iLocHalos].resize(nPartHalo);
+			nPartHalo = locHalos[iLocHalos].nPart[PTYPES];	// All particle types!
 			locPartsSize += nPartHalo * sizePart;
 			nLocParts += nPartHalo; 
 

@@ -119,7 +119,7 @@ void Communication::BufferSendRecv()
 	 */
 	vector <Halo> locHalosBufferSend, locHalosBufferRecv;
 	void * locPartsBufferSend = NULL; void * locPartsBufferRecv = NULL;
-	vector <vector <Particle>> tmpPartsBuffer; 	// Particles will be unpacked here
+	vector <vector<vector<unsigned long long int>>> tmpPartsBuffer; 	// Particles will be unpacked here
 
 	size_t locHalosBufferSendSize = 0, locHalosBufferRecvSize = 0;
 	size_t locPartsBufferSendSize = 0, locPartsBufferRecvSize = 0;
@@ -127,6 +127,7 @@ void Communication::BufferSendRecv()
 	int nHalosBufferSend = 1 + locTask, nHalosBufferRecv = 0;
 	int bufferPosPartSend=0, bufferPosPartRecv=0;
 	int sendTask, recvTask, barrMpi = 0;
+	int nPTypes = locHalos[0].nTypes;
 
 	/* Allocate halo buffer */
 	locHalosBufferSendSize = nHalosBufferSend * sizeHalo;
@@ -138,7 +139,7 @@ void Communication::BufferSendRecv()
 	for (int iP = 0; iP < nHalosBufferSend; iP ++)
 	{
 		locHalosBufferSend[iP] = locHalos[iP];
-		locPartsBufferSendSize += locHalos[iP].nPart * sizePart;
+		locPartsBufferSendSize += locHalos[iP].nPart[nPTypes] * sizePart;
 	}
 
 	/* Local particles to be sent will be mpi-packed into this buffer */
@@ -146,8 +147,9 @@ void Communication::BufferSendRecv()
 
 	/* Pack all the selected particles into a single buffer */
 	for (int iP = 0; iP < nHalosBufferSend; iP ++)
-		MPI_Pack(&locParts[iP][0], locHalos[iP].nPart * sizePart, MPI_BYTE, 
- 			  locPartsBufferSend, locPartsBufferSendSize, &bufferPosPartSend, MPI_COMM_WORLD);
+		for (int iT = 0; iT < nPTypes; iT ++)
+			MPI_Pack(&locParts[iP][iT][0], locHalos[iP].nPart[nPTypes] * sizePart, MPI_BYTE, 
+ 				  locPartsBufferSend, locPartsBufferSendSize, &bufferPosPartSend, MPI_COMM_WORLD);
 
 	// FIXME this is just a temporary setting
 	/* RecvTask is recieving from LocTask and SendTask is sending to LocTask */
@@ -192,13 +194,19 @@ void Communication::BufferSendRecv()
 	/* This is a vector <vector <Particles>> - type object and needs to be allocated*/
 	tmpPartsBuffer.resize(nHalosBufferRecv);
 
+	for (int iP = 0; iP < nHalosBufferRecv; iP ++)
+		tmpPartsBuffer[iP].resize(nPTypes);
+	
 	/* Unpack the particle buffer */
 	for (int iP = 0; iP < nHalosBufferRecv; iP ++)
 	{
-		int tmpNParts = locHalosBufferRecv[iP].nPart;
-		tmpPartsBuffer[iP].resize(tmpNParts);
-		MPI_Unpack(locPartsBufferRecv, locPartsBufferRecvSize, &bufferPosPartRecv, &tmpPartsBuffer[iP][0], 
-				tmpNParts * sizePart, MPI_BYTE, MPI_COMM_WORLD);
+		for (int iT = 0; iT < nHalosBufferRecv; iT ++)
+		{
+			int tmpNParts = locHalosBufferRecv[iP].nPart[nPTypes];
+			//tmpPartsBuffer[iP].resize(tmpNParts);
+			MPI_Unpack(locPartsBufferRecv, locPartsBufferRecvSize, &bufferPosPartRecv, &tmpPartsBuffer[iP][0], 
+					tmpNParts * sizePart, MPI_BYTE, MPI_COMM_WORLD);
+		}
 	}
 
 	if (locTask == 0)

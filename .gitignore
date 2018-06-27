@@ -2,8 +2,8 @@
 *.bkp
 *.dat
 *.o
-PTrees
-bin/Ptrees
+MetroCPP
+bin/MetroCPP
 output/*.dat
 mpirun
 *.tmp
