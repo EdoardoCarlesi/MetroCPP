@@ -14,6 +14,13 @@ MetroCPP :
 test :
 	cd src/; make ${EXEC_T}
 
+
+.PHONY: all
+
+all: MetroCPP test
+
+
+.PHONY: clean
+
 clean  :
-	rm bin/*
-	cd src; rm *.o; 
+	cd src/; make clean;

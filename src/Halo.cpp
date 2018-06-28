@@ -14,7 +14,7 @@ Halo::Halo()
 {
 	mTot = 0.0; 	mGas = 0.0; 	mDM = 0.0; 	
 	rVir = 0.0;	lambda = 0.0;
-	isToken = false; nTypes = PTYPES;
+	isToken = false; 
 };
 
 
@@ -50,7 +50,7 @@ void Halo::ReadLineAHF(const char * lineRead)
 	sscanf(lineRead, "%llu %llu %d %f %d %f %f %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f\
 			  %f   %f   %f", 
-			&ID, &hostID, &nSub, &mTot, &nPart[PTYPES], &X[0], &X[1], &X[2], &V[0], &V[1], &V[2], 	// 11
+			&ID, &hostID, &nSub, &mTot, &nPart[nTypes], &X[0], &X[1], &X[2], &V[0], &V[1], &V[2], 	// 11
 			&rVir, &dummy, &dummy, &dummy, &dummy, &vMax, &dummy, &sigV, &lambda, &dummy, // 21
 			&L[0], &L[1], &L[2]); 
 
@@ -82,7 +82,7 @@ void Halo::Info(void)
 {
 	cout << "Task " << locTask << " Halo ID " << ID << endl;
 	printf("Mtot: %.3e, ID: %.llu, Npart: %d, X:(%.2f, %.2f, %.2f), V:(%.2f, %.2f, %.2f) \n", 
-		mTot, ID, nPart, X[0], X[1], X[2], V[0], V[1], V[2]);
+		mTot, ID, nPart[nTypes], X[0], X[1], X[2], V[0], V[1], V[2]);
 
 };
 

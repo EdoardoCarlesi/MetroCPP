@@ -10,7 +10,6 @@
 
 #define PTYPES 6
 
-
 using namespace std;
 
 
@@ -31,7 +30,8 @@ public:
 	// Token halos keeping track of "lost" subhalos need to set this to TRUE
 	bool isToken;
 
-	int nPart[PTYPES+1], nTypes, nSub;
+	int nTypes = PTYPES;
+	int nPart[PTYPES+1], nSub;
 	unsigned long long int ID, hostID;
 
 	// Compute the halo distance from a given point
