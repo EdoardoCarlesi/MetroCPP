@@ -33,6 +33,36 @@ bool Methods::CompareHalos(int iHalo, int jHalo)
 };
 
 
+void Methods::FindProgenitors()
+{
+
+	// todo check fwdComparison TODO true or false
+	int nStepsCounter = floor(nLocHalos / 50.);
+	vector<int> nCommon;
+
+		for (int j = 0; j < nLocHalos; j++)
+		{
+			if (j == nStepsCounter * floor(j / nStepsCounter))
+				if (locTask == 0)			
+					cout << "." << flush; 
+
+			for (int i = 0; i < nLocHalos; i++)
+			{
+	
+				if (CompareHalos(j, i))
+				{
+					nCommon = CommonParticles(locParts[j], locParts[i]);
+				//if (nCommon[1] > 100)
+				//	cout << "OnTask= " << locTask << " found n " << nCommon[1] 
+				//		<< " DM particles between halos " << "0 - "  << nCommon[1] << endl;
+				}
+			}
+		}
+
+
+};
+
+
 vector<int> Methods::CommonParticles(vector<vector<unsigned long long int>> partsHaloOne, 
 	vector<vector<unsigned long long int>> partsHaloTwo)
 {

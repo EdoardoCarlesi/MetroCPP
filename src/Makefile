@@ -41,7 +41,7 @@ test : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
 	mv $(EXEC_T) ../bin/
 
-# Check if file exist before cleaning
+# Check if file format *.o exists before cleaning
 ifneq ("$(wildcard *.o)","")
 FILE_EXISTS = 1
 else

@@ -28,25 +28,29 @@ extern int totTask;
 extern MPI_Status status;
 
 // Halo & particle related variables for each task
+extern vector<Halo> tmpHalos;
 extern vector<Halo> locHalos;
 
-extern size_t totHalosSize;
 extern size_t locHalosSize;
+extern size_t tmpHalosSize;
 
 extern int nPTypes;
 extern int nTotHalos;
 extern int nLocHalos;
+extern int nTmpHalos;
 extern int iLocHalos;
 
 extern vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
+extern vector <vector<vector<unsigned long long int>>> tmpParts;	// numbers of particles are stored by particle type
+
 extern size_t sizePart;
 extern size_t sizeHalo;
 
 /* Particle and halo sizes are communicated to check for integrity */
-extern size_t totPartsSize;
+extern size_t tmpPartsSize;
 extern size_t locPartsSize;
 
-extern int nTotParts;
+extern int nTmpParts;
 extern int nLocParts;
 
 // These quantities are useful to compute the buffer region
@@ -57,5 +61,4 @@ extern float totVmax;
 extern float locVmax;
 extern float bufferThickness;
 extern int nChunksPerFile;	// Each halo catalog / particle file is split into this number of files
-
 #endif 

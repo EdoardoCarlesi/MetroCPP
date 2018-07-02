@@ -23,7 +23,6 @@ int main(int argv, char **argc)
 	
 	int iHalo = 0, jHalo = 0, kHalo = 0;
 		
-	vector <int> nCommon;
 	size_t locHaloSize = 0;
 	size_t sizeP = 0;
 	
@@ -73,8 +72,6 @@ int main(int argv, char **argc)
 	SettingsIO.DistributeFilesAmongTasks();
 
 	int totCat = 1;	// Only read the 
-	
-	nCommon.resize(nPTypes);
 
 	for (int iCat = 0; iCat < totCat; iCat++)
 	{
@@ -91,22 +88,14 @@ int main(int argv, char **argc)
 		CommTasks.BroadcastAndGatherGrid();
 
 		if (locTask == 0)
-			cout << "Comparing halos' particle content" << flush ;
-
-		for (int j = 0; j < nLocHalos; j++)
-		for (int i = 0; i < nLocHalos; i++)
-		//for (int i = 0; i<10; i++)
-		{
+			cout << "Finding halo progentors..." << flush ;
 	
-			if (GeneralMethods.CompareHalos(j, i))
-			{
-				nCommon = GeneralMethods.CommonParticles(locParts[j], locParts[i]);
+		GeneralMethods.fwdComparison = true;
+		GeneralMethods.FindProgenitors();
 
-				//if (nCommon[1] > 100)
-				//	cout << "OnTask= " << locTask << " found n " << nCommon[1] 
-				//		<< " DM particles between halos " << "0 - "  << nCommon[1] << endl;
-			}
-		}
+		// Now do the inverse comparison to clean the halo connections
+		//GeneralMethods.fwdComparison = false;
+		//GeneralMethods.FindProgenitors();
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;

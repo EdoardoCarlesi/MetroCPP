@@ -19,6 +19,10 @@ public:
 	~Methods();
 
 	float dMaxFactor;
+	bool fwdComparison;
+
+	// Pairwise comparison of halos
+	void FindProgenitors();
 
 	// Given two (sorted) vectors, compare their content and return the number of common elements
 	vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);
