@@ -16,7 +16,6 @@ EXEC_T = test
 SOURCE =\
 	IOSettings.cpp Communication.cpp general.cpp \
 	Halo.cpp Grid.cpp MergerTree.cpp Methods.cpp
-#	Particle.cpp Halo.cpp Grid.cpp MergerTree.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
 
@@ -30,17 +29,28 @@ OBJS  =  $(SOURCE:.cpp=.o)
 .cpp.o :
 	$(CXX) $(CXXFLAGS) -c $<
 
-#all :
-#	make MetroCPP; make test
+.PHONY: all clean
+
+all : 	MetroCPP test
 
 MetroCPP : $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
-	mv MetroCPP ../bin/
+	mv $(EXEC) ../bin/
 
-#test : $(OBJS)
-#	$(CXX) $(CXXFLAGS) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
+test : $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
+	mv $(EXEC_T) ../bin/
 
+# Check if file exist before cleaning
+ifneq ("$(wildcard *.o)","")
+FILE_EXISTS = 1
+else
+FILE_EXISTS = 0
+endif
 
 clean :
-	rm *.o;	rm $(EXEC); rm $(EXEC_T) 
-	rm ../bin/$(EXEC); rm ../bin/$(EXEC_T) 
+	@if [ -f $(EXEC) ]; then rm $(EXEC); fi;
+	@if [ -f $(EXEC_T) ]; then rm $(EXEC_T); fi;
+	@if [ -f ../bin/$(EXEC) ]; then rm ../bin/$(EXEC); fi;
+	@if [ -f ../bin/$(EXEC_T) ]; then rm ../bin/$(EXEC_T); fi;
+	@if [ "$(FILE_EXISTS)" -eq "1" ]; then rm *.o; fi;

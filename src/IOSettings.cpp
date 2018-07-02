@@ -35,7 +35,7 @@ void IOSettings::FindCatID()
 	string lineIn;
 	string cleanTmp;
 	char *tmpLine;
-	int iS = 0;
+	int iS = 0, sysOut = 0;
 
 	optionsSh = pathInput + " " + catFormat;
 	outputTmp = thisPath + tmpIdOut;
@@ -51,7 +51,7 @@ void IOSettings::FindCatID()
 		// Execute the bash script to find out the snapshot IDs. These are usually just the snapshot numbers, 
 		// but might change sometimes if there is a "hole" in between.
 		cout << inputSh << endl;
-		system(inputSh.c_str());
+		sysOut = system(inputSh.c_str());
 	}
 
 	ifstream fileIn(outputTmp);
@@ -66,14 +66,14 @@ void IOSettings::FindCatID()
 
 #ifdef CLEAN_TMP
 	cleanTmp = "rm " + outputTmp;
-	system(cleanTmp.c_str());
+	sysOut = system(cleanTmp.c_str());
 #endif
 };
 
 
 void IOSettings::FindCatZ()
 {	
-	int iZ = 0;
+	int iZ = 0, sysOut = 0;
 	string outputSh;
 	string inputSh;
 	string optionsSh;
@@ -95,7 +95,7 @@ void IOSettings::FindCatZ()
 		// Execute the bash script and find out the redshifts of the snapshot files.
 		// TODO this assumes AHF format! Other formats might not dump the z value in the output file
 		cout << inputSh << endl;
-		system(inputSh.c_str());
+		sysOut = system(inputSh.c_str());
 	}
 
 	ifstream fileIn(outputTmp);
@@ -119,13 +119,14 @@ void IOSettings::FindCatZ()
 #ifdef CLEAN_TMP
 	// Remove temporary files
 	cleanTmp = "rm " + outputTmp;
-	system(cleanTmp.c_str());
+	sysOut = system(cleanTmp.c_str());
 #endif
 };
 
 
 void IOSettings::FindCatN()
 {	
+	int sysOut = 0;
 	string outputSh;
 	string inputSh;
 	string optionsSh;
@@ -143,7 +144,7 @@ void IOSettings::FindCatN()
 		cout << "File " << outputTmp << " found. " << endl;
 	} else {
 
-		system(inputSh.c_str());
+		sysOut = system(inputSh.c_str());
 	}
 
 		ifstream fileIn(outputTmp);
@@ -158,7 +159,7 @@ void IOSettings::FindCatN()
 #ifdef CLEAN_TMP	
 	// Remove temporary files
 	cleanTmp = "rm " + outputTmp;
-	system(cleanTmp.c_str());
+	sysOut = system(cleanTmp.c_str());
 #endif
 };
 
@@ -321,7 +322,7 @@ void IOSettings::ReadHalos()
 	const char *lineHead = "#";
 	string lineIn;
 
-	int nPartHalo = 0;
+	int nPartHalo = 0, nPTypes = 0;
 	iLocHalos = 0; 
 	
 	nLocHalos = NumLines(urlHalo);	

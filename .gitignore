@@ -4,6 +4,8 @@
 *.o
 MetroCPP
 bin/MetroCPP
+bin/test
+test
 output/*.dat
 mpirun
 *.tmp

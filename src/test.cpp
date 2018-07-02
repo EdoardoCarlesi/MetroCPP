@@ -1,13 +1,15 @@
 #include <mpi.h>
 
+#include <vector>
 #include <iostream>
 #include <string>
+#include <ctime>
 
+#include "general.h"
 #include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
-#include "Particle.h"
-#include "general.h"
+#include "Methods.h"
 
 using namespace std;
 
@@ -20,7 +22,8 @@ int main(int argv, char **argc)
 	int iStep = 0;	// Step of the iteration	
 	
 	int iHalo = 0, jHalo = 0, kHalo = 0;
-	
+		
+	vector <int> nCommon;
 	size_t locHaloSize = 0;
 	size_t sizeP = 0;
 	
@@ -31,6 +34,7 @@ int main(int argv, char **argc)
 
 	IOSettings SettingsIO;
 	Communication CommTasks;
+	Methods GeneralMethods;
 
 	nChunksPerFile = 8;
 
@@ -41,13 +45,17 @@ int main(int argv, char **argc)
 	InitLocVariables();
 	GlobalGrid.Init(nGrid, boxSize);
 
-	//float *xtest; xtest = new float[3]; xtest[0]=99900.; xtest[1]=10000.; xtest[2] = locTask * 10000.;
-	//int *itest; itest = new int[3]; itest = GlobalGrid.GridCoord(xtest); 
-	//cout << locTask << ") Test: " << itest[0] << " " << itest[1] << " " << itest[2] << endl;
-
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
-	SettingsIO.DistributeFilesAmongTasks();
+	//SettingsIO.DistributeFilesAmongTasks();
+
+	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
+	SettingsIO.catFormat = "AHF_halos";
+	SettingsIO.thisPath = "/home/eduardo/CLUES/MetroC++/";
+	SettingsIO.haloSuffix = "AHF_halos";
+	SettingsIO.partSuffix = "AHF_particles";
+	SettingsIO.haloPrefix = "snapshot_";
+	SettingsIO.partPrefix = "snapshot_";
 
 	string fileRoot = "snapshot_054.000";
 	string fileSuffHalo = ".z0.000.AHF_halos";
@@ -57,26 +65,47 @@ int main(int argv, char **argc)
 	SettingsIO.urlTestFileHalo = fileRoot + nameTask + fileSuffHalo;
 	SettingsIO.urlTestFilePart = fileRoot + nameTask + fileSuffPart;
 
-	//cout << SettingsIO.urlTestFileHalo << endl;
-	//cout << SettingsIO.urlTestFilePart << endl;
+	SettingsIO.Init();
 
-	// Read the halo files - one per task
-	// This is also assigning the halo list to each grid node
-	SettingsIO.ReadHalos();
+	SettingsIO.DistributeFilesAmongTasks();
 
-	GlobalGrid.FindPatchOnTask();
+	int totCat = 1;	// Only read the 
 
+	for (int iCat = 0; iCat < totCat; iCat++)
+	{
+		// Read the halo files - one per task
+		// This is also assigning the halo list to each grid node
+		SettingsIO.ReadHalos();
+
+		// Read the particle files - one per task
+		SettingsIO.ReadParticles();	
+
+		nCommon.resize(locHalos[0].nTypes);
+		//cout << "Print part= " << locParts[0][1][1] << endl;
+
+		clock_t iniTime = clock();
+		nCommon = GeneralMethods.CommonParticles(locParts[0], locParts[0]);
+		clock_t endTime = clock();
+
+		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+	
+		//cout << locParts[0][0].first << " " << locParts[0][0].second << " on task " << locTask << endl; 
+		//cout << "Npart: " << locParts[0].size() << " on task " << locTask << endl; 
+		//cout << "Npart: " << locHalos[0].nPart << " on task " << locTask << endl; 
+
+		cout << "Process took " << elapsed << " s on task "<< locTask << endl;
+	}
+
+
+	// Now every task knows which nodes belongs to which task
+	//CommTasks.BroadcastAndGatherGrid();
+
+	// Retrieve some informations on the grid - sanity check
 	//GlobalGrid.Info();
 
-	//cout << " On task " << locTask << " Vmax is: " << locVmax << endl;
-	//cout << " On task " << locTask << " Xmax is: " << locXmax[0] << " " << locXmax[1] << " " << locXmax[2] << endl;
-	//cout << " On task " << locTask << " Xmin is: " << locXmin[0] << " " << locXmin[1] << " " << locXmin[2] << endl;
-
-	// Read the particle files - one per task
-	SettingsIO.ReadParticles();	
 
 	// Now exchange the halos in the requested buffer zones among the different tasks
-	CommTasks.BufferSendRecv();
+	//CommTasks.BufferSendRecv();
 
 	// Get the maximum halo velocity to compute buffer size
 
@@ -86,11 +115,7 @@ int main(int argv, char **argc)
 
 	//cout << "Finished on task=" << locTask << endl;
 
-	locHalos.clear();
-	locHalos.shrink_to_fit();
-
-#ifdef TEST_BLOCK
-#endif
+	CleanMemory();
 
 	MPI_Finalize();
 	
