@@ -27,8 +27,6 @@ int nTotHalos;
 int nLocHalos;
 int iLocHalos;
 
-//vector <vector <Particle>> locParts;
-//vector <unordered_map<unsigned long long int, short int>> locParts;
 vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
 size_t locPartsSize;
 size_t totPartsSize;
@@ -36,6 +34,7 @@ size_t totPartsSize;
 size_t sizeHalo;
 size_t sizePart;
 
+int nPTypes;
 int nTotParts;
 int nLocParts;
 

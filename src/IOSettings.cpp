@@ -248,17 +248,21 @@ void IOSettings::ReadParticles(void)
 	const char *urlPart = strUrlPart.c_str();
 	unsigned long long int locHaloID = 0, partID = 0;
 	unsigned int iLocParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0, nFileHalos = 0;		
-	short int partType = 0, nPTypes = locHalos[0].nTypes;
+	int partType = 0;
 	string lineIn;
 
 	iLocHalos = 0;
 	ifstream fileIn(urlPart);
 		
 	if (!fileIn.good())
+	{
 		cout << "File: " << urlPart << " not found on task=" << locTask << endl;
-	else 
-	        cout << "Task=" << locTask << " is reading " << nLocParts << " particles from file: " << urlPart << endl;
-	
+	} else {
+		if (locTask == 0)
+	        	cout << "Reading " << nLocParts << " particles from file: " << urlPart << endl;
+	        //cout << "Task=" << locTask << " is reading " << nLocParts << " particles from file: " << urlPart << endl;
+	}
+
 	while (getline(fileIn, lineIn))
 	{
 		const char *lineRead = lineIn.c_str();		
@@ -272,14 +276,14 @@ void IOSettings::ReadParticles(void)
 				cout << "WARNING on task=" << locTask << " expected: " << nLocHalos << " found: " <<  nFileHalos << endl;
 				iLine++;
 			} else {
-				cout << "Particle file contains " << nLocHalos << " halos." << endl; 
+				//cout << "Particle file contains " << nLocHalos << " halos." << endl; 
 				iLine++;
 			}
 
 		} else if (iLine == 1) {
 
 	                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-			locParts[iLocHalos].resize(nPTypes);
+			locParts[iLocHalos].resize(nPTypes+1);
 			iLine++;
 
 		} else {
@@ -331,9 +335,13 @@ void IOSettings::ReadHalos()
 	ifstream fileIn(urlHalo);
 	
 	if (!fileIn.good())
+	{
 		cout << "File: " << urlHalo << " not found on task=" << locTask << endl;
-	else 
-	        cout << "Task=" << locTask << " is reading " << nLocHalos << " halos from file: " << urlHalo << endl;
+	} else { 
+		if (locTask == 0)
+	        cout << "Reading " << nLocHalos << " halos from file: " << urlHalo << endl;
+	        //cout << "Task=" << locTask << " is reading " << nLocHalos << " halos from file: " << urlHalo << endl;
+	}
 
 	while (getline(fileIn, lineIn))
 	{
@@ -342,7 +350,7 @@ void IOSettings::ReadHalos()
 		if (lineRead[0] != lineHead[0])
 		{
 			locHalos[iLocHalos].ReadLineAHF(lineRead);
-			nPartHalo = locHalos[iLocHalos].nPart[PTYPES];	// All particle types!
+			nPartHalo = locHalos[iLocHalos].nPart[nPTypes];	// All particle types!
 			locPartsSize += nPartHalo * sizePart;
 			nLocParts += nPartHalo; 
 
@@ -355,8 +363,8 @@ void IOSettings::ReadHalos()
 
 	fileIn.close();
 
-	cout << "On task=" << locTask << " " << locPartsSize/1024/1024 << " MB pt and " << locHalosSize/1024/1024 << " MB hl " << endl; 
-	cout << "NHalos: " << locHalos.size() << " on task=" << locTask << endl;
+	//cout << "On task=" << locTask << " " << locPartsSize/1024/1024 << " MB pt and " << locHalosSize/1024/1024 << " MB hl " << endl; 
+	//cout << "NHalos: " << locHalos.size() << " on task=" << locTask << endl;
 };
 
    

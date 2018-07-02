@@ -23,6 +23,7 @@ public:
 	void Info(void);
 	void Init(int, float);
 
+	//void NearbyHalos();
 	void RecvBufferNodes(void); 	// This function finds the nodes (on the receiving end) that need to be communicated
 	void FindPatchOnTask(void);	// This uses the locXax, locXmin to determine the nodes belonging to each task	
 	void AssignToGrid(float *, int);

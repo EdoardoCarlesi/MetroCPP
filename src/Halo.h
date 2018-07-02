@@ -8,14 +8,8 @@
 
 #include "general.h"
 
-#define PTYPES 6
-
-
 using namespace std;
 
-
-
-class Particle;
 
 class Halo {
 
@@ -31,7 +25,8 @@ public:
 	// Token halos keeping track of "lost" subhalos need to set this to TRUE
 	bool isToken;
 
-	int nPart[PTYPES+1], nTypes, nSub;
+	vector<int> nPart;
+	int nSub;
 	unsigned long long int ID, hostID;
 
 	// Compute the halo distance from a given point

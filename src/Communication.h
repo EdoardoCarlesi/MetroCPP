@@ -1,3 +1,5 @@
+#ifndef COMMUNICATION_H
+#define COMMUNICATION_H
 #include <mpi.h>
 
 
@@ -12,4 +14,4 @@ public:
 	void ComputeBufferSize(void);
 	void BufferSendRecv(void);
 };
-
+#endif

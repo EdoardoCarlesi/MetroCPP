@@ -36,7 +36,10 @@ int main(int argv, char **argc)
 	Communication CommTasks;
 	Methods GeneralMethods;
 
+	GeneralMethods.dMaxFactor = 1.5;
+
 	nChunksPerFile = 8;
+	nPTypes = 6;
 
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
@@ -70,35 +73,55 @@ int main(int argv, char **argc)
 	SettingsIO.DistributeFilesAmongTasks();
 
 	int totCat = 1;	// Only read the 
+	
+	nCommon.resize(nPTypes);
 
 	for (int iCat = 0; iCat < totCat; iCat++)
 	{
 		// Read the halo files - one per task
 		// This is also assigning the halo list to each grid node
+		clock_t iniTime = clock();
+
 		SettingsIO.ReadHalos();
 
 		// Read the particle files - one per task
 		SettingsIO.ReadParticles();	
 
-		nCommon.resize(locHalos[0].nTypes);
-		//cout << "Print part= " << locParts[0][1][1] << endl;
+		// Now every task knows which nodes belongs to which task
+		CommTasks.BroadcastAndGatherGrid();
 
-		clock_t iniTime = clock();
-		nCommon = GeneralMethods.CommonParticles(locParts[0], locParts[0]);
+		if (locTask == 0)
+			cout << "Comparing halos' particle content" << flush ;
+
+		for (int j = 0; j < nLocHalos; j++)
+		for (int i = 0; i < nLocHalos; i++)
+		//for (int i = 0; i<10; i++)
+		{
+	
+			if (GeneralMethods.CompareHalos(j, i))
+			{
+				nCommon = GeneralMethods.CommonParticles(locParts[j], locParts[i]);
+
+				//if (nCommon[1] > 100)
+				//	cout << "OnTask= " << locTask << " found n " << nCommon[1] 
+				//		<< " DM particles between halos " << "0 - "  << nCommon[1] << endl;
+			}
+		}
+
 		clock_t endTime = clock();
-
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+
+		if (locTask == 0)
+			cout << "done in " << elapsed << "s. " << endl;
 	
 		//cout << locParts[0][0].first << " " << locParts[0][0].second << " on task " << locTask << endl; 
 		//cout << "Npart: " << locParts[0].size() << " on task " << locTask << endl; 
-		//cout << "Npart: " << locHalos[0].nPart << " on task " << locTask << endl; 
+		//cout << "Npart: " << locHalos[0].nPart[nPTypes] << " on task " << locTask << endl; 
 
-		cout << "Process took " << elapsed << " s on task "<< locTask << endl;
+		//cout << "Process took " << elapsed << " s on task "<< locTask << endl;
 	}
 
 
-	// Now every task knows which nodes belongs to which task
-	//CommTasks.BroadcastAndGatherGrid();
 
 	// Retrieve some informations on the grid - sanity check
 	//GlobalGrid.Info();

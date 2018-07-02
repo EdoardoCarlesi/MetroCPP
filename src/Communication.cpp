@@ -77,7 +77,7 @@ void Communication::BroadcastAndGatherGrid()
 	MPI_Bcast(&allNonZeroTasks[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
 	
 	if (locTask == 0)
-		cout << "MPI_BCast done." << endl;
+		cout << "Halo positions on the grid nodes have been broadcasted to all tasks." << endl;
 
 	/* Now allocate the GLOBAL grid informations and assign the task/node connection on every task */
 	GlobalGrid.globalTaskOnGridNode.resize(gridSize);
@@ -127,7 +127,6 @@ void Communication::BufferSendRecv()
 	int nHalosBufferSend = 1 + locTask, nHalosBufferRecv = 0;
 	int bufferPosPartSend=0, bufferPosPartRecv=0;
 	int sendTask, recvTask, barrMpi = 0;
-	int nPTypes = locHalos[0].nTypes;
 
 	/* Allocate halo buffer */
 	locHalosBufferSendSize = nHalosBufferSend * sizeHalo;

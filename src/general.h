@@ -4,24 +4,22 @@
 #include <mpi.h>
 #include <map>
 #include <vector>
-#include <unordered_map>
 
 #include "Grid.h"
 #include "Halo.h"
-//#include "Particle.h"
 
 using namespace std;
 
 class Grid;
 class Halo;
-//class Particle;
 
 // General variables and functions
-void InitLocVariables(void);
 unsigned int NumLines(const char *);
+void InitLocVariables(void);
 float VectorModule(float *);
 void CleanMemory(void);
 
+// This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid;
 
 // MPI variables
@@ -35,13 +33,10 @@ extern vector<Halo> locHalos;
 extern size_t totHalosSize;
 extern size_t locHalosSize;
 
+extern int nPTypes;
 extern int nTotHalos;
 extern int nLocHalos;
 extern int iLocHalos;
-
-//extern vector<vector <Particle>> locParts;
-
-//extern vector<unordered_map<unsigned long long int, short int>> locParts;
 
 extern vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
 extern size_t sizePart;
