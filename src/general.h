@@ -10,6 +10,7 @@
 
 using namespace std;
 
+
 class Grid;
 class Halo;
 
@@ -29,33 +30,34 @@ extern MPI_Status status;
 
 // Halo & particle related variables for each task
 extern vector<Halo> tmpHalos;
-extern vector<Halo> locHalos;
+extern vector<vector<Halo>> locHalos;
 
-extern size_t locHalosSize;
+extern size_t locHalosSize[2];
 extern size_t tmpHalosSize;
 
 extern int nPTypes;
-extern int nTotHalos;
-extern int nLocHalos;
+extern int nTotHalos[2];
+extern int nLocHalos[2];
 extern int nTmpHalos;
-extern int iLocHalos;
 
-extern vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
-extern vector <vector<vector<unsigned long long int>>> tmpParts;	// numbers of particles are stored by particle type
+// 0 is the last catalog (first to be read in) to the _000 one (number N)
+extern int iNumCat;
+// Set to 0 or 1 according to the catalogs being read in
+extern int iUseCat;
+
+// numbers of particles are stored by particle type
+extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
+extern vector<vector<unsigned long long int>> tmpParts;
 
 extern size_t sizePart;
 extern size_t sizeHalo;
 
 /* Particle and halo sizes are communicated to check for integrity */
+extern size_t locPartsSize[2];
 extern size_t tmpPartsSize;
-extern size_t locPartsSize;
 
+extern int nLocParts[2];
 extern int nTmpParts;
-extern int nLocParts;
-
-// These quantities are useful to compute the buffer region
-extern float locXmin[3];
-extern float locXmax[3];
 
 extern float totVmax;
 extern float locVmax;

@@ -18,29 +18,30 @@ MPI_Status status;
 
 Grid GlobalGrid;
 
-vector <Halo> locHalos;
-size_t locHalosSize;
-size_t totHalosSize;
+vector<vector<Halo>> locHalos;
+vector <Halo> tmpHalos;
 
+size_t locHalosSize[2];
+size_t tmpHalosSize;
+
+int iNumCat; // Halo catalog number in use, from 0 to N
+int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
 int nTypePart;
-int nTotHalos;
-int nLocHalos;
-int iLocHalos;
+int nTotHalos[2];
+int nLocHalos[2];
 
-vector <vector<vector<unsigned long long int>>> locParts;	// numbers of particles are stored by particle type
-size_t locPartsSize;
-size_t totPartsSize;
+vector<vector<vector<vector<unsigned long long int>>>> locParts;
+vector<vector<unsigned long long int>> tmpParts;	
+
+size_t locPartsSize[2];
+size_t tmpPartsSize;
 
 size_t sizeHalo;
 size_t sizePart;
 
 int nPTypes;
-int nTotParts;
-int nLocParts;
-
-// Apex coordinates of the sub-box containing the halo on each task
-float locXmin[3];
-float locXmax[3];
+int nTmpParts;
+int nLocParts[2];
 
 float totVmax;
 float locVmax;
@@ -53,21 +54,19 @@ int nChunksPerFile;
  */
 void InitLocVariables(void)
 {
+	// FIXME
         locVmax = 0.0; 
 	totVmax = 0.0;
-        locHalosSize = 0;
-        totHalosSize = 0;
+        locHalosSize[0] = 0; locHalosSize[1] = 0;
+	nLocParts[0] = 0; nLocParts[1] = 0;
+        tmpHalosSize = 0; 
 
-	for (int iX = 0; iX < 3; iX++)
-	{
-		locXmin[iX] = 10000000.0;
-		locXmax[iX] = 0.0;
-	}
+	// We will do a pairwise comparison of the catalogs
+	locParts.resize(2);
+	locHalos.resize(2);
 
 	sizeHalo = sizeof(Halo);
-	sizePart = sizeof(unsigned long long int) + sizeof(short int);	
-
-	nTotParts = 0; nLocParts = 0;
+	sizePart = sizeof(unsigned long long int);
 };
 
 
@@ -102,24 +101,23 @@ unsigned int NumLines(const char * fileName)
 
 void CleanMemory()
 {
+	locHalos[iUseCat].clear();
+	locHalos[iUseCat].shrink_to_fit();
 
-	locHalos.clear();
-	locHalos.shrink_to_fit();
-
-		for (int iH = 0; iH < nLocHalos; iH++)
+		for (int iH = 0; iH < nLocHalos[iUseCat]; iH++)
 		{
 			for (int iT = 0; iT < 6; iT++)
 			{
-				locParts[iH][iT].clear();
-				locParts[iH][iT].shrink_to_fit();
+				locParts[iUseCat][iH][iT].clear();
+				locParts[iUseCat][iH][iT].shrink_to_fit();
 			}
 				
-			locParts[iH].clear();
-			locParts[iH].shrink_to_fit();
+			locParts[iUseCat][iH].clear();
+			locParts[iUseCat][iH].shrink_to_fit();
 		}
 
-		locParts.clear();
-		locParts.shrink_to_fit();
+		locParts[iUseCat].clear();
+		locParts[iUseCat].shrink_to_fit();
 
 };
 

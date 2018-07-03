@@ -208,33 +208,48 @@ void IOSettings::Init()
 };
 
 
+
 void IOSettings::DistributeFilesAmongTasks(void)
 {
 	char charCpu[5], charZ[8];
+	int locChunk = 0;
 	string strZ;
 
 	// TODO This function should optimize the halo distribution es. giving each task a slab of haloes, which 
 	// would also make the FFTW operation much faster, if planning to implement a purely PM grid to compute 
 	// the gravitational force at each step
 
-	nFilesOnTask = 1;		//FIXME for the moment we do 1 file 1 task 
+	nFilesOnTask = nChunksPerFile; // / totTask;
 
-	haloFiles.resize(nFilesOnTask);
+	if (locTask == 0)
+		cout << "Assigning " << nFilesOnTask << " halo/particle files among " << totTask << " tasks. " << endl; 
 
-	for (int i = 0; i < nFilesOnTask; i++)
+	haloFiles.resize(nCat);
+	partFiles.resize(nCat);
+
+	for (int i = 0; i < nCat; i++)
 	{
-		haloFiles[i].resize(nCat);
-		sprintf(charCpu, "%04d", locTask);	// TODO this is just a temporary assignment
+		sprintf(charZ, "%.3f", redShift[i]);	
+		haloFiles[i].resize(nFilesOnTask);
+		partFiles[i].resize(nFilesOnTask);
 
-		for (int j = 0; j < nCat; j++)
+		for (int j = 0; j < nFilesOnTask; j++)
 		{
-			sprintf(charZ, "%.3f", redShift[j]);	
-			haloFiles[i][j] = pathInput + haloPrefix + strSnaps[j] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
+			locChunk = j + locTask * nFilesOnTask;
+			sprintf(charCpu, "%04d", locChunk);	
+			haloFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
+			partFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + partSuffix;
 
-			ifstream fExists(haloFiles[i][j]);
-				
-			if (fExists.fail())
+			ifstream haloExists(haloFiles[i][j]);
+			if (haloExists.fail())
 				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
+
+			ifstream partExists(haloFiles[i][j]);
+			if (partExists.fail())
+				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
+		
+			//if (locTask == 0 || locTask == 2)  
+			//	cout << locTask << ") haloFiles[" << i << "][" << j << "]: " << haloFiles[i][j] << endl; 
 
 		}
 	}
@@ -242,74 +257,82 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 
 // Particle sizes have already been allocated in the ReadHalos() routines, do a safety check for the size
+// TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
 void IOSettings::ReadParticles(void)
 {
-	// TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
-	string strUrlPart = pathInput + urlTestFilePart;	// FIXME : this is only a test url for the moment
-	const char *urlPart = strUrlPart.c_str();
+	string tmpStrUrlPart;
+	const char *tmpUrlPart;
 	unsigned long long int locHaloID = 0, partID = 0;
-	unsigned int iLocParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0, nFileHalos = 0;		
-	int partType = 0;
+	unsigned int iTmpParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0;
+	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0, nTmpHalos = 0;
+	int partType = 0, nChunks = 0;
 	string lineIn;
 
-	iLocHalos = 0;
-	ifstream fileIn(urlPart);
+	nChunks = nChunksPerFile;
 		
-	if (!fileIn.good())
+	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
-		cout << "File: " << urlPart << " not found on task=" << locTask << endl;
-	} else {
-		if (locTask == 0)
-	        	cout << "Reading " << nLocParts << " particles from file: " << urlPart << endl;
-	        //cout << "Task=" << locTask << " is reading " << nLocParts << " particles from file: " << urlPart << endl;
-	}
+		tmpUrlPart = partFiles[iNumCat][iChunk].c_str();
+		ifstream fileIn(tmpUrlPart);
 
-	while (getline(fileIn, lineIn))
-	{
-		const char *lineRead = lineIn.c_str();		
+		// Reset temporary variables
+		iTmpParts = 0;
+		iTmpHalos = 0;
+		iLine = 0;
 
-		if (iLine == 0)
+		if (!fileIn.good())
 		{
-	                sscanf(lineRead, "%d", &nFileHalos);
-	
-			if (nFileHalos != nLocHalos && iLine == 0)
-			{
-				cout << "WARNING on task=" << locTask << " expected: " << nLocHalos << " found: " <<  nFileHalos << endl;
-				iLine++;
-			} else {
-				//cout << "Particle file contains " << nLocHalos << " halos." << endl; 
-				iLine++;
-			}
-
-		} else if (iLine == 1) {
-
-	                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-			locParts[iLocHalos].resize(nPTypes+1);
-			iLine++;
-
+			cout << "File: " << tmpUrlPart << " not found on task=" << locTask << endl;
 		} else {
-			// TODO this is all AHF format dependent!
-	                sscanf(lineRead, "%llu %hd", &partID, &partType);
-			locParts[iLocHalos][partType].push_back(partID);
-			totLocParts++;
-			iLocParts++;
+			if (locTask == 0)
+	        		cout << "Reading " << nLocParts << " particles from file: " << tmpUrlPart << endl;
+		}
 
-			if (iLocParts == locHalos[iLocHalos].nPart[nPTypes])
-			{	
-				// Sort the ordered IDs
-				for (int iT = 0; iT < nPTypes; iT++)
+		while (getline(fileIn, lineIn))
+		{
+			const char *lineRead = lineIn.c_str();		
+
+			// TODO this is all AHF format dependent
+			if (iLine == 0)
+			{
+		                sscanf(lineRead, "%d", &nFileHalos);
+				iLine++;
+
+			} else if (iLine == 1) {
+
+		                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
+				tmpParts.resize(nPTypes+1);
+				iLine++;
+
+			} else {
+
+	        	        sscanf(lineRead, "%llu %hd", &partID, &partType);
+				tmpParts[iLocHalos][partType].push_back(partID);
+				totLocParts++;
+				iTmpParts++;
+
+				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[nPTypes])
 				{	
-					if (locParts[iLocHalos][iT].size() > 0)
-						sort(locParts[iLocHalos][iT].begin(), locParts[iLocHalos][iT].end());
+					// Sort the ordered IDs
+					for (int iT = 0; iT < nPTypes; iT++)
+					{	
+						if (tmpParts[iTmpHalos][iT].size() > 0)
+						{
+							sort(tmpParts[iT].begin(), tmpParts[iT].end());
+						
+						locParts[iUseCat][iLocHalos][iT].insert(tmpParts[iUseCat].end(), tmpParts[iTmpHalos][iT].begin(), tmpParts[iT].end());
+						}
+					}
+
+					iLocHalos++;
+					iLine = 1;	// Reset some indicators
 				}
+			} // else iLine not 0 or 1
+		} // end while
 
-				iLocParts = 0;
-				iLocHalos++;
-				iLine = 1;	// Reset some indicators
-			}
-		} // else iLine not 0 or 1
-	} // end while
+		//locParts[iUseCat].insert(locParts[iUseCat].end(), tmpParts[iUseCat].begin(), tmpParts[iUseCat].end());
 
+	} // End for loop on file chunks
 
 };
  
@@ -317,55 +340,71 @@ void IOSettings::ReadParticles(void)
 /* Using AHF by default */
 void IOSettings::ReadHalos()
 {
-	string strUrlHalo = pathInput + urlTestFileHalo;	// FIXME : this is only a test url for the moment
-	const char *urlHalo = strUrlHalo.c_str();
+	string tmpStrUrlHalo;
+	const char *tmpUrlHalo;
 	const char *lineHead = "#";
 	string lineIn;
 
-	int nPartHalo = 0, nPTypes = 0;
-	iLocHalos = 0; 
-	
-	nLocHalos = NumLines(urlHalo);	
-	
-	locParts.resize(nLocHalos); 
-	locHalos.resize(nLocHalos); 
+	int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nChunks = 0, nTmpHalos = 0; 
 
-	locPartsSize = 0;	// This will be increased while reading the file
-	locHalosSize = sizeHalo * nLocHalos;
+	nChunks = nChunksPerFile;
 
-	ifstream fileIn(urlHalo);
+	// Initialize outside of the files loop
+	int iLocHalos = 0; 
 	
-	if (!fileIn.good())
+	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
-		cout << "File: " << urlHalo << " not found on task=" << locTask << endl;
-	} else { 
-		if (locTask == 0)
-	        cout << "Reading " << nLocHalos << " halos from file: " << urlHalo << endl;
-	        //cout << "Task=" << locTask << " is reading " << nLocHalos << " halos from file: " << urlHalo << endl;
-	}
+		tmpUrlHalo = haloFiles[iNumCat][iChunk].c_str();
 
-	while (getline(fileIn, lineIn))
-	{
-		const char *lineRead = lineIn.c_str();		
+		nTmpHalos = NumLines(tmpUrlHalo);	
+		
+		tmpParts.resize(nTmpHalos); 
+		tmpHalos.resize(nTmpHalos); 
+
+		iTmpHalos = 0;
+		tmpPartsSize = 0;	// This will be increased while reading the file
+		tmpHalosSize = sizeHalo * nTmpHalos;
+
+		ifstream fileIn(tmpUrlHalo);
 	
-		if (lineRead[0] != lineHead[0])
+		if (!fileIn.good())
 		{
-			locHalos[iLocHalos].ReadLineAHF(lineRead);
-			nPartHalo = locHalos[iLocHalos].nPart[nPTypes];	// All particle types!
-			locPartsSize += nPartHalo * sizePart;
-			nLocParts += nPartHalo; 
-
-			// Assign halo to its nearest grid point
-			GlobalGrid.AssignToGrid(locHalos[iLocHalos].X, iLocHalos);
-
-			iLocHalos++;
+			cout << "File: " << tmpUrlHalo << " not found on task=" << locTask << endl;
+		} else { 
+			if (locTask == 0)
+	       			cout << "Reading " << nTmpHalos << " halos from file: " << tmpUrlHalo << endl;
 		}
-	}
 
-	fileIn.close();
+		while (getline(fileIn, lineIn))
+		{
+			const char *lineRead = lineIn.c_str();		
+		
+			if (lineRead[0] != lineHead[0])
+			{
+				tmpHalos[iTmpHalos].ReadLineAHF(lineRead);
+				nPartHalo = tmpHalos[iTmpHalos].nPart[nPTypes];	// All particle types!
+				tmpPartsSize += nPartHalo * sizePart;
+				nTmpParts += nPartHalo; 
 
-	//cout << "On task=" << locTask << " " << locPartsSize/1024/1024 << " MB pt and " << locHalosSize/1024/1024 << " MB hl " << endl; 
-	//cout << "NHalos: " << locHalos.size() << " on task=" << locTask << endl;
+				// Assign halo to its nearest grid point - assign the absolute local index number
+				GlobalGrid.AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
+
+				iLocHalos++;
+				iTmpHalos++;
+			}
+		}	// While Read Line
+
+		fileIn.close();
+
+		// Append to the locHalo file
+		locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
+		tmpHalos.clear();
+		tmpHalos.shrink_to_fit();
+
+	} // Loop on files per task
+
+	//cout << "On task=" << locTask << " " << locPartsSize/1024/1024 << " MB pt and " << tmpHalosSize/1024/1024 << " MB hl " << endl; 
+	//cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 };
 
    

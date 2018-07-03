@@ -151,14 +151,6 @@ void Grid::Info()
 {	
 	int *ixMax, *ixMin;
 	ixMax = new int[3];	ixMin = new int[3];	
-	
-	ixMax = GridCoord(locXmax);
-	ixMin = GridCoord(locXmin);
-
-	cout << locTask << " " << ixMin[0] << " " << ixMax[0] << endl;
-	cout << locTask << " " << ixMin[1] << " " << ixMax[1] << endl;
-	cout << locTask << " " << ixMin[2] << " " << ixMax[2] << endl;
-
 /*
 	for (int i = ixMin[0]; i < ixMax[0]; i++)
 		for (int j = ixMin[1]; j < ixMax[1]; j++)

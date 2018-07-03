@@ -64,18 +64,6 @@ void Halo::ReadLineAHF(const char * lineRead)
 
 	if (vHalo > locVmax)
 		locVmax = vHalo;
-
-	for (int iX = 0; iX < 3; iX++)
-	{
-		if (X[iX] > locXmax[iX])
-			locXmax[iX] = X[iX]; 
-
-		if (X[iX] < locXmin[iX])
-			locXmin[iX] = X[iX]; 
-	}
-	
-	// Assigning each halo to its nearest grid node
-	GlobalGrid.AssignToGrid(X, iLocHalos);
 };
 
 

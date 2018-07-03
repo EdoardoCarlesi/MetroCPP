@@ -37,7 +37,7 @@ int main(int argv, char **argc)
 
 	GeneralMethods.dMaxFactor = 1.5;
 
-	nChunksPerFile = 8;
+	nChunksPerFile = 2;
 	nPTypes = 6;
 
 	MPI_Init(&argv, &argc);
@@ -71,9 +71,9 @@ int main(int argv, char **argc)
 
 	SettingsIO.DistributeFilesAmongTasks();
 
-	int totCat = 1;	// Only read the 
+	int totCat = 2;	// Only read the 
 
-	for (int iCat = 0; iCat < totCat; iCat++)
+	for (iNumCat = 0; iNumCat < totCat; iNumCat++)
 	{
 		// Read the halo files - one per task
 		// This is also assigning the halo list to each grid node
@@ -81,6 +81,7 @@ int main(int argv, char **argc)
 
 		SettingsIO.ReadHalos();
 
+#ifdef TEST_BLOCK
 		// Read the particle files - one per task
 		SettingsIO.ReadParticles();	
 
@@ -108,6 +109,7 @@ int main(int argv, char **argc)
 		//cout << "Npart: " << locHalos[0].nPart[nPTypes] << " on task " << locTask << endl; 
 
 		//cout << "Process took " << elapsed << " s on task "<< locTask << endl;
+#endif
 	}
 
 
