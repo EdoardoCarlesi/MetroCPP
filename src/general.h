@@ -21,7 +21,7 @@ float VectorModule(float *);
 void CleanMemory(void);
 
 // This is the grid that keeps track of halos positions and tasks they are located on
-extern Grid GlobalGrid;
+extern Grid GlobalGrid[2];
 
 // MPI variables
 extern int locTask;
@@ -29,16 +29,13 @@ extern int totTask;
 extern MPI_Status status;
 
 // Halo & particle related variables for each task
-extern vector<Halo> tmpHalos;
 extern vector<vector<Halo>> locHalos;
 
 extern size_t locHalosSize[2];
-extern size_t tmpHalosSize;
 
 extern int nPTypes;
 extern int nTotHalos[2];
 extern int nLocHalos[2];
-extern int nTmpHalos;
 
 // 0 is the last catalog (first to be read in) to the _000 one (number N)
 extern int iNumCat;
@@ -47,17 +44,13 @@ extern int iUseCat;
 
 // numbers of particles are stored by particle type
 extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
-extern vector<vector<unsigned long long int>> tmpParts;
 
 extern size_t sizePart;
 extern size_t sizeHalo;
 
 /* Particle and halo sizes are communicated to check for integrity */
 extern size_t locPartsSize[2];
-extern size_t tmpPartsSize;
-
 extern int nLocParts[2];
-extern int nTmpParts;
 
 extern float totVmax;
 extern float locVmax;

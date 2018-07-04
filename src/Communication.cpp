@@ -32,7 +32,7 @@ void Comm::Optimize()	// Write some function that optimizes the memory distribut
  */
 void Communication::BroadcastAndGatherGrid()
 {
-	size_t gridSize = GlobalGrid.nNodes, globalGridSize = 0;
+	size_t gridSize = GlobalGrid[iUseCat].nNodes, globalGridSize = 0;
 	vector <int> tmpTaskOnGridNode, allNonZeroTasks, allNonZeroNodes;
 	int iNonZero = 0, nNonZero = 0, thisTask = 0, thisNode = 0;
 
@@ -42,7 +42,8 @@ void Communication::BroadcastAndGatherGrid()
 	/* Gather all the nodes on totTask * gridSize array, which can be large, but we need to check for nodes shared between
 	 * several processors so first we collect everything separately
 	 */
-	MPI_Gather(&GlobalGrid.taskOnGridNode[0], gridSize, MPI_INT, &tmpTaskOnGridNode[0], gridSize, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gather(&GlobalGrid[iUseCat].taskOnGridNode[0], gridSize, MPI_INT, 
+			&tmpTaskOnGridNode[0], gridSize, MPI_INT, 0, MPI_COMM_WORLD);
 
 	/* Loop on all the huge grid to take care of the nodes which might be assigned to several tasks */
 	if (locTask == 0)
@@ -80,13 +81,13 @@ void Communication::BroadcastAndGatherGrid()
 		cout << "Halo positions on the grid nodes have been broadcasted to all tasks." << endl;
 
 	/* Now allocate the GLOBAL grid informations and assign the task/node connection on every task */
-	GlobalGrid.globalTaskOnGridNode.resize(gridSize);
+	GlobalGrid[iUseCat].globalTaskOnGridNode.resize(gridSize);
 
 	for (int i = 0; i < nNonZero; i++)
 	{
 		thisNode = allNonZeroNodes[i];
 		thisTask = allNonZeroTasks[i];
-		GlobalGrid.globalTaskOnGridNode[thisNode].push_back(thisTask);
+		GlobalGrid[iUseCat].globalTaskOnGridNode[thisNode].push_back(thisTask);
 
 		//cout << i << " " <<  thisNode << " task=" << thisTask << endl;
 
@@ -118,8 +119,9 @@ void Communication::BufferSendRecv()
 	 * guaranteed - thus, it is safer to MPI_Pack all the particle objects into a generic void* buffer and then unpack it
 	 */
 	vector <Halo> locHalosBufferSend, locHalosBufferRecv;
-	void * locPartsBufferSend = NULL; void * locPartsBufferRecv = NULL;
 	vector <vector<vector<unsigned long long int>>> tmpPartsBuffer; 	// Particles will be unpacked here
+
+	void * locPartsBufferSend = NULL; void * locPartsBufferRecv = NULL;
 
 	size_t locHalosBufferSendSize = 0, locHalosBufferRecvSize = 0;
 	size_t locPartsBufferSendSize = 0, locPartsBufferRecvSize = 0;
@@ -137,8 +139,8 @@ void Communication::BufferSendRecv()
 
 	for (int iP = 0; iP < nHalosBufferSend; iP ++)
 	{
-		locHalosBufferSend[iP] = locHalos[iP];
-		locPartsBufferSendSize += locHalos[iP].nPart[nPTypes] * sizePart;
+		locHalosBufferSend[iP] = locHalos[iUseCat][iP];
+		locPartsBufferSendSize += locHalos[iUseCat][iP].nPart[nPTypes] * sizePart;
 	}
 
 	/* Local particles to be sent will be mpi-packed into this buffer */
@@ -147,10 +149,10 @@ void Communication::BufferSendRecv()
 	/* Pack all the selected particles into a single buffer */
 	for (int iP = 0; iP < nHalosBufferSend; iP ++)
 		for (int iT = 0; iT < nPTypes; iT ++)
-			MPI_Pack(&locParts[iP][iT][0], locHalos[iP].nPart[nPTypes] * sizePart, MPI_BYTE, 
+			MPI_Pack(&locParts[iUseCat][iP][iT][0], locHalos[iUseCat][iP].nPart[nPTypes] * sizePart, MPI_BYTE, 
  				  locPartsBufferSend, locPartsBufferSendSize, &bufferPosPartSend, MPI_COMM_WORLD);
 
-	// FIXME this is just a temporary setting
+	// FIXME this is just a temporary setting: should read from the grid requesting the nodes on the buffer
 	/* RecvTask is recieving from LocTask and SendTask is sending to LocTask */
 	recvTask = (locTask + totTask - 1) % (totTask);
 	sendTask = (locTask + 1) % (totTask);
@@ -175,6 +177,7 @@ void Communication::BufferSendRecv()
 	locHalosBufferSend.clear();
 	locHalosBufferSend.shrink_to_fit();
 
+#ifdef TEST_BLOCK	// FIXME clean up the memory...
 	/* Particle swap across tasks - first communicate the size of the buffer to be delivered */
 	MPI_Sendrecv(&locPartsBufferSendSize, sizeof(size_t), MPI_BYTE, recvTask, 0, 
 		     &locPartsBufferRecvSize, sizeof(size_t), MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &status);
@@ -216,7 +219,6 @@ void Communication::BufferSendRecv()
 
 	// TODO There will be a loop, all the particle buffers will be appended to some general buffer, the tmpBuffer can be 
 	// freed afterwards...
-#ifdef TEST_BLOCK	// FIXME clean up the memory...
 	for (int iP = 0; iP < nHalosBufferSend; iP ++)	
 	{
 		tmpPartsBuffer[iP].clear();

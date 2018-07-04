@@ -21,11 +21,14 @@ Methods::~Methods()
 bool Methods::CompareHalos(int iHalo, int jHalo)
 {
 	float rMax = 0.0;
+	int iOne = 0, iTwo = 0;
+	iOne = iUseCat; 
+	iTwo = iUseCat + 1 % 1;
 
-	rMax = locHalos[iHalo].rVir + locHalos[jHalo].rVir; rMax *= dMaxFactor;
+	rMax = locHalos[iOne][iHalo].rVir + locHalos[iTwo][jHalo].rVir; rMax *= dMaxFactor;
 
 	// Only check for pairwise distance
-	if (locHalos[iHalo].Distance(locHalos[jHalo].X) < rMax)
+	if (locHalos[iOne][iHalo].Distance(locHalos[iTwo][jHalo].X) < rMax)
 		return true;
 	else 
 		return false;
@@ -35,30 +38,23 @@ bool Methods::CompareHalos(int iHalo, int jHalo)
 
 void Methods::FindProgenitors()
 {
-
-	// todo check fwdComparison TODO true or false
-	int nStepsCounter = floor(nLocHalos / 50.);
+	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	vector<int> nCommon;
 
-		for (int j = 0; j < nLocHalos; j++)
+	int iOne = 0, iTwo = 0;
+	iOne = iUseCat; 
+	iTwo = iUseCat + 1 % 1;
+
+		for (int j = 0; j < nLocHalos[iOne]; j++)
 		{
 			if (j == nStepsCounter * floor(j / nStepsCounter))
 				if (locTask == 0)			
 					cout << "." << flush; 
 
-			for (int i = 0; i < nLocHalos; i++)
-			{
-	
+			for (int i = 0; i < nLocHalos[iTwo]; i++)
 				if (CompareHalos(j, i))
-				{
-					nCommon = CommonParticles(locParts[j], locParts[i]);
-				//if (nCommon[1] > 100)
-				//	cout << "OnTask= " << locTask << " found n " << nCommon[1] 
-				//		<< " DM particles between halos " << "0 - "  << nCommon[1] << endl;
-				}
-			}
+					nCommon = CommonParticles(locParts[iOne][j], locParts[iTwo][i]);
 		}
-
 
 };
 

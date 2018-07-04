@@ -45,10 +45,9 @@ int main(int argv, char **argc)
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 	
 	InitLocVariables();
-	GlobalGrid.Init(nGrid, boxSize);
 
-	// Each task could read more than one file, this ensures it only reads adjacent snapshots
-	//SettingsIO.DistributeFilesAmongTasks();
+	GlobalGrid[0].Init(nGrid, boxSize);
+	GlobalGrid[1].Init(nGrid, boxSize);
 
 	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
@@ -59,30 +58,25 @@ int main(int argv, char **argc)
 	SettingsIO.haloPrefix = "snapshot_";
 	SettingsIO.partPrefix = "snapshot_";
 
-	string fileRoot = "snapshot_054.000";
-	string fileSuffHalo = ".z0.000.AHF_halos";
-	string fileSuffPart = ".z0.000.AHF_particles";
-	string nameTask = to_string(locTask);
-
-	SettingsIO.urlTestFileHalo = fileRoot + nameTask + fileSuffHalo;
-	SettingsIO.urlTestFilePart = fileRoot + nameTask + fileSuffPart;
-
 	SettingsIO.Init();
 
+	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
 
 	int totCat = 2;	// Only read the 
 
-	for (iNumCat = 0; iNumCat < totCat; iNumCat++)
+	iUseCat = 0;
+	SettingsIO.ReadHalos();
+	SettingsIO.ReadParticles();	
+
+	for (iNumCat = 1; iNumCat < totCat; iNumCat++)
 	{
 		// Read the halo files - one per task
 		// This is also assigning the halo list to each grid node
 		clock_t iniTime = clock();
 
+		iUseCat = 1;
 		SettingsIO.ReadHalos();
-
-#ifdef TEST_BLOCK
-		// Read the particle files - one per task
 		SettingsIO.ReadParticles();	
 
 		// Now every task knows which nodes belongs to which task
@@ -94,6 +88,7 @@ int main(int argv, char **argc)
 		GeneralMethods.fwdComparison = true;
 		GeneralMethods.FindProgenitors();
 
+#ifdef TEST_BLOCK
 		// Now do the inverse comparison to clean the halo connections
 		//GeneralMethods.fwdComparison = false;
 		//GeneralMethods.FindProgenitors();

@@ -16,13 +16,10 @@ int locTask;
 int totTask;
 MPI_Status status;
 
-Grid GlobalGrid;
+Grid GlobalGrid[2];
 
 vector<vector<Halo>> locHalos;
-vector <Halo> tmpHalos;
-
 size_t locHalosSize[2];
-size_t tmpHalosSize;
 
 int iNumCat; // Halo catalog number in use, from 0 to N
 int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
@@ -31,16 +28,12 @@ int nTotHalos[2];
 int nLocHalos[2];
 
 vector<vector<vector<vector<unsigned long long int>>>> locParts;
-vector<vector<unsigned long long int>> tmpParts;	
-
 size_t locPartsSize[2];
-size_t tmpPartsSize;
 
 size_t sizeHalo;
 size_t sizePart;
 
 int nPTypes;
-int nTmpParts;
 int nLocParts[2];
 
 float totVmax;
@@ -59,7 +52,6 @@ void InitLocVariables(void)
 	totVmax = 0.0;
         locHalosSize[0] = 0; locHalosSize[1] = 0;
 	nLocParts[0] = 0; nLocParts[1] = 0;
-        tmpHalosSize = 0; 
 
 	// We will do a pairwise comparison of the catalogs
 	locParts.resize(2);

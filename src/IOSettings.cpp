@@ -260,16 +260,22 @@ void IOSettings::DistributeFilesAmongTasks(void)
 // TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
 void IOSettings::ReadParticles(void)
 {
-	string tmpStrUrlPart;
+	string tmpStrUrlPart, lineIn;
 	const char *tmpUrlPart;
 	unsigned long long int locHaloID = 0, partID = 0;
 	unsigned int iTmpParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0;
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0, nTmpHalos = 0;
 	int partType = 0, nChunks = 0;
-	string lineIn;
+
+	//vector<vector<vector<unsigned long long int>>> tmpParts;
+	vector<vector<unsigned long long int>> tmpParts;
 
 	nChunks = nChunksPerFile;
-		
+	tmpParts.resize(nPTypes);
+	locParts[iUseCat].resize(nLocHalos[iUseCat]);
+
+	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
+
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
 		tmpUrlPart = partFiles[iNumCat][iChunk].c_str();
@@ -285,7 +291,7 @@ void IOSettings::ReadParticles(void)
 			cout << "File: " << tmpUrlPart << " not found on task=" << locTask << endl;
 		} else {
 			if (locTask == 0)
-	        		cout << "Reading " << nLocParts << " particles from file: " << tmpUrlPart << endl;
+	        		cout << "Reading " << nPTypes << " particle types from file: " << tmpUrlPart << endl;
 		}
 
 		while (getline(fileIn, lineIn))
@@ -301,13 +307,13 @@ void IOSettings::ReadParticles(void)
 			} else if (iLine == 1) {
 
 		                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-				tmpParts.resize(nPTypes+1);
+				locParts[iUseCat][iLocHalos].resize(nPTypes);
 				iLine++;
 
 			} else {
-
 	        	        sscanf(lineRead, "%llu %hd", &partID, &partType);
-				tmpParts[iLocHalos][partType].push_back(partID);
+				//cout << partID << " " << partType << endl;
+				tmpParts[partType].push_back(partID);
 				totLocParts++;
 				iTmpParts++;
 
@@ -316,36 +322,48 @@ void IOSettings::ReadParticles(void)
 					// Sort the ordered IDs
 					for (int iT = 0; iT < nPTypes; iT++)
 					{	
-						if (tmpParts[iTmpHalos][iT].size() > 0)
+						if (tmpParts[iT].size() > 0)
 						{
 							sort(tmpParts[iT].begin(), tmpParts[iT].end());
 						
-						locParts[iUseCat][iLocHalos][iT].insert(tmpParts[iUseCat].end(), tmpParts[iTmpHalos][iT].begin(), tmpParts[iT].end());
+							locParts[iUseCat][iLocHalos][iT].insert(locParts[iUseCat][iLocHalos][iT].end(), 
+								tmpParts[iT].begin(), tmpParts[iT].end());
+
+							tmpParts[iT].clear();
+							tmpParts[iT].shrink_to_fit();
 						}
 					}
 
+					// Set some counters
+					iTmpParts = 0;
 					iLocHalos++;
-					iLine = 1;	// Reset some indicators
+					iTmpHalos++;
+
+					if (iTmpHalos == nFileHalos)
+					{
+					//	cout << "End of file" << endl;
+						iTmpHalos = 0;
+						iLine = 0;	
+					} else {
+						iLine = 1;	
+					}
+
 				}
 			} // else iLine not 0 or 1
 		} // end while
-
-		//locParts[iUseCat].insert(locParts[iUseCat].end(), tmpParts[iUseCat].begin(), tmpParts[iUseCat].end());
-
 	} // End for loop on file chunks
-
+	
+	//cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;
 };
  
 
 /* Using AHF by default */
 void IOSettings::ReadHalos()
 {
-	string tmpStrUrlHalo;
-	const char *tmpUrlHalo;
-	const char *lineHead = "#";
-	string lineIn;
-
-	int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nChunks = 0, nTmpHalos = 0; 
+	string tmpStrUrlHalo, lineIn;
+	const char *tmpUrlHalo, *lineHead = "#";
+	unsigned int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nChunks = 0, nTmpHalos = 0; 
+	vector<Halo> tmpHalos;
 
 	nChunks = nChunksPerFile;
 
@@ -355,15 +373,9 @@ void IOSettings::ReadHalos()
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
 		tmpUrlHalo = haloFiles[iNumCat][iChunk].c_str();
-
 		nTmpHalos = NumLines(tmpUrlHalo);	
-		
-		tmpParts.resize(nTmpHalos); 
 		tmpHalos.resize(nTmpHalos); 
-
 		iTmpHalos = 0;
-		tmpPartsSize = 0;	// This will be increased while reading the file
-		tmpHalosSize = sizeHalo * nTmpHalos;
 
 		ifstream fileIn(tmpUrlHalo);
 	
@@ -383,11 +395,9 @@ void IOSettings::ReadHalos()
 			{
 				tmpHalos[iTmpHalos].ReadLineAHF(lineRead);
 				nPartHalo = tmpHalos[iTmpHalos].nPart[nPTypes];	// All particle types!
-				tmpPartsSize += nPartHalo * sizePart;
-				nTmpParts += nPartHalo; 
 
 				// Assign halo to its nearest grid point - assign the absolute local index number
-				GlobalGrid.AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
+				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
 
 				iLocHalos++;
 				iTmpHalos++;
@@ -402,8 +412,10 @@ void IOSettings::ReadHalos()
 		tmpHalos.shrink_to_fit();
 
 	} // Loop on files per task
+	
+	nLocHalos[iUseCat] = iLocHalos;
 
-	//cout << "On task=" << locTask << " " << locPartsSize/1024/1024 << " MB pt and " << tmpHalosSize/1024/1024 << " MB hl " << endl; 
+	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
 	//cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 };
 
