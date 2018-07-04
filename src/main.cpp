@@ -23,19 +23,17 @@ int main(int argv, char **argc)
 
 	// Make these parameters readable from an input file
 	int totCat = 3;	
-	float boxSize = 1.0e+5; 	// Using kpc/h units
-	int nGrid = 100;	
-	nChunksPerFile = 2;
+	boxSize = 1.0e+5; 	// Using kpc/h units
+	nGrid = 100;	
+	nChunksPerFile = 1;
 	nPTypes = 6;
+	GeneralMethods.dMaxFactor = 1.5;
 
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 	
 	InitLocVariables();
-
-	GlobalGrid[0].Init(nGrid, boxSize);
-	GlobalGrid[1].Init(nGrid, boxSize);
 
 	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
@@ -50,7 +48,6 @@ int main(int argv, char **argc)
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
-	GeneralMethods.dMaxFactor = 1.5;
 
 	iUseCat = 0;
 	SettingsIO.ReadHalos();
@@ -93,8 +90,6 @@ int main(int argv, char **argc)
 		ShiftHalosAndParts();
 		CleanMemory(1);
 
-#ifdef TEST_BLOCK
-#endif
 	}
 	
 	if (locTask == 0)
@@ -113,7 +108,9 @@ int main(int argv, char **argc)
 
 	CleanMemory(0);
 
-	int end = MPI_Finalize();
+#ifdef TEST_BLOCK
+#endif
+	MPI_Finalize();
 	
 	if (locTask == 0)	
 		cout << "MPI finalized, memory cleaned. Exiting the program." << endl;

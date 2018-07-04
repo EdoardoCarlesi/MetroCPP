@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 #include "general.h"
 #include "Grid.h"
@@ -53,6 +54,18 @@ void Grid::Init(int n, float size)
 
 	/* This vector holds a list of all halos within a given grid cell */
 	haloOnGridNode.resize(nNodes);
+};
+
+
+int * Grid::Index2Grid(int index)
+{
+	int *iX; iX = new int[3];
+
+	iX[2] = floor(index / (N * N));
+	iX[1] = floor((index - iX[2] * N * N) / N);
+	iX[0] = floor((index - iX[2] * N * N - iX[1] * N));
+
+	return iX;	
 };
 
 
@@ -121,6 +134,13 @@ void Grid::FindNearbyNodes(int *iX)
 };
 
 
+void Grid::CleanLocNodes()
+{
+	sort(locNodes.begin(), locNodes.end() );
+	locNodes.erase(unique( locNodes.begin(), locNodes.end() ), locNodes.end());
+};
+
+
 void Grid::AssignToGrid(float *X, int index)
 {
 	int *iX, thisNode = 0;
@@ -130,6 +150,8 @@ void Grid::AssignToGrid(float *X, int index)
 	thisNode = Index(iX[0], iX[1], iX[2]);
 	haloOnGridNode[thisNode].push_back(index);
 	taskOnGridNode[thisNode] = locTask + 1;	// Add one to distinguish from empty node!
+
+	locNodes.push_back(thisNode);
 
 //	if (index < 50) 	// Sanity check
 //		printf("%d) Halo=%d grid=(%d, %d, %d) x=(%.2f, %.2f, %.2f) node=%d\n", 
@@ -146,6 +168,9 @@ void Grid::AssignToGrid(float *X, int index)
  */
 void Grid::FindBufferNodes()
 {
+	// Do a loop on all the nodes contained in this task to find out which nodes need to be communicated
+	
+
 
 #ifdef TEST_BLOCK
 #endif

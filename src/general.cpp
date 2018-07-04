@@ -41,6 +41,9 @@ int nLocParts[2];
 float totVmax;
 float locVmax;
 float maxBufferThick;
+float boxSize;
+
+int nGrid;
 int nChunksPerFile;
 
 
@@ -58,6 +61,9 @@ void InitLocVariables(void)
 	// We will do a pairwise comparison of the catalogs
 	locParts.resize(2);
 	locHalos.resize(2);
+
+	GlobalGrid[0].Init(nGrid, boxSize);
+	GlobalGrid[1].Init(nGrid, boxSize);
 
 	sizeHalo = sizeof(Halo);
 	sizePart = sizeof(unsigned long long int);

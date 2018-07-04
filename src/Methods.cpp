@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "Grid.h"
 #include "Methods.h"
 #include "general.h"
 
@@ -25,6 +26,8 @@ bool Methods::CompareHalos(int iHalo, int jHalo)
 	iOne = iUseCat; 
 	iTwo = iUseCat + 1 % 1;
 
+	// do some check - if jHalo > nLocHalos ---> go look into the buffer halos FIXME
+
 	rMax = locHalos[iOne][iHalo].rVir + locHalos[iTwo][jHalo].rVir; rMax *= dMaxFactor;
 
 	// Only check for pairwise distance
@@ -46,11 +49,11 @@ void Methods::FindProgenitors(int iOne, int iTwo)
 			if (i == nStepsCounter * floor(i / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 
+			// FIXME instead of looping on all haloes ONLY select those within neighbouring nodes
 			for (int j = 0; j < nLocHalos[iTwo]; j++)
 				if (CompareHalos(i, j))
 					nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
 		}
-
 };
 
 

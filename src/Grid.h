@@ -23,6 +23,9 @@ public:
 	void Info(void);
 	void Init(int, float);
 
+	// Sort and clean the nodes number assigned locally to each task
+	void CleanLocNodes(void);
+
 	// This function determines the nodes placed on different tasks required for the buffer region
 	void FindBufferNodes(void);	
 
@@ -36,6 +39,7 @@ public:
 	void AssignToGrid(float *, int);	
 
 	int Index(int, int, int);	// Given i, j, k determine their position in the array
+	int * Index2Grid(int);	// Given and index, i, j, k it position in grid coordinates
 	int * GridCoord(float *);	// Given x, y, z determine their position in the array in grid coordinates
 
 	// Some tasks may share parts of the same node, so take care of them separately in a vector of vectors
@@ -44,6 +48,9 @@ public:
 
 	// This variable tracks the task number that is storing halos on a given grid node
 	vector<int> taskOnGridNode;	
+
+	// This variable keeps track of the grid nodes stored on the local task - it only stores the index
+	vector<int> locNodes;	
 
 	// For each grid node, store the (local) list of halos (indexes of locHalos)
 	vector<vector<int>> haloOnGridNode;	

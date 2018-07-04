@@ -414,6 +414,10 @@ void IOSettings::ReadHalos()
 	
 	nLocHalos[iUseCat] = iLocHalos;
 
+	GlobalGrid[iUseCat].CleanLocNodes();
+	//sort( GlobalG.begin(), vec.end() );
+	//vec.erase( unique( vec.begin(), vec.end() ), vec.end() );
+
 	//if (locTask == 0)
 	//	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
 	//cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
