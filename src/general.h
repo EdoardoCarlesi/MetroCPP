@@ -18,7 +18,8 @@ class Halo;
 unsigned int NumLines(const char *);
 void InitLocVariables(void);
 float VectorModule(float *);
-void CleanMemory(void);
+void CleanMemory(int);
+void ShiftHalosAndParts(void);
 
 // This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid[2];
@@ -30,6 +31,7 @@ extern MPI_Status status;
 
 // Halo & particle related variables for each task
 extern vector<vector<Halo>> locHalos;
+extern vector<Halo> locHalosBuffer;
 
 extern size_t locHalosSize[2];
 
@@ -44,6 +46,7 @@ extern int iUseCat;
 
 // numbers of particles are stored by particle type
 extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
+extern vector<vector<vector<unsigned long long int>>> locPartsBuffer;
 
 extern size_t sizePart;
 extern size_t sizeHalo;
@@ -54,6 +57,6 @@ extern int nLocParts[2];
 
 extern float totVmax;
 extern float locVmax;
-extern float bufferThickness;
+extern float maxBufferThick;
 extern int nChunksPerFile;	// Each halo catalog / particle file is split into this number of files
 #endif 

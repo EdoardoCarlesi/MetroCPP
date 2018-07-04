@@ -22,7 +22,7 @@ public:
 	bool fwdComparison;
 
 	// Pairwise comparison of halos
-	void FindProgenitors();
+	void FindProgenitors(int, int);
 
 	// Given two (sorted) vectors, compare their content and return the number of common elements
 	vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);

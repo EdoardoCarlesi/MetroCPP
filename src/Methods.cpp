@@ -36,24 +36,19 @@ bool Methods::CompareHalos(int iHalo, int jHalo)
 };
 
 
-void Methods::FindProgenitors()
+void Methods::FindProgenitors(int iOne, int iTwo)
 {
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	vector<int> nCommon;
 
-	int iOne = 0, iTwo = 0;
-	iOne = iUseCat; 
-	iTwo = iUseCat + 1 % 1;
-
-		for (int j = 0; j < nLocHalos[iOne]; j++)
+		for (int i = 0; i < nLocHalos[iOne]; i++)
 		{
-			if (j == nStepsCounter * floor(j / nStepsCounter))
-				if (locTask == 0)			
+			if (i == nStepsCounter * floor(i / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 
-			for (int i = 0; i < nLocHalos[iTwo]; i++)
-				if (CompareHalos(j, i))
-					nCommon = CommonParticles(locParts[iOne][j], locParts[iTwo][i]);
+			for (int j = 0; j < nLocHalos[iTwo]; j++)
+				if (CompareHalos(i, j))
+					nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
 		}
 
 };

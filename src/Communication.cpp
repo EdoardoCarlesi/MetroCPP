@@ -69,7 +69,7 @@ void Communication::BroadcastAndGatherGrid()
 	// Allocate the receiving buffers on all tasks
 	if (locTask != 0)
 	{
-		cout << "Recving: " << nNonZero << " nodes on task " << locTask << endl;
+		//cout << "Recving: " << nNonZero << " nodes on task " << locTask << endl;
 		allNonZeroTasks.resize(nNonZero);
 		allNonZeroNodes.resize(nNonZero);
 	}

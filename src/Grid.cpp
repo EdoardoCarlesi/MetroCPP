@@ -18,8 +18,8 @@ Grid::Grid(){};
 
 Grid::~Grid()
 {
-	if (locTask == 0)
-		cout << "Clearing grid..." << endl;
+	//if (locTask == 0)
+	//	cout << "Clearing grid..." << endl;
 
 	taskOnGridNode.clear();
 	taskOnGridNode.shrink_to_fit();
@@ -33,8 +33,8 @@ Grid::~Grid()
 	haloOnGridNode.clear();
 	haloOnGridNode.shrink_to_fit();
 
-	if (locTask == 0)
-		cout << "Done." << endl;
+	//if (locTask == 0)
+	//	cout << "Done." << endl;
 };
 
 
@@ -100,6 +100,27 @@ void Grid::FindPatchOnTask()
 };
 
 
+void Grid::FindNearbyNodes(int *iX)
+{
+	int *jX; jX = new int[3]; 
+
+	for (int i = -1; i < 2; i++)
+	{
+		jX[0] = iX[0] + i % N;
+
+		for (int j = -1; j < 2; j++)
+		{
+			jX[1] = iX[1] + j % N;
+
+			for (int k = -1; k < 2; k++)
+			{ 
+				jX[2] = iX[2] + k % N;
+			}
+		}
+	}
+};
+
+
 void Grid::AssignToGrid(float *X, int index)
 {
 	int *iX, thisNode = 0;
@@ -114,6 +135,20 @@ void Grid::AssignToGrid(float *X, int index)
 //		printf("%d) Halo=%d grid=(%d, %d, %d) x=(%.2f, %.2f, %.2f) node=%d\n", 
 //			locTask, index, iX[0], iX[1], iX[2], X[0], X[1], X[2], thisNode);
 	free(iX);
+};
+
+
+/* 
+ * This function identifies the nodes of the buffer region for each task.
+ * For each halo it determines the nodes allocated to other tasks and stores them into a list.
+ * It loops on all the nodes already allocated and identifies all the neighbouring nodes within 
+ * a radius of maxBufferThick size.
+ */
+void Grid::FindBufferNodes()
+{
+
+#ifdef TEST_BLOCK
+#endif
 };
 
 

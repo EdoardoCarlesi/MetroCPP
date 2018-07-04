@@ -260,21 +260,19 @@ void IOSettings::DistributeFilesAmongTasks(void)
 // TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
 void IOSettings::ReadParticles(void)
 {
+	vector<vector<unsigned long long int>> tmpParts;
 	string tmpStrUrlPart, lineIn;
 	const char *tmpUrlPart;
 	unsigned long long int locHaloID = 0, partID = 0;
-	unsigned int iTmpParts = 0, totLocParts = 0, iLine = 0, nPartHalo = 0;
-	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0, nTmpHalos = 0;
+	unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
+	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
 	int partType = 0, nChunks = 0;
-
-	//vector<vector<vector<unsigned long long int>>> tmpParts;
-	vector<vector<unsigned long long int>> tmpParts;
 
 	nChunks = nChunksPerFile;
 	tmpParts.resize(nPTypes);
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
 
-	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
+	//cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
 
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
@@ -312,9 +310,8 @@ void IOSettings::ReadParticles(void)
 
 			} else {
 	        	        sscanf(lineRead, "%llu %hd", &partID, &partType);
-				//cout << partID << " " << partType << endl;
 				tmpParts[partType].push_back(partID);
-				totLocParts++;
+				iLocParts++;
 				iTmpParts++;
 
 				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[nPTypes])
@@ -328,7 +325,8 @@ void IOSettings::ReadParticles(void)
 						
 							locParts[iUseCat][iLocHalos][iT].insert(locParts[iUseCat][iLocHalos][iT].end(), 
 								tmpParts[iT].begin(), tmpParts[iT].end());
-
+							
+							// Clean the temporary read-in buffer
 							tmpParts[iT].clear();
 							tmpParts[iT].shrink_to_fit();
 						}
@@ -336,12 +334,13 @@ void IOSettings::ReadParticles(void)
 
 					// Set some counters
 					iTmpParts = 0;
-					iLocHalos++;
 					iTmpHalos++;
+					iLocHalos++;
+					iLocParts++;
 
+					// Check if all of the halos in the current file chunk have been read in
 					if (iTmpHalos == nFileHalos)
 					{
-					//	cout << "End of file" << endl;
 						iTmpHalos = 0;
 						iLine = 0;	
 					} else {
@@ -415,7 +414,8 @@ void IOSettings::ReadHalos()
 	
 	nLocHalos[iUseCat] = iLocHalos;
 
-	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
+	//if (locTask == 0)
+	//	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
 	//cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 };
 

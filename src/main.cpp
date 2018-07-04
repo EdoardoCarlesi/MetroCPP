@@ -17,26 +17,14 @@ using namespace std;
 
 int main(int argv, char **argc)
 {
-	int nCpus = 0;	// Number of cpus used for the analysis - each file (part or halo) is split into nCpus parts
-	int nSnap = 0;	// Total number of snapshots - e.g. from 0 to 54 
-	int iStep = 0;	// Step of the iteration	
-	
-	int iHalo = 0, jHalo = 0, kHalo = 0;
-		
-	size_t locHaloSize = 0;
-	size_t sizeP = 0;
-	
-	float boxSize = 1.0e+5; int nGrid = 100;	// Unsing kpc/h units
-
-	string partFilesInfo;
-	string haloFilesInfo;
-
 	IOSettings SettingsIO;
 	Communication CommTasks;
 	Methods GeneralMethods;
 
-	GeneralMethods.dMaxFactor = 1.5;
-
+	// Make these parameters readable from an input file
+	int totCat = 3;	
+	float boxSize = 1.0e+5; 	// Using kpc/h units
+	int nGrid = 100;	
 	nChunksPerFile = 2;
 	nPTypes = 6;
 
@@ -62,59 +50,58 @@ int main(int argv, char **argc)
 
 	// Each task could read more than one file, this ensures it only reads adjacent snapshots
 	SettingsIO.DistributeFilesAmongTasks();
-
-	int totCat = 2;	// Only read the 
+	GeneralMethods.dMaxFactor = 1.5;
 
 	iUseCat = 0;
 	SettingsIO.ReadHalos();
 	SettingsIO.ReadParticles();	
 
+	// Now every task knows which nodes belongs to which task
+	CommTasks.BroadcastAndGatherGrid();
+
 	for (iNumCat = 1; iNumCat < totCat; iNumCat++)
 	{
-		// Read the halo files - one per task
-		// This is also assigning the halo list to each grid node
 		clock_t iniTime = clock();
 
 		iUseCat = 1;
 		SettingsIO.ReadHalos();
 		SettingsIO.ReadParticles();	
 
+		// Now exchange the halos in the requested buffer zones among the different tasks
+		//CommTasks.BufferSendRecv();
+
 		// Now every task knows which nodes belongs to which task
 		CommTasks.BroadcastAndGatherGrid();
 
 		if (locTask == 0)
-			cout << "Finding halo progentors..." << flush ;
+			cout << "Finding halo progentors, forwards..." << flush ;
 	
-		GeneralMethods.fwdComparison = true;
-		GeneralMethods.FindProgenitors();
+		GeneralMethods.FindProgenitors(0, 1);
 
-#ifdef TEST_BLOCK
-		// Now do the inverse comparison to clean the halo connections
-		//GeneralMethods.fwdComparison = false;
-		//GeneralMethods.FindProgenitors();
+		if (locTask == 0)
+			cout << "\nFinding halo progentors, backwards..." << flush ;
+	
+		GeneralMethods.FindProgenitors(1, 0);
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 
 		if (locTask == 0)
-			cout << "done in " << elapsed << "s. " << endl;
+			cout << "\nDone in " << elapsed << "s. " << endl;
 	
-		//cout << locParts[0][0].first << " " << locParts[0][0].second << " on task " << locTask << endl; 
-		//cout << "Npart: " << locParts[0].size() << " on task " << locTask << endl; 
-		//cout << "Npart: " << locHalos[0].nPart[nPTypes] << " on task " << locTask << endl; 
+		// Now shift the halo catalog from 1 to 0, and clean the buffers
+		ShiftHalosAndParts();
+		CleanMemory(1);
 
-		//cout << "Process took " << elapsed << " s on task "<< locTask << endl;
+#ifdef TEST_BLOCK
 #endif
 	}
-
-
+	
+	if (locTask == 0)
+		cout << "The loop on halo and particle catalogs has finished." << endl;
 
 	// Retrieve some informations on the grid - sanity check
 	//GlobalGrid.Info();
-
-
-	// Now exchange the halos in the requested buffer zones among the different tasks
-	//CommTasks.BufferSendRecv();
 
 	// Get the maximum halo velocity to compute buffer size
 
@@ -124,12 +111,12 @@ int main(int argv, char **argc)
 
 	//cout << "Finished on task=" << locTask << endl;
 
-	CleanMemory();
+	CleanMemory(0);
 
-	MPI_Finalize();
+	int end = MPI_Finalize();
 	
 	if (locTask == 0)	
-		cout << "Done." << endl;
+		cout << "MPI finalized, memory cleaned. Exiting the program." << endl;
 
 	exit(0);
 }
