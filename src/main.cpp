@@ -53,9 +53,10 @@ int main(int argv, char **argc)
 	SettingsIO.ReadHalos();
 	SettingsIO.ReadParticles();	
 
-	// Now every task knows which nodes belongs to which task
+	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
 
+	/* Loop on halo and particle catalogs */
 	for (iNumCat = 1; iNumCat < totCat; iNumCat++)
 	{
 		clock_t iniTime = clock();
@@ -64,12 +65,19 @@ int main(int argv, char **argc)
 		SettingsIO.ReadHalos();
 		SettingsIO.ReadParticles();	
 
-		// Now exchange the halos in the requested buffer zones among the different tasks
-		//CommTasks.BufferSendRecv();
-
 		// Now every task knows which nodes belongs to which task
 		CommTasks.BroadcastAndGatherGrid();
 
+		// After reading in the second halo catalog, each task finds out which buffer nodes it needs to request to the other tasks
+		GlobalGrid[0].FindBufferNodes();
+	
+		// Communicate the list of the buffer nodes to be exchanged among every task
+		//CommTasks.ExchangeBuffers();
+
+		// Now exchange the halos in the requested buffer zones among the different tasks
+		//CommTasks.BufferSendRecv();
+
+#ifdef TEST
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
@@ -79,6 +87,7 @@ int main(int argv, char **argc)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
 	
 		GeneralMethods.FindProgenitors(1, 0);
+#endif
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -115,7 +124,7 @@ int main(int argv, char **argc)
 	if (locTask == 0)	
 		cout << "MPI finalized, memory cleaned. Exiting the program." << endl;
 
-	exit(0);
+	//exit(0);
 }
 
 

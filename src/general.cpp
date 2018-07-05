@@ -58,7 +58,6 @@ void InitLocVariables(void)
         locHalosSize[0] = 0; locHalosSize[1] = 0;
 	nLocParts[0] = 0; nLocParts[1] = 0;
 
-	// We will do a pairwise comparison of the catalogs
 	locParts.resize(2);
 	locHalos.resize(2);
 

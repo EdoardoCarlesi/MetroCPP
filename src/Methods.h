@@ -28,7 +28,7 @@ public:
 	vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);
 	
 	// Decide whether to compare two halos
-	bool CompareHalos(int, int);
+	bool CompareHalos(int, int, int, int);
 
 };
 #endif

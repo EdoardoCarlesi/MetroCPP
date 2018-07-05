@@ -33,7 +33,7 @@ void Comm::Optimize()	// Write some function that optimizes the memory distribut
 void Communication::BroadcastAndGatherGrid()
 {
 	size_t gridSize = GlobalGrid[iUseCat].nNodes, globalGridSize = 0;
-	vector <int> tmpTaskOnGridNode, allNonZeroTasks, allNonZeroNodes;
+	vector<int> tmpTaskOnGridNode, allNonZeroTasks, allNonZeroNodes;
 	int iNonZero = 0, nNonZero = 0, thisTask = 0, thisNode = 0;
 
 	if (locTask == 0)

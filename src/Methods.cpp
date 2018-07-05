@@ -19,12 +19,9 @@ Methods::~Methods()
 
 	
 // Given two halos, decide whether to compare their particle content or not
-bool Methods::CompareHalos(int iHalo, int jHalo)
+bool Methods::CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 {
 	float rMax = 0.0;
-	int iOne = 0, iTwo = 0;
-	iOne = iUseCat; 
-	iTwo = iUseCat + 1 % 1;
 
 	// do some check - if jHalo > nLocHalos ---> go look into the buffer halos FIXME
 
@@ -51,7 +48,7 @@ void Methods::FindProgenitors(int iOne, int iTwo)
 
 			// FIXME instead of looping on all haloes ONLY select those within neighbouring nodes
 			for (int j = 0; j < nLocHalos[iTwo]; j++)
-				if (CompareHalos(i, j))
+				if (CompareHalos(i, j, iOne, iTwo))
 					nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
 		}
 };
