@@ -135,7 +135,6 @@ void Grid::FindNearbyNodes(int index, int nCells)
 			for (int k = -nCells; k < nCells+1; k++)
 			{ 
 				jX[2] = iX[2] + k;
-				
 				thisIndex = Index(jX[0], jX[1], jX[2]);
 
 				/* There might be nodes shared among several tasks, so we have to loop here */
@@ -197,27 +196,31 @@ void Grid::AssignToGrid(float *X, int index)
  * For each halo it determines the nodes allocated to other tasks and stores them into a list.
  * It loops on all the nodes already allocated and identifies all the neighbouring nodes within 
  * a radius of maxBufferThick size.
+ * useNodes is a collection of nodes at a different snapshot. The grid might be allocated differently 
+ * among the tasks at each snapshot so we compare e.g. the local nodes at 0 with those at 1 to find the buffer
  */
-void Grid::FindBufferNodes()
+void Grid::FindBufferNodes(vector<int> useNodes)
 {
-	int nCells = 1;
+	int nCells = 2;
 
 	if (buffNodes.size() == 0)
 		buffNodes.resize(totTask);
-	//cout << locTask << "- size " << buffNodes.size() << endl;;
+
+	//cout << locTask << "- size " << buffNodes.size() << " " << useNodes.size() << endl;;
 
 	// Do a loop on all the nodes contained in this task to find out which nodes need to be communicated
-	for (int i = 0; i < locNodes.size(); i++)
-		FindNearbyNodes(locNodes[i], nCells);		
+	for (int i = 0; i < useNodes.size(); i++)
+		FindNearbyNodes(useNodes[i], nCells);		
 	
+#ifdef TEST_BLOCK
 	/*	Clean Buffer Nodes	*/
 	for (int i = 0; i < totTask; i++)
 	{
 		sort(buffNodes[i].begin(), buffNodes[i].end());
 		buffNodes[i].erase(unique(buffNodes[i].begin(), buffNodes[i].end()), buffNodes[i].end());
-		//cout << locTask << " needs " << buffNodes[i].size() << " nodes from task=" << i << endl;
+		cout << locTask << " needs " << buffNodes[i].size() << " nodes from task=" << i << endl;
 	}
-
+#endif
 };
 
 

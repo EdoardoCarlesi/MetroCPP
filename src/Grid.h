@@ -27,7 +27,7 @@ public:
 	void SortLocNodes(void);
 
 	// This function determines the nodes placed on different tasks required for the buffer region
-	void FindBufferNodes(void);	
+	void FindBufferNodes(vector<int>);	
 
 	// This function finds the nodes (on the receiving end) that need to be communicated
 	void RecvBufferNodes(void); 	

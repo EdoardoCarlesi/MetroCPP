@@ -21,7 +21,7 @@ int main(int argv, char **argc)
 	Communication CommTasks;
 	Methods GeneralMethods;
 
-	// Make these parameters readable from an input file
+	// TODO Make these parameters readable from an input file
 	int totCat = 3;	
 	boxSize = 1.0e+5; 	// Using kpc/h units
 	nGrid = 100;	
@@ -46,12 +46,16 @@ int main(int argv, char **argc)
 
 	SettingsIO.Init();
 
-	// Each task could read more than one file, this ensures it only reads adjacent snapshots
+	// We are assuming that each task reads more than one file
 	SettingsIO.DistributeFilesAmongTasks();
 
 	iUseCat = 0;
 	SettingsIO.ReadHalos();
 	SettingsIO.ReadParticles();	
+
+	// TODO some load balancing
+	// Split the files among the tasks:
+	// - if ntask > nfiles read in then distribute the halos 
 
 	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
@@ -69,7 +73,9 @@ int main(int argv, char **argc)
 		CommTasks.BroadcastAndGatherGrid();
 
 		// After reading in the second halo catalog, each task finds out which buffer nodes it needs to request to the other tasks
-		GlobalGrid[0].FindBufferNodes();
+		// The nodes are located on grid 1 based on the distribution of the nodes on grid 0
+		GlobalGrid[0].FindBufferNodes(GlobalGrid[0].locNodes);	// TODO Check with globalGrid[1] there might be some allocation
+									// problem, or initialization!!!!!
 	
 		// Communicate the list of the buffer nodes to be exchanged among every task
 		//CommTasks.ExchangeBuffers();
@@ -109,9 +115,6 @@ int main(int argv, char **argc)
 
 	// Get the maximum halo velocity to compute buffer size
 
-	// Split the files among the tasks:
-	// - compute the optimal size of the splitting region according to the buffer size
-	// - if ntask > nfiles read in then distribute the halos 
 
 	//cout << "Finished on task=" << locTask << endl;
 
