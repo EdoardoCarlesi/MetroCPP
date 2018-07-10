@@ -19,7 +19,7 @@ unsigned int NumLines(const char *);
 void InitLocVariables(void);
 float VectorModule(float *);
 void CleanMemory(int);
-void ShiftHalosAndParts(void);
+void ShiftHalosPartsGrids(void);
 
 // This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid[2];

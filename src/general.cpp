@@ -100,6 +100,10 @@ unsigned int NumLines(const char * fileName)
 
 void CleanMemory(int iCat)
 {
+
+	if (locTask ==0)
+		cout << "Cleaning memory for catalog " << iCat << endl;		
+
 	locHalos[iCat].clear();
 	locHalos[iCat].shrink_to_fit();
 
@@ -117,15 +121,17 @@ void CleanMemory(int iCat)
 
 		locParts[iCat].clear();
 		locParts[iCat].shrink_to_fit();
+		
+		GlobalGrid[iCat].Clean();
 };
 
 
-void ShiftHalosAndParts()
+void ShiftHalosPartsGrids()
 {
-	if (locTask == 0)
-		cout << "Shifting halos and particles..." << endl;
-
 	CleanMemory(0);
+
+	if (locTask == 0)
+		cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
 
 	nLocHalos[0] = nLocHalos[1];
 	nLocParts[0] = nLocParts[1];
@@ -140,6 +146,13 @@ void ShiftHalosAndParts()
 		for (int iT = 0; iT < 6; iT++)
 			locParts[0][iH][iT] = locParts[1][iH][iT];
 	}
+	
+	GlobalGrid[0].globalTaskOnGridNode = GlobalGrid[1].globalTaskOnGridNode;
+	GlobalGrid[0].taskOnGridNode = GlobalGrid[1].taskOnGridNode;
+	GlobalGrid[0].locNodes = GlobalGrid[1].locNodes;
+	GlobalGrid[0].buffNodes = GlobalGrid[1].buffNodes;
+	GlobalGrid[0].haloOnGridNode = GlobalGrid[1].haloOnGridNode;
+	GlobalGrid[0].buffOnGridNode = GlobalGrid[1].buffOnGridNode;
 };
 
 

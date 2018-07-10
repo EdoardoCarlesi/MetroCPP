@@ -35,6 +35,9 @@ void Communication::BroadcastAndGatherGrid()
 	size_t gridSize = GlobalGrid[iUseCat].nNodes, globalGridSize = 0;
 	vector<int> tmpTaskOnGridNode, allNonZeroTasks, allNonZeroNodes;
 	int iNonZero = 0, nNonZero = 0, thisTask = 0, thisNode = 0;
+	
+	if (locTask == 0)
+		cout << "Gathering " << gridSize << " nodes to all tasks for grid=" << iUseCat << endl;
 
 	if (locTask == 0)
 		tmpTaskOnGridNode.resize(totTask * gridSize);
@@ -53,9 +56,12 @@ void Communication::BroadcastAndGatherGrid()
 			{
 				thisTask = tmpTaskOnGridNode[i + gridSize * j];
 
+				//if (thisTask > 0 && iUseCat == 1)
 				if (thisTask > 0)
 				{
-				//	cout << "task=" << thisTask << " " << i << endl;
+				//	if (iUseCat ==1)
+				//		cout << "task=" << thisTask << " " << i << endl;
+
 					allNonZeroTasks.push_back(thisTask);	
 					allNonZeroNodes.push_back(i);	
 				}
@@ -77,8 +83,8 @@ void Communication::BroadcastAndGatherGrid()
 	MPI_Bcast(&allNonZeroNodes[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
 	MPI_Bcast(&allNonZeroTasks[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
 	
-	if (locTask == 0)
-		cout << "Halo positions on the grid nodes have been broadcasted to all tasks." << endl;
+	//if (locTask == 0)
+	//cout << "Halo positions on the grid nodes have been broadcasted to all tasks for grid=" << iUseCat << endl;
 
 	/* Now allocate the GLOBAL grid informations and assign the task/node connection on every task */
 	GlobalGrid[iUseCat].globalTaskOnGridNode.resize(gridSize);

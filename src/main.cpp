@@ -22,7 +22,7 @@ int main(int argv, char **argc)
 	Methods GeneralMethods;
 
 	// TODO Make these parameters readable from an input file
-	int totCat = 3;	
+	int totCat = 2;	
 	boxSize = 1.0e+5; 	// Using kpc/h units
 	nGrid = 100;	
 	nChunksPerFile = 1;
@@ -72,18 +72,18 @@ int main(int argv, char **argc)
 		// Now every task knows which nodes belongs to which task
 		CommTasks.BroadcastAndGatherGrid();
 
+		//MPI_Barrier(MPI_COMM_WORLD);
+
 		// After reading in the second halo catalog, each task finds out which buffer nodes it needs to request to the other tasks
 		// The nodes are located on grid 1 based on the distribution of the nodes on grid 0
-		GlobalGrid[0].FindBufferNodes(GlobalGrid[0].locNodes);	// TODO Check with globalGrid[1] there might be some allocation
+		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	// TODO Check with globalGrid[1] there might be some allocation
 									// problem, or initialization!!!!!
-	
 		// Communicate the list of the buffer nodes to be exchanged among every task
 		//CommTasks.ExchangeBuffers();
 
 		// Now exchange the halos in the requested buffer zones among the different tasks
 		//CommTasks.BufferSendRecv();
 
-#ifdef TEST
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
@@ -93,7 +93,6 @@ int main(int argv, char **argc)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
 	
 		GeneralMethods.FindProgenitors(1, 0);
-#endif
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -101,10 +100,11 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
+#ifdef TEST
+#endif
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
-		ShiftHalosAndParts();
+		ShiftHalosPartsGrids();
 		CleanMemory(1);
-
 	}
 	
 	if (locTask == 0)

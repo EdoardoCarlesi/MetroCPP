@@ -23,11 +23,30 @@ Grid::~Grid()
 {
 	//if (locTask == 0)
 	//	cout << "Clearing grid..." << endl;
+	
+	Clean();
+
+	//if (locTask == 0)
+	//	cout << "Done." << endl;
+};
+
+
+void Grid::Clean()
+{
 
 	taskOnGridNode.clear();
 	taskOnGridNode.shrink_to_fit();
 
-	for (int iN = 0; iN < nNodes; iN++)
+	for (int iN = 0; iN < globalTaskOnGridNode.size(); iN++)
+	{
+		globalTaskOnGridNode[iN].clear();
+		globalTaskOnGridNode[iN].shrink_to_fit();
+	}
+
+	globalTaskOnGridNode.clear();
+	globalTaskOnGridNode.shrink_to_fit();
+
+	for (int iN = 0; iN < haloOnGridNode.size(); iN++)
 	{
 		haloOnGridNode[iN].clear();
 		haloOnGridNode[iN].shrink_to_fit();
@@ -36,8 +55,24 @@ Grid::~Grid()
 	haloOnGridNode.clear();
 	haloOnGridNode.shrink_to_fit();
 
-	//if (locTask == 0)
-	//	cout << "Done." << endl;
+	for (int iN = 0; iN < buffOnGridNode.size(); iN++)
+	{
+		buffOnGridNode[iN].clear();
+		buffOnGridNode[iN].shrink_to_fit();
+	}
+
+	buffOnGridNode.clear();
+	buffOnGridNode.shrink_to_fit();
+
+	for (int iN = 0; iN < buffNodes.size(); iN++)
+	{
+		buffNodes[iN].clear();
+		buffNodes[iN].shrink_to_fit();
+	}
+
+	buffNodes.clear();
+	buffNodes.shrink_to_fit();
+
 };
 
 
@@ -76,7 +111,7 @@ int Grid::Index(int i, int j, int k)
 	int ii, jj, kk;
 
 	// Add periodic boundary conditions:
-	ii = i % N; 	jj = j % N; 	kk = k % N;
+	ii = (i + N) % N; 	jj = (j + N) % N; 	kk = (k + N) % N;
 
 	return (ii + N * jj + N * N * kk);
 };
@@ -125,32 +160,39 @@ void Grid::FindNearbyNodes(int index, int nCells)
 	/* Periodic boundary conditions are taken care of by the Index() function, no need to implement them here */
 	for (int i = -nCells; i < nCells+1; i++)
 	{
-		//jX[0] = iX[0] + i % N;
+		//jX[0] = (iX[0] + i) % N;
 		jX[0] = iX[0] + i;
 
 		for (int j = -nCells; j < nCells+1; j++)
 		{
-			jX[1] = iX[1] + j;
+			//jX[1] = (iX[1] + j) % N;
+			jX[1] = (iX[1] + j);
 
 			for (int k = -nCells; k < nCells+1; k++)
 			{ 
-				jX[2] = iX[2] + k;
+				//jX[2] = (iX[2] + k) % N;
+				jX[2] = (iX[2] + k);
 				thisIndex = Index(jX[0], jX[1], jX[2]);
 
 				/* There might be nodes shared among several tasks, so we have to loop here */
+				//for (int l = 0; l < 1; l++)
 				for (int l = 0; l < globalTaskOnGridNode[thisIndex].size(); l++)
 				{
-					// Tasks on the grid are named with a +1 to avoid confusion with null nodes
-					thisTask = globalTaskOnGridNode[thisIndex][l] -1;
-					//cout << thisTask << " " << thisIndex << endl;
+					/*
+					if (thisIndex < 0)
+						cout << locTask << "] " << thisIndex << " " 
+						<< iX[0] << " " << iX[1] << " " << iX[2] << " " 
+						<< jX[0] << " " << jX[1] << " " << jX[2] << " "
+						<< globalTaskOnGridNode.size() << " " << N << endl;
+					*/
+						thisTask = globalTaskOnGridNode[thisIndex][l] -1;
 
-					// Only add the task to the communication buffer if the node is 
+					//if (locTask == 0)
+					//	cout << "locTask=" << locTask << ", "<< thisTask << " " << thisIndex << endl;
+
+					// Only add the task to the communication buffer if the node is not already there
 					if (thisTask != locTask && thisTask > -1)
-					{
-						buffNodes[thisTask].push_back(thisIndex);
-						//cout << locTask << " needs " << thisIndex << " from task " 
-						//	<< thisTask << " " << endl;
-					}
+							buffNodes[thisTask].push_back(thisIndex);	
 				}
 			}
 		}
@@ -160,15 +202,8 @@ void Grid::FindNearbyNodes(int index, int nCells)
 
 void Grid::SortLocNodes()
 {
-	sort(locNodes.begin(), locNodes.end() );
+	sort(locNodes.begin(), locNodes.end());
 	locNodes.erase(unique(locNodes.begin(), locNodes.end()), locNodes.end());
-/*
-	for (int i = 0; i < locNodes.size(); i++)
-	{
-		int *iX = Index2Grid(locNodes[i]);
-		cout << "Task " << locTask << " has node: " << locNodes[i] <<  " GridX: " << iX[0] << " " << iX[1] << " " << iX[2] << endl;
-	}
-*/
 };
 
 
@@ -203,23 +238,32 @@ void Grid::FindBufferNodes(vector<int> useNodes)
 {
 	int nCells = 2;
 
-	if (buffNodes.size() == 0)
+	//if (buffNodes.size() == 0)
+	{
+		buffNodes.clear();
 		buffNodes.resize(totTask);
+	
+		for (int iT = 0; iT < totTask; iT++)
+		{
+			buffNodes[iT].resize(10000);
+			buffNodes[iT][0] = 0;
+		}
 
-	//cout << locTask << "- size " << buffNodes.size() << " " << useNodes.size() << endl;;
+	//cout << locTask << " size " << buffNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
+	}
 
 	// Do a loop on all the nodes contained in this task to find out which nodes need to be communicated
 	for (int i = 0; i < useNodes.size(); i++)
 		FindNearbyNodes(useNodes[i], nCells);		
-	
-#ifdef TEST_BLOCK
+
 	/*	Clean Buffer Nodes	*/
 	for (int i = 0; i < totTask; i++)
 	{
 		sort(buffNodes[i].begin(), buffNodes[i].end());
 		buffNodes[i].erase(unique(buffNodes[i].begin(), buffNodes[i].end()), buffNodes[i].end());
-		cout << locTask << " needs " << buffNodes[i].size() << " nodes from task=" << i << endl;
+		//cout << locTask << " needs " << buffNodes[i].size() << " nodes from task=" << i << endl;
 	}
+#ifdef TEST_BLOCK
 #endif
 };
 
@@ -255,9 +299,11 @@ void Grid::RecvBufferNodes()
 
 
 void Grid::Info()
-{	
-	int *ixMax, *ixMin;
-	ixMax = new int[3];	ixMin = new int[3];	
+{
+
+	cout << "Task=" << locTask << " has " << locNodes.size() << " loc nodes, out of " << globalTaskOnGridNode.size() << endl;	
+//	int *ixMax, *ixMin;
+//	ixMax = new int[3];	ixMin = new int[3];	
 /*
 	for (int i = ixMin[0]; i < ixMax[0]; i++)
 		for (int j = ixMin[1]; j < ixMax[1]; j++)

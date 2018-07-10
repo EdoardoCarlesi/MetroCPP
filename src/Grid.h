@@ -22,7 +22,8 @@ public:
 	
 	void Info(void);
 	void Init(int, float);
-
+	void Clean(void);
+	
 	// Sort and clean the nodes number assigned locally to each task
 	void SortLocNodes(void);
 
@@ -61,8 +62,9 @@ public:
 	// For each grid node, store the list of halos in the buffer (indexes of buffHalos)
 	vector<vector<int>> buffOnGridNode;	
 
-private:
-	void FindNearbyNodes(int, int); 	// Given a node index find all the neighbouring nodes
+	// Given a node index find all the neighbouring nodes
+	void FindNearbyNodes(int, int); 	
+//private:
 
 
 };
