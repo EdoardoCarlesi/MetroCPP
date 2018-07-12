@@ -39,6 +39,9 @@ public:
 	// This assigns a coordinate to the grid, and stores the id associated to the point in the node
 	void AssignToGrid(float *, int);	
 
+	// Given a node index find all the neighbouring nodes
+	void FindNearbyNodes(int, int); 	
+
 	int Index(int, int, int);	// Given i, j, k determine their position in the array
 	int * Index2Grid(int);		// Given and index, i, j, k it position in grid coordinates
 	int * GridCoord(float *);	// Given x, y, z determine their position in the array in grid coordinates
@@ -61,13 +64,6 @@ public:
 
 	// For each grid node, store the list of halos in the buffer (indexes of buffHalos)
 	vector<vector<int>> buffOnGridNode;	
-
-	// Given a node index find all the neighbouring nodes
-	void FindNearbyNodes(int, int); 	
-//private:
-
-
 };
-
 
 #endif

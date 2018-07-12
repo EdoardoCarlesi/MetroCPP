@@ -71,6 +71,24 @@ void IOSettings::FindCatID()
 };
 
 
+void IOSettings::ReadConfigFile(string configFile)
+{
+	
+	if (locTask == 0)
+		cout << "Reading config file: " << configFile << endl;
+/*
+	ifstream fileCfg(configFile);
+	
+	// vector<string> arg = splitString 
+
+	if (arg[0] == "boxSize") boxSize = arg[1];
+	else if (arg[0] == "haloSuffix") haloSuffix = arg[1];
+	else if (arg[0] == "partSuffix") partSuffix = arg[1];
+*/
+
+};
+
+
 void IOSettings::FindCatZ()
 {	
 	int iZ = 0, sysOut = 0;
@@ -206,7 +224,6 @@ void IOSettings::Init()
 	}
 
 };
-
 
 
 void IOSettings::DistributeFilesAmongTasks(void)

@@ -54,6 +54,8 @@ public:
 	void FindCatZ();
 	void FindCatID();
 
+	void ReadConfigFile(string);
+
 	void ReadParticles();
 	void ReadHalos();
 	void WriteTrees();

@@ -29,11 +29,14 @@ int main(int argv, char **argc)
 	nPTypes = 6;
 	GeneralMethods.dMaxFactor = 1.5;
 
+	string configFile = argc[1];
+
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
-	
+
 	InitLocVariables();
+	SettingsIO.ReadConfigFile(configFile);
 
 	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
@@ -72,18 +75,14 @@ int main(int argv, char **argc)
 		// Now every task knows which nodes belongs to which task
 		CommTasks.BroadcastAndGatherGrid();
 
-		//MPI_Barrier(MPI_COMM_WORLD);
-
 		// After reading in the second halo catalog, each task finds out which buffer nodes it needs to request to the other tasks
 		// The nodes are located on grid 1 based on the distribution of the nodes on grid 0
-		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	// TODO Check with globalGrid[1] there might be some allocation
-									// problem, or initialization!!!!!
-		// Communicate the list of the buffer nodes to be exchanged among every task
-		//CommTasks.ExchangeBuffers();
+		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 
 		// Now exchange the halos in the requested buffer zones among the different tasks
-		//CommTasks.BufferSendRecv();
+		CommTasks.BufferSendRecv();
 
+#ifdef TEST
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
@@ -100,11 +99,10 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
-#ifdef TEST
-#endif
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
 		CleanMemory(1);
+#endif
 	}
 	
 	if (locTask == 0)

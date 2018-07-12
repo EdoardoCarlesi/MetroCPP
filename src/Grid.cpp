@@ -238,19 +238,9 @@ void Grid::FindBufferNodes(vector<int> useNodes)
 {
 	int nCells = 2;
 
-	//if (buffNodes.size() == 0)
-	{
-		buffNodes.clear();
+	if (buffNodes.size() == 0)
 		buffNodes.resize(totTask);
-	
-		for (int iT = 0; iT < totTask; iT++)
-		{
-			buffNodes[iT].resize(10000);
-			buffNodes[iT][0] = 0;
-		}
-
 	//cout << locTask << " size " << buffNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
-	}
 
 	// Do a loop on all the nodes contained in this task to find out which nodes need to be communicated
 	for (int i = 0; i < useNodes.size(); i++)
