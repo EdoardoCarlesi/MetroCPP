@@ -12,10 +12,12 @@ public:
 
 	void BroadcastAndGatherGrid(void);
 	void ComputeBufferSize(void);
-	void BufferSendRecv(void);
-	
+	void BufferSendRecv(void);	
+
 private:
 	void ExchangeBuffers(void);
+	
+	void SetSendRecvTasks(void);
 
 	// Buffers for halo and node communication
 	vector<vector<int>> buffNodeHalo;
@@ -26,5 +28,8 @@ private:
 	// This only holds the number of haloes to be received
 	vector<int> nBuffRecvHalo;	
 
+	vector<int> sendTasks;
+
+	vector<int> recvTasks;
 };
 #endif

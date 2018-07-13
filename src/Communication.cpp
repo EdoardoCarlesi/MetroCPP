@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #include "general.h"
 #include "Grid.h"
@@ -117,7 +118,7 @@ void Communication::ExchangeBuffers()
 	vector<int> allIndex;
 	
 	if (locTask == 0)
-		cout << "Exchanging buffer among tasks... " << flush;
+		cout << "Exchanging buffer among tasks... " << endl;
 
 	// Resize the buffers - hold a list of halos/nodes to be received from each task
 	buffNodeHalo.resize(totTask);
@@ -131,7 +132,7 @@ void Communication::ExchangeBuffers()
 			sizeSendNode = GlobalGrid[1].buffNodes[iT].size();
 
 			MPI_Sendrecv(&sizeSendNode, 1, MPI_INT, iT, 0, 
-				&sizeRecvNode, 1, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
+			  	     &sizeRecvNode, 1, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
 		
 			/* If a task is sending nodes to another task, then it must also receive some nodes 
 			 * (not the same number in general) */
@@ -152,19 +153,23 @@ void Communication::ExchangeBuffers()
 					allIndex = GlobalGrid[1].haloOnGridNode[thisNode];
 					
 					for (int iH = 0; iH < allIndex.size(); iH++)
+					{
 						buffSendHalo[iT].push_back(allIndex[iH]);
+						if (buffSendHalo[iT][iH] > locHalos[iUseCat].size())
+							cout << "WARNING---> " << locTask << ", " << iT << ") " << buffSendHalo[iT][iH] << endl;	
+						//cout << iH << ", " << iT << "] " << thisNode << " " << buffSendHalo[iT][iH] << endl;
+					}
 				}
 
 				sizeSendHalo = buffSendHalo[iT].size();
 
 				/* Communicate how many halos each task will send/recv */
 				MPI_Sendrecv(&sizeSendHalo, 1, MPI_INT, iT, 0, 
-					 &nBuffRecvHalo[iT], 1, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
+				        &nBuffRecvHalo[iT], 1, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
 
 				//if (locTask == 0)	
-				//cout << "Task=" << locTask << " to=" << iT << ", send=" << sizeSendHalo << " halos;"  
-				//	<< " from=" << iT << " recv=" << nBuffRecvHalo[iT] << " halos." << endl;
-
+				cout << "Task=" << locTask << " to=" << iT << " send=" << sizeSendHalo << " halos;"  
+					<< " from=" << iT << " recv=" << nBuffRecvHalo[iT] << " halos." << endl;
 			}
 
 			//cout << locTask << " from task= " << iT << ", requests n nodes: " << buffNodeHalo[iT].size() << endl; 
@@ -178,6 +183,40 @@ void Communication::ExchangeBuffers()
 };
 
 
+void Communication::SetSendRecvTasks()
+{
+	int iTrecv = 0, iTsend = 0;
+	int jTrecv = 0, jTsend = 0;
+
+	sendTasks.resize(totTask - 1);
+	recvTasks.resize(totTask - 1);
+
+	for (int iT = 0; iT < totTask; iT++)
+	{
+		iTrecv = (locTask - 1 - iT + totTask) % totTask;
+		iTsend = (iT + locTask + 1 + totTask) % totTask;
+
+		if (iTrecv != locTask)
+		{
+			recvTasks[jTrecv] = iTrecv;
+			jTrecv++;
+		}		
+		
+
+		if (iTsend != locTask)
+		{
+			sendTasks[jTsend] = iTsend;
+			jTsend++;
+		}		
+		
+	}
+
+	for (int iT = 0; iT < totTask-1; iT++)
+		cout << iT << ") on task= " << locTask << ", send=" << sendTasks[iT] << ", recv=" << recvTasks[iT] << endl; 
+
+};
+
+
 void Communication::BufferSendRecv()
 {
 	/* 
@@ -186,49 +225,158 @@ void Communication::BufferSendRecv()
 	 */
 	ExchangeBuffers();
 
+	/* Determine the order of sending and receiving tasks to avoid gridlocks */
+	SetSendRecvTasks();
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	/* Technical note:
 	 * Halo buffers can be allocated directly as vectors.
 	 * However, since Particles buffers are allocated as vectors of vectors, the contiguity of ALL the memory blocks is not
 	 * guaranteed - thus, it is safer to MPI_Pack all the particle objects into a generic void* buffer and then unpack it
 	 */
-	vector <vector <Halo>> locBuffSendHalos, locBuffRecvHalos;
+	vector <Halo> buffSendHalos, buffRecvHalos;
 	vector <vector<vector<unsigned long long int>>> tmpBuffParts; 	
 
 	/* These buffers hold the number of halos to be sent/recvd to/from multiple tasks */
-	int bufferPosSendPart, bufferPosRecvPart;
-	int nBuffSendHalo;
+	int buffPosSendPart = 0, buffPosRecvPart = 0;
+	int nBuffSendHalos, nBuffRecvHalos, recvTask, sendTask;
+	int buffPosSendHalo = 0, buffPosRecvHalo = 0;
 
 	/* Buffers and buffer sizes */
 	void *locBuffSendParts = NULL, *locBuffRecvParts = NULL;
+	void *locBuffSendHalos = NULL, *locBuffRecvHalos = NULL;
 	size_t locBuffSendSizeHalos = 0, locBuffRecvSizeHalos = 0;
 	size_t locBuffSendSizeParts = 0, locBuffRecvSizeParts = 0;
-	int barrMpi = 0, nBuffHalos = 0;
 
-	/* Loop on all the tasks */
-	for (int iT = 0; iT < locTask; iT++)
+//	if (locTask == 0)
+//		cout << "Sending and receiving halos across all tasks..." << flush; 
+
+	/* Loop on all the tasks, minus one - the local one */
+	//for (int iT = 0; iT < totTask; iT++)
+	//for (int iT = 0; iT < 1; iT++)
+	for (int iT = 0; iT < totTask-1; iT++)
 	{
-
-		/* If we expect to receive halos from task iT, then we will also send some back */
-		if (nBuffRecvHalo[iT] > 0)
+		sendTask = sendTasks[iT];
+		recvTask = recvTasks[iT];
+		//sendTask = iT;
+		//recvTask = iT;
+	
+		//if (locTask == 0)
+		//if (iT != locTask)
 		{
-			nBuffSendHalo = buffSendHalo[iT].size();
+	
+			nBuffSendHalos = buffSendHalo[sendTask].size();
+			buffSendHalos.resize(nBuffSendHalos);
+/*			
 
-			/* Allocate halo buffer */
-			locBuffSendSizeHalos = sizeHalo * nBuffSendHalo;
-			//locBuffHalosSend.resize(nBuffSendHalo);
-
-			/* Now compute the size of the particle buffer */
-			//locPartsBufferSendSize = 0;
-
-			for (int iP = 0; iP < nBuffSendHalo; iP ++)
+			for (int iP = 0; iP < nBuffSendHalos; iP ++)
 			{
-			//	locHalosBufferSend[iP] = locHalos[iUseCat][iP];
-			//	locPartsBufferSendSize += locHalos[iUseCat][iP].nPart[nPTypes] * sizePart;
+				int iBuf = buffSendHalo[sendTask][iP];
+
+				if (iBuf > locHalos[iUseCat].size())
+					cout << "WARNING---> " << locTask << ", " << iT << ") " << iBuf << endl;	
+			}
+*/
+
+			//cout << iT << ") task=" << locTask << ") nsend " << buffSendHalo[sendTask].size() << " to " << sendTask 
+		 	//	   << " nrecv " << nBuffRecvHalo[recvTask] << " from " << recvTask << endl;
+
+			/* Allocate halo buffers */
+			locBuffSendSizeHalos = sizeHalo * nBuffSendHalos;
+			locBuffSendHalos = (void *) calloc(sizeHalo, nBuffSendHalos); //locBuffSendSizeHalos); 
+
+			/* Now compute the size of the particle buffer and copy the halos into the buffer to be communicated */
+			locBuffSendSizeParts = 0;
+
+			vector<int>::const_iterator max_v_buf = max_element(buffSendHalo[sendTask].begin(), buffSendHalo[sendTask].end());
+			cout << "OnTask=" << locTask << " send=" << sendTask << "  max=" << *max_v_buf 
+					<< " maxH=" << locHalos[iUseCat].size() << endl; 
+
+			int nBuffDummy = nBuffSendHalos;
+			int buf_pos = 0, pack_pos = 0;
+			void *dummyBuff; dummyBuff = (void *) malloc(nBuffDummy * sizeHalo);
+
+			for (int iP = 0; iP < nBuffSendHalos; iP ++)
+			//for (int iP = 0; iP < nBuffDummy; iP ++)
+			{
+				int iH = buffSendHalo[sendTask][iP];
+				
+				buffSendHalos[iP] = locHalos[iUseCat][iH];
+
+				//Halo *dummyHalo; dummyHalo = new Halo();
+				//void *dummyData; dummyData = (void *) calloc(1, sizeHalo);
+			
+				if (iH > locHalos[iUseCat].size())
+					cout << "WARNING " << iH << " not in locHalos " << locTask << "-->" << sendTask << endl;
+
+				//MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+				//MPI_Pack(&locHalos[iUseCat][0], sizeHalo, MPI_BYTE, locBuffSendHalos, 
+				//	  nBuffDummy * sizeHalo, &buffPosSendHalo, MPI_COMM_WORLD);
+				//MPI_Pack(&locHalos[iUseCat][iH], sizeHalo, MPI_BYTE, dummyBuff, 
+				//MPI_Pack(&locHalos[iUseCat][0], sizeHalo, MPI_BYTE, dummyBuff, 
+				//	  nBuffDummy * sizeHalo, &buf_pos, MPI_COMM_WORLD);
+				//MPI_Pack(&dummyHalo->mTot, sizeHalo, MPI_BYTE, locBuffSendHalos, 
+				//MPI_Pack(dummyData, sizeHalo, MPI_BYTE, locBuffSendHalos, 
+					  //20 * sizeHalo, &buf_pos, MPI_COMM_WORLD);
+					  //nBuffDummy * sizeHalo, &buffPosSendHalo, MPI_COMM_WORLD);
+
+				//locBuffSendHalos.push_back(locHalos[iUseCat][iH]);
+				//locBuffSendSizeParts += locHalos[iUseCat][iH].nPart[nPTypes] * sizePart;
+				//cout << iH << " " << iP << " " << locBuffSendSizeHalos << " " << sizeHalo << endl;
 			}
 
-		} /* if (nBuff > 0) */
+			free(dummyBuff);
+
+#ifdef TEST
+			/* Now get the actual message, the halos */
+		//	if (locBuffSendSizeHalos > 0) 
+		//		MPI_Send(&locBuffSendHalos[0], locBuffSendSizeHalos, MPI_BYTE, sendTask, 0, MPI_COMM_WORLD);
+		
+		//	if (locBuffRecvSizeHalos > 0) 
+		//		MPI_Recv(&locBuffRecvHalos[0], locBuffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
+
+		//	MPI_Sendrecv(&nBuffSendHalos, 1, MPI_INT, sendTask, 0, 
+		//		     &nBuffRecvHalos, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
+
+		//	locBuffRecvSizeHalos = sizeHalo * nBuffRecvHalos;
+		//	locBuffRecvHalos = malloc(locBuffRecvSizeHalos);
+
+		//	cout << "On task=" << locTask << ") sending " << nBuffSendHalos << " to " << sendTask <<endl;
+		//	cout << "On task=" << locTask << ") recving " << nBuffRecvHalos << " by " << recvTask <<endl;
+			
+		//	int *testSend, *testRecv; 
+		//	testSend = new int[nBuffSendHalos];
+		//	testRecv = new int[nBuffRecvHalos];
+
+		//	MPI_Sendrecv(&testSend[0], nBuffSendHalos, MPI_INT, sendTask, 0, 
+		//		     &testRecv[0], nBuffRecvHalos, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
+
+		//	MPI_Sendrecv(&locBuffSendHalos[0], locBuffSendSizeHalos, MPI_BYTE, recvTask, 0, 
+		//		     &locBuffRecvHalos[0], locBuffRecvSizeHalos, MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &status);
+
+		//cout << iT << ") Send " << locBuffSendHalos.size()/sizeHalo << " h on t = " << locTask << "  to  " << sendTask << endl;  
+		//cout << iT << ") Recv " << locBuffRecvHalos.size()/sizeHalo << " h on t = " << locTask << " from " << recvTask << endl;  
+
+			/* Halos have been sent across the tasks, so the send buffer can be cleaned now */
+			if (locBuffSendSizeHalos > 0) 
+			{
+				locBuffSendHalos.clear();
+				locBuffSendHalos.shrink_to_fit();
+			}
+
+			if (locBuffRecvSizeHalos > 0) 
+			{
+				locBuffRecvHalos.clear();
+				locBuffRecvHalos.shrink_to_fit();
+			}
+#endif
+		} /* if locTask != iT */
 
 	}	/* Loop on iT, all the tasks */
+
+	if (locTask == 0)
+		cout << "Done." << endl;
 
 #ifdef TEST_BLOCK	
 	/* Local particles to be sent will be mpi-packed into this buffer */
@@ -246,24 +394,9 @@ void Communication::BufferSendRecv()
 	sendTask = (locTask + 1) % (totTask);
 
 	/* Communicate halo and particle numbers to be sent across tasks */
-	MPI_Sendrecv(&nHalosBufferSend, 1, MPI_INT, recvTask, 0, &nHalosBufferRecv, 1, MPI_INT, sendTask, 0, MPI_COMM_WORLD, &status);
-	
-	/* You have to tell the size of the message */
-	MPI_Sendrecv(&locHalosBufferSendSize, sizeof(size_t), MPI_BYTE, recvTask, 0, 
-		     &locHalosBufferRecvSize, sizeof(size_t), MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &status);
-	
-	/* Resize the receiving buffer accordingly */
-	locHalosBufferRecv.resize(nHalosBufferRecv);
+	//MPI_Sendrecv(&nHalosBufferSend, 1, MPI_INT, recvTask, 0, &nHalosBufferRecv, 1, MPI_INT, sendTask, 0, MPI_COMM_WORLD, &status);
 
 	//barrMpi = MPI_Barrier(MPI_COMM_WORLD); // Maybe it's useless...
-	
-	/* Now get the actual message, the halos */
-	MPI_Sendrecv(&locHalosBufferSend[0], locHalosBufferSendSize, MPI_BYTE, recvTask, 0, 
-		     &locHalosBufferRecv[0], locHalosBufferRecvSize, MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &status);
-
-	/* Halos have been sent across the tasks, so the send buffer can be cleaned now */
-	locHalosBufferSend.clear();
-	locHalosBufferSend.shrink_to_fit();
 
 	/* Particle swap across tasks - first communicate the size of the buffer to be delivered */
 	MPI_Sendrecv(&locPartsBufferSendSize, sizeof(size_t), MPI_BYTE, recvTask, 0, 

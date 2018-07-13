@@ -131,7 +131,6 @@ int * Grid::GridCoord(float *X)
 /* This function specifies on which task is located each node of the global grid */	// DEPRECATED
 void Grid::FindPatchOnTask()
 {
-
 /*
 	int *ixMax, *ixMin;
 	ixMax = new int[3];	ixMin = new int[3];	
@@ -145,7 +144,6 @@ void Grid::FindPatchOnTask()
 				taskOnGridNode[Index(i, j, k)] = locTask + 1;	// distinguish from the "null" nodes
 
 	free(ixMax); free(ixMin);
-
 */
 };
 
@@ -251,10 +249,7 @@ void Grid::FindBufferNodes(vector<int> useNodes)
 	{
 		sort(buffNodes[i].begin(), buffNodes[i].end());
 		buffNodes[i].erase(unique(buffNodes[i].begin(), buffNodes[i].end()), buffNodes[i].end());
-		//cout << locTask << " needs " << buffNodes[i].size() << " nodes from task=" << i << endl;
 	}
-#ifdef TEST_BLOCK
-#endif
 };
 
 

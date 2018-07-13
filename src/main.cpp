@@ -57,8 +57,7 @@ int main(int argv, char **argc)
 	SettingsIO.ReadParticles();	
 
 	// TODO some load balancing
-	// Split the files among the tasks:
-	// - if ntask > nfiles read in then distribute the halos 
+	// Split the files among the tasks in case ntask > nfiles to be read in
 
 	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
@@ -99,12 +98,13 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
+#endif
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
 		CleanMemory(1);
-#endif
 	}
 	
+#ifdef TEST_BLOCK
 	if (locTask == 0)
 		cout << "The loop on halo and particle catalogs has finished." << endl;
 
@@ -118,7 +118,6 @@ int main(int argv, char **argc)
 
 	CleanMemory(0);
 
-#ifdef TEST_BLOCK
 #endif
 	MPI_Finalize();
 	
