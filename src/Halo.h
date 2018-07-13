@@ -10,6 +10,10 @@
 
 using namespace std;
 
+#define NPTYPES 6	/* This needs to be defined at compile time so that the Halo class has a well-defined size,
+			 * which makes MPI communication easier
+			 */
+
 
 class Halo {
 
@@ -25,8 +29,10 @@ public:
 	// Token halos keeping track of "lost" subhalos need to set this to TRUE
 	bool isToken;
 
-	vector<int> nPart;
 	int nSub;
+	
+	// Total number of particles is set to 7
+	int nPart[NPTYPES+1];
 	unsigned long long int ID, hostID;
 
 	// Compute the halo distance from a given point

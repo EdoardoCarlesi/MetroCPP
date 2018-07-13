@@ -1,6 +1,5 @@
 TO DO NEXT:
 
-first write another function that MPI_Sendrecv from each task to each other task the nodes it needs for the buffer, and
-receives the number of nodes it needs to pack to be sent to other nodes
+Small fixes: Move the ReadAHF from Halo to SettingsIO class
+Introduce a compile time option NPTYPES = X to define the number of particles used GLOBALLY at compile time
 
-then fix the communication function to MPI_Pack the halos and send them according to the requested node.

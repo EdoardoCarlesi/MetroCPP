@@ -20,16 +20,13 @@ private:
 	void SetSendRecvTasks(void);
 
 	// Buffers for halo and node communication
-	vector<vector<int>> buffNodeHalo;
+	vector<vector<int>> buffIndexNodeHalo;
 	
 	// Here we store the full list of halo indexes
-	vector<vector<int>> buffSendHalo;
+	vector<vector<int>> buffIndexSendHalo;
 
 	// This only holds the number of haloes to be received
-	vector<int> nBuffRecvHalo;	
-
 	vector<int> sendTasks;
-
 	vector<int> recvTasks;
 };
 #endif

@@ -31,7 +31,6 @@ extern MPI_Status status;
 
 // Halo & particle related variables for each task
 extern vector<vector<Halo>> locHalos;
-extern vector<Halo> locHalosBuffer;
 
 extern size_t locHalosSize[2];
 
@@ -46,7 +45,6 @@ extern int iUseCat;
 
 // numbers of particles are stored by particle type
 extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
-extern vector<vector<vector<unsigned long long int>>> locPartsBuffer;
 
 extern size_t sizePart;
 extern size_t sizeHalo;

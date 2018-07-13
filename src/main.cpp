@@ -36,7 +36,7 @@ int main(int argv, char **argc)
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 
 	InitLocVariables();
-	SettingsIO.ReadConfigFile(configFile);
+	//SettingsIO.ReadConfigFile(configFile);
 
 	// TODO make this readable from input file
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
@@ -54,6 +54,9 @@ int main(int argv, char **argc)
 
 	iUseCat = 0;
 	SettingsIO.ReadHalos();
+
+	locHalos[0][0].Info();
+
 	SettingsIO.ReadParticles();	
 
 	// TODO some load balancing
@@ -81,12 +84,12 @@ int main(int argv, char **argc)
 		// Now exchange the halos in the requested buffer zones among the different tasks
 		CommTasks.BufferSendRecv();
 
-#ifdef TEST
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
 		GeneralMethods.FindProgenitors(0, 1);
 
+#ifdef TEST
 		if (locTask == 0)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
 	
@@ -116,9 +119,9 @@ int main(int argv, char **argc)
 
 	//cout << "Finished on task=" << locTask << endl;
 
+#endif
 	CleanMemory(0);
 
-#endif
 	MPI_Finalize();
 	
 	if (locTask == 0)	

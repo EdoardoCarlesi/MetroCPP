@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "Halo.h"
 
 using namespace std;
 
@@ -57,6 +58,7 @@ public:
 	void ReadConfigFile(string);
 
 	void ReadParticles();
+	//void ReadLineHalo();
 	void ReadHalos();
 	void WriteTrees();
 

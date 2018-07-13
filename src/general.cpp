@@ -11,7 +11,9 @@
 
 using namespace std;
 
-
+/*
+ *	General variables declared here and used program-wide for synchronization
+ */
 int locTask;
 int totTask;
 MPI_Status status;
@@ -19,7 +21,6 @@ MPI_Status status;
 Grid GlobalGrid[2];
 
 vector<vector<Halo>> locHalos;
-vector<Halo> locHalosBuffer;
 size_t locHalosSize[2];
 
 int iNumCat; // Halo catalog number in use, from 0 to N
@@ -29,7 +30,6 @@ int nTotHalos[2];
 int nLocHalos[2];
 
 vector<vector<vector<vector<unsigned long long int>>>> locParts;
-vector<vector<vector<unsigned long long int>>> locPartsBuffer;
 size_t locPartsSize[2];
 
 size_t sizeHalo;
