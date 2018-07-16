@@ -376,9 +376,9 @@ void IOSettings::ReadParticles(void)
 /* Using AHF by default */
 void IOSettings::ReadHalos()
 {
-	string tmpStrUrlHalo, lineIn;
-	const char *tmpUrlHalo, *lineHead = "#";
 	unsigned int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nChunks = 0, nTmpHalos = 0; 
+	const char *tmpUrlHalo, *lineHead = "#";
+	string tmpStrUrlHalo, lineIn;
 	vector<Halo> tmpHalos;
 
 	nChunks = nChunksPerFile;

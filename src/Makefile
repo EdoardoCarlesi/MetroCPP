@@ -15,7 +15,8 @@ EXEC_T = test
 
 SOURCE =\
 	IOSettings.cpp Communication.cpp general.cpp \
-	Halo.cpp Grid.cpp MergerTree.cpp Methods.cpp
+	Halo.cpp Grid.cpp MergerTree.cpp Methods.cpp \
+	Gravity.cpp Cosmology.cpp
 
 OBJS  =  $(SOURCE:.cpp=.o)
 

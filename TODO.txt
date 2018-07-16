@@ -3,3 +3,11 @@ TO DO NEXT:
 Small fixes: Move the ReadAHF from Halo to SettingsIO class
 Introduce a compile time option NPTYPES = X to define the number of particles used GLOBALLY at compile time
 
+
+Add: 
+a Cosmology class (to compute the expansion factor of the universe) 
+a Gravity class (to compute the gravitational field at each point due to the neighbouring objects). 
+Make it simple at first, use it only for objects with no progenitor to guess the position at the previous step and 
+put a placeholder
+
+

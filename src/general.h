@@ -23,6 +23,7 @@ void ShiftHalosPartsGrids(void);
 
 // This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid[2];
+extern Grid BufferGrid;
 
 // MPI variables
 extern int locTask;
@@ -32,6 +33,9 @@ extern MPI_Status status;
 // Halo & particle related variables for each task
 extern vector<vector<Halo>> locHalos;
 
+/* Extra halos coming from the buffer nodes communicated from other tasks */
+extern vector<Halo> locBuffHalos;
+
 extern size_t locHalosSize[2];
 
 extern int nPTypes;
@@ -40,11 +44,15 @@ extern int nLocHalos[2];
 
 // 0 is the last catalog (first to be read in) to the _000 one (number N)
 extern int iNumCat;
-// Set to 0 or 1 according to the catalogs being read in
+
+// Set to 0 or 1 according to the catalogs being read in (at each step we read two at the same time)
 extern int iUseCat;
 
-// numbers of particles are stored by particle type
+/* Particles on task, also allocated by particle type within each halo */
 extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
+
+/* Extra particles coming from the buffer areas located on other tasks */
+extern vector<vector<vector<unsigned long long int>>> locBuffParts;
 
 extern size_t sizePart;
 extern size_t sizeHalo;

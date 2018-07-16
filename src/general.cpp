@@ -19,8 +19,10 @@ int totTask;
 MPI_Status status;
 
 Grid GlobalGrid[2];
+Grid BufferGrid;
 
 vector<vector<Halo>> locHalos;
+vector<Halo> locBuffHalos;
 size_t locHalosSize[2];
 
 int iNumCat; // Halo catalog number in use, from 0 to N
@@ -30,6 +32,7 @@ int nTotHalos[2];
 int nLocHalos[2];
 
 vector<vector<vector<vector<unsigned long long int>>>> locParts;
+vector<vector<vector<unsigned long long int>>> locBuffParts;
 size_t locPartsSize[2];
 
 size_t sizeHalo;
@@ -63,6 +66,7 @@ void InitLocVariables(void)
 
 	GlobalGrid[0].Init(nGrid, boxSize);
 	GlobalGrid[1].Init(nGrid, boxSize);
+	BufferGrid.Init(nGrid, boxSize);
 
 	sizeHalo = sizeof(Halo);
 	sizePart = sizeof(unsigned long long int);

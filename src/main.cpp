@@ -25,7 +25,7 @@ int main(int argv, char **argc)
 	int totCat = 2;	
 	boxSize = 1.0e+5; 	// Using kpc/h units
 	nGrid = 100;	
-	nChunksPerFile = 1;
+	nChunksPerFile = 2;
 	nPTypes = 6;
 	GeneralMethods.dMaxFactor = 1.5;
 
@@ -52,11 +52,11 @@ int main(int argv, char **argc)
 	// We are assuming that each task reads more than one file
 	SettingsIO.DistributeFilesAmongTasks();
 
+	/* This is a global variable */
 	iUseCat = 0;
+
+	/* Read particles and catalogs */
 	SettingsIO.ReadHalos();
-
-	locHalos[0][0].Info();
-
 	SettingsIO.ReadParticles();	
 
 	// TODO some load balancing
@@ -84,14 +84,26 @@ int main(int argv, char **argc)
 		// Now exchange the halos in the requested buffer zones among the different tasks
 		CommTasks.BufferSendRecv();
 
+		MPI_Barrier(MPI_COMM_WORLD);
+
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
 		GeneralMethods.FindProgenitors(0, 1);
 
+		clock_t endTime = clock();
+		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+
+		if (locTask == 0)
+			cout << "\nDone in " << elapsed << "s. " << endl;
+	
+
 #ifdef TEST
+		clock_t iniTime = clock();
+
 		if (locTask == 0)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
+
 	
 		GeneralMethods.FindProgenitors(1, 0);
 
