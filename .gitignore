@@ -6,6 +6,7 @@ MetroCPP
 bin/MetroCPP
 bin/test
 test
+old_code/*
 output/*.dat
 mpirun
 *.tmp
