@@ -5,11 +5,12 @@
 #include <string>
 #include <ctime>
 
-#include "general.h"
+#include "global_vars.h"
+#include "utils.h"
+
 #include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
-#include "Methods.h"
 
 using namespace std;
 
@@ -19,15 +20,14 @@ int main(int argv, char **argc)
 {
 	IOSettings SettingsIO;
 	Communication CommTasks;
-	Methods GeneralMethods;
 
 	// TODO Make these parameters readable from an input file
 	int totCat = 2;	
 	boxSize = 1.0e+5; 	// Using kpc/h units
 	nGrid = 100;	
-	nChunksPerFile = 1;
+	nChunksPerFile = 2;
 	nPTypes = 6;
-	GeneralMethods.dMaxFactor = 1.5;
+	dMaxFactor = 1.5;
 
 	string configFile = argc[1];
 
@@ -35,30 +35,32 @@ int main(int argv, char **argc)
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 
-	SettingsIO.ReadConfigFile(configFile);
+	InitLocVariables();
+	//SettingsIO.ReadConfigFile(configFile);
 
 	// TODO make this readable from input file
+	SettingsIO.pathMetroCpp = "/home/eduardo/CLUES/MetroC++/";
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
 	SettingsIO.catFormat = "AHF_halos";
-	SettingsIO.thisPath = "/home/eduardo/CLUES/MetroC++/";
 	SettingsIO.haloSuffix = "AHF_halos";
 	SettingsIO.partSuffix = "AHF_particles";
 	SettingsIO.haloPrefix = "snapshot_";
 	SettingsIO.partPrefix = "snapshot_";
 
 	SettingsIO.Init();
-	InitLocVariables();
 
 	// We are assuming that each task reads more than one file
 	SettingsIO.DistributeFilesAmongTasks();
 
+	/* This is a global variable */
 	iUseCat = 0;
+
+	/* Read particles and catalogs */
 	SettingsIO.ReadHalos();
 	SettingsIO.ReadParticles();	
 
 	// TODO some load balancing
-	// Split the files among the tasks:
-	// - if ntask > nfiles read in then distribute the halos 
+	// Split the files among the tasks in case ntask > nfiles to be read in
 
 	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
@@ -70,9 +72,8 @@ int main(int argv, char **argc)
 
 		iUseCat = 1;
 		SettingsIO.ReadHalos();
-		//SettingsIO.ReadParticles();	
+		SettingsIO.ReadParticles();	
 
-#ifdef TEST
 		// Now every task knows which nodes belongs to which task
 		CommTasks.BroadcastAndGatherGrid();
 
@@ -81,17 +82,30 @@ int main(int argv, char **argc)
 		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 
 		// Now exchange the halos in the requested buffer zones among the different tasks
-		//CommTasks.BufferSendRecv();
+		CommTasks.BufferSendRecv();
+
+		MPI_Barrier(MPI_COMM_WORLD);
 
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
-		GeneralMethods.FindProgenitors(0, 1);
+		FindProgenitors(0, 1);
+
+		clock_t endTime = clock();
+		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+
+		if (locTask == 0)
+			cout << "\nDone in " << elapsed << "s. " << endl;
+	
+
+#ifdef TEST
+		clock_t iniTime = clock();
 
 		if (locTask == 0)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
+
 	
-		GeneralMethods.FindProgenitors(1, 0);
+		FindProgenitors(1, 0);
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -105,6 +119,7 @@ int main(int argv, char **argc)
 		CleanMemory(1);
 	}
 	
+#ifdef TEST_BLOCK
 	if (locTask == 0)
 		cout << "The loop on halo and particle catalogs has finished." << endl;
 
@@ -116,10 +131,9 @@ int main(int argv, char **argc)
 
 	//cout << "Finished on task=" << locTask << endl;
 
+#endif
 	CleanMemory(0);
 
-#ifdef TEST_BLOCK
-#endif
 	MPI_Finalize();
 	
 	if (locTask == 0)	

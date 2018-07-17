@@ -6,7 +6,7 @@
 #include <iostream>
 #include <malloc.h>
 
-#include "general.h"
+//#include "global_vars.h"
 
 using namespace std;
 
@@ -42,10 +42,6 @@ public:
 	float RelativeVelocity(float *);
 
 	// Set methods: sets the halo properties reading from different formats of halo catalogs
-	void ReadLineAHF(const char *);
-	
-	// TODO Not implemented yet
-	void ReadLineFOF(const char *);
 
 	// Cout some infos on the halo (velocity, position, etc.)
 	void Info(void);

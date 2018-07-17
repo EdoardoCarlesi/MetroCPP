@@ -14,13 +14,6 @@ using namespace std;
 class Grid;
 class Halo;
 
-// General variables and functions
-unsigned int NumLines(const char *);
-void InitLocVariables(void);
-float VectorModule(float *);
-void CleanMemory(int);
-void ShiftHalosPartsGrids(void);
-
 // This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid[2];
 extern Grid BufferGrid;
@@ -62,6 +55,7 @@ extern size_t locPartsSize[2];
 extern int nLocParts[2];
 extern int nGrid;
 
+extern float dMaxFactor;
 extern float boxSize;
 extern float totVmax;
 extern float locVmax;

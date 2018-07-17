@@ -39,7 +39,7 @@ public:
 
 	int nCat;		// Number of catalogs
 	string catFormat;
-	string thisPath;	// Where the program is installed
+	string pathMetroCpp;	// Where the program is installed
 	string pathInput;	// Folder containing all the halo/particle catalogs	//TODO allow for different folders
 	string pathOutput;	// Where to dump all the output data
 
@@ -57,7 +57,9 @@ public:
 
 	void ReadConfigFile(string);
 
+	void ReadLineAHF(const char *, Halo *);
 	void ReadParticles();
+	//void ReadLineFOF(const char *);
 	//void ReadLineHalo();
 	void ReadHalos();
 	void WriteTrees();
@@ -65,12 +67,12 @@ public:
 private:
 	// TODO : AHF-halo catalog format only is assumed!
 	// These scripts are used by the program to find:
-	string findNsh = "scripts/find_n.sh";	// Number of catalogs
-	string findZsh = "scripts/find_z.sh";	// Redshift of snapshots
-	string findIDsh = "scripts/find_id.sh";	// ID number of catalogs
-	string tmpIdOut = "tmp/output_id.tmp";
-	string tmpZOut = "tmp/output_z.tmp";
-	string tmpNOut = "tmp/output_n.tmp";
+	string findNsh  = "/scripts/find_n.sh";	// Number of catalogs
+	string findZsh  = "/scripts/find_z.sh";	// Redshift of snapshots
+	string findIDsh = "/scripts/find_id.sh";	// ID number of catalogs
+	string tmpIdOut = "/tmp/output_id.tmp";
+	string tmpZOut  = "/tmp/output_z.tmp";
+	string tmpNOut  = "/tmp/output_n.tmp";
 };
 
 

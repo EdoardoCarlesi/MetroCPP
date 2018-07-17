@@ -2,7 +2,8 @@
 #include <iostream>
 #include <algorithm>
 
-#include "general.h"
+#include "utils.h"
+#include "global_vars.h"
 #include "Grid.h"
 
 using namespace std;

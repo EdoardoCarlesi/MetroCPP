@@ -5,7 +5,8 @@
 #include <cstdint>
 #include <cstring>
 
-#include "general.h"
+#include "utils.h"
+#include "global_vars.h"
 #include "Grid.h"
 #include "Halo.h"
 #include "Communication.h"

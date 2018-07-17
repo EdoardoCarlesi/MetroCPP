@@ -5,11 +5,12 @@
 #include <string>
 #include <ctime>
 
-#include "general.h"
+#include "global_vars.h"
+#include "utils.h"
+
 #include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
-#include "Methods.h"
 
 using namespace std;
 
@@ -19,7 +20,6 @@ int main(int argv, char **argc)
 {
 	IOSettings SettingsIO;
 	Communication CommTasks;
-	Methods GeneralMethods;
 
 	// TODO Make these parameters readable from an input file
 	int totCat = 2;	
@@ -27,7 +27,7 @@ int main(int argv, char **argc)
 	nGrid = 100;	
 	nChunksPerFile = 2;
 	nPTypes = 6;
-	GeneralMethods.dMaxFactor = 1.5;
+	dMaxFactor = 1.5;
 
 	string configFile = argc[1];
 
@@ -39,9 +39,9 @@ int main(int argv, char **argc)
 	//SettingsIO.ReadConfigFile(configFile);
 
 	// TODO make this readable from input file
+	SettingsIO.pathMetroCpp = "/home/eduardo/CLUES/MetroC++/";
 	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
 	SettingsIO.catFormat = "AHF_halos";
-	SettingsIO.thisPath = "/home/eduardo/CLUES/MetroC++/";
 	SettingsIO.haloSuffix = "AHF_halos";
 	SettingsIO.partSuffix = "AHF_particles";
 	SettingsIO.haloPrefix = "snapshot_";
@@ -89,7 +89,7 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
 	
-		GeneralMethods.FindProgenitors(0, 1);
+		FindProgenitors(0, 1);
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -105,7 +105,7 @@ int main(int argv, char **argc)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
 
 	
-		GeneralMethods.FindProgenitors(1, 0);
+		FindProgenitors(1, 0);
 
 		clock_t endTime = clock();
 		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
