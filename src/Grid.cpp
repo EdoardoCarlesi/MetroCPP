@@ -82,8 +82,10 @@ void Grid::Init(int n, float size)
 	N = n; boxSize = size;
 	cellSize = (boxSize/n);	// The size of the cell is divided by the total N
 
+#ifdef VERBOSE
 	if (locTask == 0)
 		cout << "Initialized grid with N=" << N << " nodes in a box of " << boxSize << " kpc/h" << endl; 
+#endif
 
 	nNodes = N * N * N;
 

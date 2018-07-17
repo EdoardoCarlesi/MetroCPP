@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <cctype>
 
 #include "global_vars.h"
 #include "utils.h"
@@ -88,6 +90,38 @@ void CleanMemory(int iCat)
 		
 		GlobalGrid[iCat].Clean();
 };
+
+
+vector<string> SplitString (string strIn, string delim)
+{
+	string whiteSpace, tabSpace, endSpace; 
+	vector<string> results, cleanResults;
+	int cutAt, iChar = 0;
+
+	whiteSpace = " "; tabSpace = '\t'; endSpace = '\n'; 
+
+	while((cutAt = strIn.find_first_of(delim)) != strIn.npos )
+	{
+		if(cutAt > 0)
+        		results.push_back(strIn.substr(0, cutAt));
+	
+    		strIn = strIn.substr(cutAt+1);
+    	}
+
+	if(strIn.length() > 0)
+		results.push_back(strIn);
+
+	for (int iR = 0; iR < results.size(); iR++)
+	{
+		string newStr = results[iR];
+		newStr.erase(remove(newStr.begin(), newStr.end(), ' '), newStr.end());
+		newStr.erase(remove(newStr.begin(), newStr.end(), '\t'), newStr.end());
+		newStr.erase(remove(newStr.begin(), newStr.end(), " "), newStr.end());
+		cleanResults.push_back(newStr);
+	}
+
+    return cleanResults;
+}
 
 
 void ShiftHalosPartsGrids()

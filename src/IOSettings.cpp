@@ -1,14 +1,17 @@
+/* This class takes care of input and output files, where they are located, how they are distributed across tasks and so on.
+ * It uses absolute paths to input files and relies on some bash scripts to locate effectively the input catalogs and particle lists. */
+
 #include <string>
 #include <sstream>
 #include <fstream>
 #include <algorithm>
-
+#include <iostream>
 #include <array>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
 #include "IOSettings.h"
 #include "utils.h"
@@ -38,7 +41,7 @@ void IOSettings::FindCatID()
 	char *tmpLine;
 	int iS = 0, sysOut = 0;
 
-	optionsSh = pathInput + " " + catFormat;
+	optionsSh = pathInput + " " + haloSuffix;
 	outputTmp = pathMetroCpp + tmpIdOut;
 	inputSh = pathMetroCpp + findIDsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;	
@@ -74,20 +77,96 @@ void IOSettings::FindCatID()
 
 void IOSettings::ReadConfigFile(string configFile)
 {
+	int iLine = 0;
+	string lineIn, delim;
+	vector<string> args; 
 	
-	if (locTask == 0)
-		cout << "Reading config file: " << configFile << endl;
-/*
+	delim = "=";
+
 	ifstream fileCfg(configFile);
+
+		if (!fileCfg.good())
+		{
+			cout << "File: " << configFile << " not found. Exiting..." << endl;
+			MPI_Finalize();
+			exit(0);
+
+		} else {
+#ifdef VERBOSE
+			if (locTask == 0)
+				cout << "Reading config file: " << configFile << endl;
+#endif
+		}
+
+		while (getline(fileCfg, lineIn))
+		{
+			const char *lineRead = lineIn.c_str();		
 	
-	// vector<string> arg = splitString 
+			if (lineRead[0] != '#' && lineRead[0] != ' ')
+			{
+				if (locTask == 0)
+				{
+					args = SplitString(lineRead, delim);
+	
+#ifdef VERBOSE
+						if (args.size() > 1) 
+						{
+							cout << args[0] << endl;
+							cout << args[1] << endl;
+						}
+#endif
+				}
+			}
 
-	if (arg[0] == "boxSize") boxSize = arg[1];
-	else if (arg[0] == "haloSuffix") haloSuffix = arg[1];
-	else if (arg[0] == "partSuffix") partSuffix = arg[1];
-*/
+			/* The line is read in, now setup */
+			if (args.size() > 1) 
+				InitFromCfgFile(args);
 
+			iLine++;
+
+		} /* while(line) */
 };
+
+
+void IOSettings::InitFromCfgFile(vector<string> arg)
+{
+	if (arg[0] == "boxSize") 		boxSize = stof(arg[1]);
+	else if (arg[0] == "haloSuffix") 	haloSuffix = arg[1];
+	else if (arg[0] == "partSuffix") 	partSuffix = arg[1];
+	else if (arg[0] == "haloPrefix") 	haloPrefix = arg[1];
+	else if (arg[0] == "partPrefix") 	partPrefix = arg[1];
+	else if (arg[0] == "pathMetroCpp") 	pathMetroCpp = arg[1];
+	else if (arg[0] == "pathInput") 	pathInput = arg[1];
+	else if (arg[0] == "inputFormat") 	inputFormat = arg[1];
+	else if (arg[0] == "nCat")		nCat = stoi(arg[1]);
+	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
+	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
+	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
+	else {
+		cout << "Arg= " << arg[0] << " does not exist." << endl;
+	}
+
+	//if (arg.size() > 0)
+	//	cout << arg[0] << " = " << arg[1] << endl;
+
+	/* Just issue a warning here, in case some parameter has not been set correctly. */
+	if (arg[1] == "" && locTask == 0)
+		cout << "WARNING " << arg[0] << " has not been set correctly in the config file." << endl;
+ 
+}
+
+
+void IOSettings::CheckStatus()
+{
+	cout << "On task="	 << locTask << endl;
+	cout << "nCat        = " << nCat << endl;
+	cout << "nChunks     = " << nChunks << endl;
+	cout << "inputFormat = " << inputFormat << endl;
+	cout << "nGrid       = " << nGrid << endl;
+	cout << "boxSize     = " << boxSize << endl;
+	cout << "pathMetro   = " << pathMetroCpp << endl;
+	cout << "pathInput   = " << pathInput << endl;
+}
 
 
 void IOSettings::FindCatZ()
@@ -100,7 +179,7 @@ void IOSettings::FindCatZ()
 	string cleanTmp;
 	string lineIn;
 
-	optionsSh = pathInput + " " + catFormat;
+	optionsSh = pathInput + " " + haloSuffix;
 	outputTmp = pathMetroCpp + tmpZOut;
 	inputSh = pathMetroCpp + findZsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;	
@@ -153,7 +232,7 @@ void IOSettings::FindCatN()
 	string lineIn;
 	string cleanTmp;
 
-	optionsSh = pathInput + " " + catFormat;
+	optionsSh = pathInput + " " + haloSuffix;
 	outputTmp = pathMetroCpp + tmpNOut;
 	inputSh = pathMetroCpp + findNsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;
@@ -211,6 +290,28 @@ void IOSettings::Init()
 	MPI_Bcast(&aFactors[0], nCat, MPI_FLOAT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(&numSnaps[0], nCat, MPI_INT, 0, MPI_COMM_WORLD);
 
+	if (inputFormat == "AHF")
+	{
+		if (locTask == 0)
+			cout << "Using " << inputFormat << " file format." << endl;
+
+	} else if (inputFormat == "FoF") {
+
+		if (locTask == 0)
+			cout << "Format " << inputFormat << " is not supported yet. Exiting..." << endl;
+
+		MPI_Finalize();
+		exit(0);
+
+	} else {
+
+		if (locTask == 0)
+			cout << "Format " << inputFormat << " is not supported yet. Exiting..." << endl;
+
+		MPI_Finalize();
+		exit(0);
+	};
+
 	// Convert integerts to snapshot strings on each task, it is easier than MPI_Bcast all those chars
 	if (locTask != 0)
 	{
@@ -237,10 +338,8 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	// would also make the FFTW operation much faster, if planning to implement a purely PM grid to compute 
 	// the gravitational force at each step
 
-	nFilesOnTask = nChunksPerFile; // / totTask;
-
-	if (locTask == 0)
-		cout << "Assigning " << nFilesOnTask << " halo/particle files among " << totTask << " tasks. " << endl; 
+	//if (locTask == 0)
+	cout << "Each task is reading " << nChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
 
 	haloFiles.resize(nCat);
 	partFiles.resize(nCat);
@@ -248,15 +347,17 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	for (int i = 0; i < nCat; i++)
 	{
 		sprintf(charZ, "%.3f", redShift[i]);	
-		haloFiles[i].resize(nFilesOnTask);
-		partFiles[i].resize(nFilesOnTask);
+		haloFiles[i].resize(nChunks);
+		partFiles[i].resize(nChunks);
 
-		for (int j = 0; j < nFilesOnTask; j++)
+		for (int j = 0; j < nChunks; j++)
 		{
-			locChunk = j + locTask * nFilesOnTask;
+			locChunk = j + locTask * nChunks;
 			sprintf(charCpu, "%04d", locChunk);	
 			haloFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
 			partFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + partSuffix;
+
+			//cout << locTask << ") " << haloFiles[i][j] << endl; 
 
 			ifstream haloExists(haloFiles[i][j]);
 			if (haloExists.fail())
@@ -281,13 +382,14 @@ void IOSettings::ReadParticles(void)
 	unsigned long long int locHaloID = 0, partID = 0;
 	unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
-	int partType = 0, nChunks = 0;
+	int partType = 0;
 
-	nChunks = nChunksPerFile;
 	tmpParts.resize(nPTypes);
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
 
-	//cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
+#ifdef VERBOSE
+	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
+#endif
 
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
@@ -304,27 +406,34 @@ void IOSettings::ReadParticles(void)
 			cout << "File: " << tmpUrlPart << " not found on task=" << locTask << endl;
 		} else {
 			if (locTask == 0)
-	        		cout << "Reading " << nPTypes << " particle types from file: " << tmpUrlPart << endl;
+	        		cout << "Reading particle file: " << tmpUrlPart << endl;
 		}
 
 		while (getline(fileIn, lineIn))
 		{
 			const char *lineRead = lineIn.c_str();		
 
-			// FIXME this is all AHF format dependent
+			
 			if (iLine == 0)
 			{
-		                sscanf(lineRead, "%d", &nFileHalos);
+				if (inputFormat == "AHF")
+		         	       sscanf(lineRead, "%d", &nFileHalos);
+
 				iLine++;
 
 			} else if (iLine == 1) {
 
-		                sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
+				if (inputFormat == "AHF")
+		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
+
 				locParts[iUseCat][iLocHalos].resize(nPTypes);
 				iLine++;
 
 			} else {
-	        	        sscanf(lineRead, "%llu %hd", &partID, &partType);
+
+				if (inputFormat == "AHF")
+		        	        sscanf(lineRead, "%llu %hd", &partID, &partType);
+
 				tmpParts[partType].push_back(partID);
 				iLocParts++;
 				iTmpParts++;
@@ -367,23 +476,23 @@ void IOSettings::ReadParticles(void)
 		} // end while
 	} // End for loop on file chunks
 	
-	//cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;
+#ifdef VERBOSE
+	cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;
+#endif
 };
  
 
 /* Using AHF by default */
 void IOSettings::ReadHalos()
 {
-	unsigned int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nChunks = 0, nTmpHalos = 0; 
+	unsigned int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nTmpHalos = 0, iChunk = 0; 
 	const char *tmpUrlHalo, *lineHead = "#";
 	string tmpStrUrlHalo, lineIn;
 	vector<Halo> tmpHalos;
 
-	nChunks = nChunksPerFile;
-
 	// Initialize outside of the files loop
 	int iLocHalos = 0; 
-	
+
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
 		tmpUrlHalo = haloFiles[iNumCat][iChunk].c_str();

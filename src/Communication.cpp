@@ -1,9 +1,9 @@
+/* MPI communication routines that take care of broadcasting, swapping, packing and send/recv of messages */
+
 #include <mpi.h>
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <cstdint>
-#include <cstring>
 
 #include "utils.h"
 #include "global_vars.h"
@@ -14,17 +14,7 @@
 using namespace std;
 
 
-// MPI communication routines that take care of broadcasting, swapping, packing and send/recv of messages 
-
-/* This function computes the size of all the packages that need to be communicated across the tasks 
- * Halos within a "buffer" volume are MPI_Pack-ed and sent to the requesting task
- */
-void Communication::ComputeBufferSize()
-{
-};
-
-
-/*
+/* TODO
 void Comm::Optimize()	// Write some function that optimizes the memory distribution among the tasks
 {};
 */
@@ -42,7 +32,7 @@ void Communication::BroadcastAndGatherGrid()
 	int iNonZero = 0, nNonZero = 0, thisTask = 0, thisNode = 0;
 	
 	if (locTask == 0)
-		cout << "Gathering " << gridSize << " nodes to all tasks for grid=" << iUseCat << endl;
+		cout << "Broadcasting node informations to all tasks for Grid[" << iUseCat << "]." << endl;
 
 	if (locTask == 0)
 		tmpTaskOnGridNode.resize(totTask * gridSize);
@@ -161,9 +151,6 @@ void Communication::ExchangeBuffers()
 				}
 
 			}
-#ifdef VERBOSE
-			cout << locTask << " from task= " << iT << ", requests n nodes: " << buffNodeHalo[iT].size() << endl; 
-#endif
 		}
 	} 
 
@@ -174,6 +161,8 @@ void Communication::ExchangeBuffers()
 };
 
 
+/* Each task is sending and receiving to/from multiple task. 
+ * Send/recv tasks need to be defined consistently everywhere to ensure correct communication. */
 void Communication::SetSendRecvTasks()
 {
 	int iTrecv = 0, iTsend = 0;
@@ -208,6 +197,10 @@ void Communication::SetSendRecvTasks()
 };
 
 
+/* This function first determines the size of the buffers to be broadcasted, then communicates it to all the tasks.
+ * Each task packs all the halos and particles that are requested by other halos for comparison into several buffers,
+ * which are communicated with a call to MPI_Sendrecv. The buffers are then unpacked into the locBuffHalos and locBuffParts
+ * vectors, which contain all of the halos/particles received from the neighbouring subvolumes. */
 void Communication::BufferSendRecv()
 {
 	/* Tasks receiving and sending messages */

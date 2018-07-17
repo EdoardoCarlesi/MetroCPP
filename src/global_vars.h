@@ -60,5 +60,7 @@ extern float boxSize;
 extern float totVmax;
 extern float locVmax;
 extern float maxBufferThick;
-extern int nChunksPerFile;	// Each halo catalog / particle file is split into this number of files
+
+extern int nCat;
+extern int nChunks;	// Each halo catalog / particle file is split into this number of files
 #endif 

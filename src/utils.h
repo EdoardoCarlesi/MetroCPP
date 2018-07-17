@@ -4,6 +4,7 @@
 #include <math.h>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 #include "global_vars.h"
 #include "utils.h"
@@ -25,6 +26,8 @@ void ShiftHalosPartsGrids(void);
 bool CompareHalos(int, int, int, int);
 
 void FindProgenitors(int, int);
+
+vector<string> SplitString(string, string);
 
 vector<int> CommonParticles(vector<vector<unsigned long long int>>, 
 vector<vector<unsigned long long int>>);

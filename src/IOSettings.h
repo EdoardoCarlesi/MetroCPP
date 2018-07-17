@@ -13,19 +13,11 @@ public:
 	IOSettings();
 	~IOSettings();
 
-	int nLinesHeader = 1;
-
-	int iniStep;
-	int endStep;
-	int totStep;
-		
-	int nFilesOnTask;
-
 	// Catalog numbers, redshifts and expansion factor values
-	vector<int> numSnaps;
 	vector<string> strSnaps;
 	vector<float> redShift;
 	vector<float> aFactors;
+	vector<int> numSnaps;
 
 	// These strings contain all the paths to all the halo files to be read
 	// They are vector of vectors as in principle a task may read from different files
@@ -37,18 +29,16 @@ public:
 	string haloPrefix;
 	string partPrefix;
 
-	int nCat;		// Number of catalogs
 	string catFormat;
 	string pathMetroCpp;	// Where the program is installed
 	string pathInput;	// Folder containing all the halo/particle catalogs	//TODO allow for different folders
 	string pathOutput;	// Where to dump all the output data
 
-	// Temporary storage for test URLs
-	string urlTestFileHalo; 
-	string urlTestFilePart; 
-	
+	string inputFormat;	// AHF, FoF, or anything else	
+
 	void Init(void);
 	void DistributeFilesAmongTasks(void);
+	void CheckStatus(void);
 
 	// These function rely on bash scripts to determine the halo catalogs properties
 	void FindCatN();
@@ -65,7 +55,8 @@ public:
 	void WriteTrees();
 
 private:
-	// TODO : AHF-halo catalog format only is assumed!
+	void InitFromCfgFile(vector<string>);
+
 	// These scripts are used by the program to find:
 	string findNsh  = "/scripts/find_n.sh";	// Number of catalogs
 	string findZsh  = "/scripts/find_z.sh";	// Redshift of snapshots

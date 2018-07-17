@@ -25,7 +25,7 @@ int main(int argv, char **argc)
 	int totCat = 2;	
 	boxSize = 1.0e+5; 	// Using kpc/h units
 	nGrid = 100;	
-	nChunksPerFile = 2;
+	nChunks = 2;
 	dMaxFactor = 1.5;
 
 	string configFile = argc[1];

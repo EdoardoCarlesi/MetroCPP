@@ -1,9 +1,4 @@
 #include <mpi.h>
-#include <math.h>
-
-#include <iostream>
-#include <sstream>
-#include <fstream>
 #include <vector>
 
 #include "Halo.h"
@@ -50,4 +45,5 @@ float maxBufferThick;
 float boxSize;
 
 int nGrid;
-int nChunksPerFile;
+int nChunks;
+int nCat;
