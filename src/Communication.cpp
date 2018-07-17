@@ -62,12 +62,8 @@ void Communication::BroadcastAndGatherGrid()
 			{
 				thisTask = tmpTaskOnGridNode[i + gridSize * j];
 
-				//if (thisTask > 0 && iUseCat == 1)
 				if (thisTask > 0)
 				{
-				//	if (iUseCat == 1)
-				//		cout << "task=" << thisTask << " " << i << endl;
-
 					allNonZeroTasks.push_back(thisTask);	
 					allNonZeroNodes.push_back(i);	
 				}
@@ -89,8 +85,8 @@ void Communication::BroadcastAndGatherGrid()
 	MPI_Bcast(&allNonZeroNodes[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
 	MPI_Bcast(&allNonZeroTasks[0], nNonZero, MPI_INT, 0, MPI_COMM_WORLD);	
 	
-	//if (locTask == 0)
-	//cout << "Halo positions on the grid nodes have been broadcasted to all tasks for grid=" << iUseCat << endl;
+	if (locTask == 0)
+		cout << "Halo positions on the grid nodes have been broadcasted to all tasks." << endl;
 
 	/* Now allocate the GLOBAL grid informations and assign the task/node connection on every task */
 	GlobalGrid[iUseCat].globalTaskOnGridNode.resize(gridSize);
@@ -102,8 +98,9 @@ void Communication::BroadcastAndGatherGrid()
 		GlobalGrid[iUseCat].globalTaskOnGridNode[thisNode].push_back(thisTask);
 	}
 
-	//cout << iNonZero << " duplicate nodes on task=" << locTask << endl;
-
+#ifdef VERBOSE
+	cout << iNonZero << " duplicate nodes on task=" << locTask << endl;
+#endif
 	// Release some memory from the buffers 
 	allNonZeroNodes.clear();	allNonZeroNodes.shrink_to_fit();
 	allNonZeroTasks.clear();	allNonZeroTasks.shrink_to_fit();
@@ -143,10 +140,10 @@ void Communication::ExchangeBuffers()
 				buffIndexNodeHalo[iT].resize(sizeRecvNode);
 				MPI_Sendrecv(&GlobalGrid[1].buffNodes[iT][0], sizeSendNode, MPI_INT, iT, 0, 
 				                   &buffIndexNodeHalo[iT][0], sizeRecvNode, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
-
-				//cout << "Task=" << locTask << " to=" << iT << ", send=" << 
-				// sizeSendNode << ", recv= " << sizeRecvNode << endl;
-
+#ifdef VERBOSE
+				cout << "Task=" << locTask << " to=" << iT << ", send=" << 
+				 	sizeSendNode << ", recv= " << sizeRecvNode << endl;
+#endif
 				/* Now each task knows which nodes need to be sent and to which task.
 				 * We collect the halo indexes corresponding to all of these nodes */
 				for (int iN = 0; iN < buffIndexNodeHalo[iT].size(); iN++)
@@ -158,23 +155,15 @@ void Communication::ExchangeBuffers()
 					{
 						buffIndexSendHalo[iT].push_back(allIndex[iH]);
 						if (buffIndexSendHalo[iT][iH] > locHalos[iUseCat].size())
-							cout << "WARNING---> " << locTask << ", " << iT << ") " << buffIndexSendHalo[iT][iH] << endl;	
-						//cout << iH << ", " << iT << "] " << thisNode << " " << buffIndexSendHalo[iT][iH] << endl;
+							cout << "WARNING---> " << locTask << ", " << iT 
+								<< ") " << buffIndexSendHalo[iT][iH] << endl;	
 					}
 				}
 
-				//sizeSendHalo = buffSendHalo[iT].size();
-
-				/* Communicate how many halos each task will send/recv */
-				//MPI_Sendrecv(&sizeSendHalo, 1, MPI_INT, iT, 0, 
-				 //       &nBuffRecvHalo[iT], 1, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
-
-				//if (locTask == 0)	
-				//cout << "Task=" << locTask << " to=" << iT << " send=" << sizeSendHalo << " halos;"  
-				//	<< " from=" << iT << " recv=" << nBuffRecvHalo[iT] << " halos." << endl;
 			}
-
-			//cout << locTask << " from task= " << iT << ", requests n nodes: " << buffNodeHalo[iT].size() << endl; 
+#ifdef VERBOSE
+			cout << locTask << " from task= " << iT << ", requests n nodes: " << buffNodeHalo[iT].size() << endl; 
+#endif
 		}
 	} 
 
@@ -212,9 +201,10 @@ void Communication::SetSendRecvTasks()
 		
 	}
 
-//	for (int iT = 0; iT < totTask-1; iT++)
-//		cout << iT << ") on task= " << locTask << ", send=" << sendTasks[iT] << ", recv=" << recvTasks[iT] << endl; 
-
+#ifdef VERBOSE
+	for (int iT = 0; iT < totTask-1; iT++)
+		cout << iT << ") on task= " << locTask << ", send=" << sendTasks[iT] << ", recv=" << recvTasks[iT] << endl; 
+#endif
 };
 
 
@@ -279,7 +269,7 @@ void Communication::BufferSendRecv()
 			
 			buffSendHalos.push_back(locHalos[iUseCat][iH]);
 			
-			for (int iT = 0; iT < 6; iT ++)
+			for (int iT = 0; iT < nPTypes; iT ++)
 				buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
 		
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
@@ -294,8 +284,10 @@ void Communication::BufferSendRecv()
 		buffRecvSizeHalos = nBuffRecvHalos * sizeHalo;
 		buffRecvHalos.resize(nBuffRecvHalos);	
 
-		//	cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " to " << recvTask <<endl;
-		//	cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " by " << sendTask <<endl;
+#ifdef VERBOSE
+		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " to " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " by " << sendTask <<endl;
+#endif
 
 		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
 			     &buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
@@ -331,9 +323,12 @@ void Communication::BufferSendRecv()
 
 		locBuffParts.resize(locBuffHalos.size());
 
+#ifdef VERBOSE
+		cout << "Allocating " << buffSendSizeParts/1024/1024 << "MB send buffer for " << nBuffSendHalos << endl;
+#else
 		if (locTask == 0 && iT == 0)
 			cout << "Allocating particle send buffer... " << endl;
-			//cout << "Allocating " << buffSendSizeParts/1024/1024 << "MB send buffer for " << nBuffSendHalos << endl;
+#endif
 
 		/* MPI_Pack variables - for some reason if defined at the beginning MPI_Pack crashes... */
 		int posSendPart = 0;
@@ -366,9 +361,12 @@ void Communication::BufferSendRecv()
 
 		buffRecvParts = (void *) malloc(buffRecvSizeParts);
 
+#ifdef VERBOSE
+		cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
+#else
 		if (locTask == 0 && iT == 0)
 			cout << "Allocating particle recv buffer..." << endl;
-		//	cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
+#endif
 
 		/* Send and recv the MPI_Pack-ed buffers */
 		MPI_Sendrecv(buffSendParts, buffSendSizeParts, MPI_BYTE, sendTask, 0, 
@@ -403,11 +401,14 @@ void Communication::BufferSendRecv()
 		}
 	}	/* Loop on all the send/recv tasks */
 
+#ifdef VERBOSE
+	cout << "Gathered " << locBuffHalos.size() << " halos in the buffer on task=" << locTask << endl;
+	cout << "Gathered " << iBuffTotHalo << " halos in the buffer on task=" << locTask << endl;
+	cout << "Gathered " << iBuffTotPart << " parts in the buffer on task=" << locTask << endl;
+#else
 	if (locTask == 0)
 		cout << "Gathered halo and particle buffers. " << endl;
-	//cout << "Gathered " << locBuffHalos.size() << " halos in the buffer on task=" << locTask << endl;
-	//cout << "Gathered " << iBuffTotHalo << " halos in the buffer on task=" << locTask << endl;
-	//cout << "Gathered " << iBuffTotPart << " parts in the buffer on task=" << locTask << endl;
+#endif
 };
 
 

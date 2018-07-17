@@ -7,7 +7,7 @@ include ../Makefile.config
 # compiler optimization:
 #CXXFLAGS += -g -O0           # debug mode
 CXXFLAGS += -O3 -std=c++11               # normal mode
-CXXFLAGS += -Wunused-result -fpermissive
+CXXFLAGS += -Wunused-result -fpermissive 
 EXEC = MetroCPP
 EXEC_T = test
 
@@ -28,18 +28,18 @@ OBJS  =  $(SOURCE:.cpp=.o)
 #=============================================================================#
 
 .cpp.o :
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) $(OPT) -c $<
 
 .PHONY: all clean
 
 all : 	MetroCPP test
 
 MetroCPP : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(OPT) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
 	mv $(EXEC) ../bin/
 
 test : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(OPT) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
 	mv $(EXEC_T) ../bin/
 
 # Check if file format *.o exists before cleaning

@@ -28,7 +28,7 @@ size_t locHalosSize[2];
 
 int iNumCat; // Halo catalog number in use, from 0 to N
 int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
-int nTypePart;
+int nTypePart = NPTYPES;
 int nTotHalos[2];
 int nLocHalos[2];
 

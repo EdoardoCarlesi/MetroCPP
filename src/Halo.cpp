@@ -16,7 +16,7 @@ Halo::Halo()
 	ID = 0;		hostID = 0;
 	isToken = false; 	
 	
-	for (int iT = 0; iT < 6; iT++)
+	for (int iT = 0; iT < nPTypes; iT++)
 		nPart[0] = 0;
 };
 
@@ -47,7 +47,7 @@ void Halo::Info(void)
 {
 	cout << "Task " << locTask << " Halo ID " << ID << endl;
 	printf("Mtot: %.3e, ID: %.llu, Npart: %d, X:(%.2f, %.2f, %.2f), V:(%.2f, %.2f, %.2f) \n", 
-		mTot, ID, nPart[6], X[0], X[1], X[2], V[0], V[1], V[2]);
+		mTot, ID, nPart[nPTypes], X[0], X[1], X[2], V[0], V[1], V[2]);
 
 };
 

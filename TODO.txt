@@ -1,6 +1,5 @@
 TO DO NEXT:
 
-Small fixes: Move the ReadAHF from Halo to SettingsIO class
 Introduce a compile time option NPTYPES = X to define the number of particles used GLOBALLY at compile time
 
 Medium improvement: determine the haloes to be compared defining a region on the grid and on the buffer grid.

@@ -14,11 +14,12 @@
  */
 void InitLocVariables(void)
 {
-	// FIXME
         locVmax = 0.0; 
 	totVmax = 0.0;
         locHalosSize[0] = 0; locHalosSize[1] = 0;
 	nLocParts[0] = 0; nLocParts[1] = 0;
+
+	nPTypes = NPTYPES;
 
 	locParts.resize(2);
 	locHalos.resize(2);
@@ -72,7 +73,7 @@ void CleanMemory(int iCat)
 
 		for (int iH = 0; iH < nLocHalos[iCat]; iH++)
 		{
-			for (int iT = 0; iT < 6; iT++)
+			for (int iT = 0; iT < nPTypes; iT++)
 			{
 				locParts[iCat][iH][iT].clear();
 				locParts[iCat][iH][iT].shrink_to_fit();
@@ -106,7 +107,7 @@ void ShiftHalosPartsGrids()
 	{
 		locParts[0][iH].resize(nPTypes);
 
-		for (int iT = 0; iT < 6; iT++)
+		for (int iT = 0; iT < nPTypes; iT++)
 			locParts[0][iH][iT] = locParts[1][iH][iT];
 	}
 	

@@ -265,9 +265,6 @@ void IOSettings::DistributeFilesAmongTasks(void)
 			ifstream partExists(haloFiles[i][j]);
 			if (partExists.fail())
 				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
-		
-			//if (locTask == 0 || locTask == 2)  
-			//	cout << locTask << ") haloFiles[" << i << "][" << j << "]: " << haloFiles[i][j] << endl; 
 
 		}
 	}
@@ -297,7 +294,7 @@ void IOSettings::ReadParticles(void)
 		tmpUrlPart = partFiles[iNumCat][iChunk].c_str();
 		ifstream fileIn(tmpUrlPart);
 
-		// Reset temporary variables
+		/* Reset temporary variables */
 		iTmpParts = 0;
 		iTmpHalos = 0;
 		iLine = 0;
@@ -314,7 +311,7 @@ void IOSettings::ReadParticles(void)
 		{
 			const char *lineRead = lineIn.c_str();		
 
-			// TODO this is all AHF format dependent
+			// FIXME this is all AHF format dependent
 			if (iLine == 0)
 			{
 		                sscanf(lineRead, "%d", &nFileHalos);
@@ -423,6 +420,9 @@ void IOSettings::ReadHalos()
 
 		fileIn.close();
 
+#ifdef VERBOSE
+		cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
+#endif
 		// Append to the locHalo file
 		locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
 		tmpHalos.clear();
@@ -435,9 +435,9 @@ void IOSettings::ReadHalos()
 	// After reading in all the catalogs, find out, sort and remove duplicates of nodes being allocated to the task
 	GlobalGrid[iUseCat].SortLocNodes();
 
-	//if (locTask == 0)
-	//	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
-	//cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
+#ifdef VERBOSE
+	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
+#endif
 };
 
 
@@ -446,16 +446,29 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	float dummy, vHalo;
 	unsigned int tmpNpart, nGas = 0, nStar = 0;
 
-//ID(1)  hostHalo(2)     numSubStruct(3) Mvir(4) npart(5)        Xc(6)   Yc(7)   Zc(8)   VXc(9)  VYc(10) VZc(11) Rvir(12)        Rmax(13)        r2(14)  mbp_offset(15)  com_offset(16)  Vmax(17)        v_esc(18)       sigV(19)        lambda(20)      lambdaE(21)     Lx(22)  Ly(23)  Lz(24)  b(25)   c(26)   Eax(27) Eay(28) Eaz(29) Ebx(30) Eby(31) Ebz(32) Ecx(33) Ecy(34) Ecz(35) ovdens(36)      nbins(37)       fMhires(38)     Ekin(39)        Epot(40)        SurfP(41)       Phi0(42)        cNFW(43)        n_gas(44)       M_gas(45)       lambda_gas(46)  lambdaE_gas(47) Lx_gas(48)      Ly_gas(49)      Lz_gas(50)      b_gas(51)       c_gas(52)       Eax_gas(53)     Eay_gas(54)     Eaz_gas(55)     Ebx_gas(56)     Eby_gas(57)     Ebz_gas(58)     Ecx_gas(59)     Ecy_gas(60)     Ecz_gas(61)     Ekin_gas(62)    Epot_gas(63)    n_star(64)      M_star(65)      lambda_star(66) lambdaE_star(67)        Lx_star(68)     Ly_star(69)     Lz_star(70)     b_star(71)      c_star(72)      Eax_star(73)    Eay_star(74)    Eaz_star(75)    Ebx_star(76)    Eby_star(77)    Ebz_star(78)    Ecx_star(79)    Ecy_star(80)    Ecz_star(81)    Ekin_star(82)   Epot_star(83)   
-	// Col:		    1   2    3  4  5  6  7  8  9 10 11 
-	sscanf(lineRead, "%llu %llu %d %f %d %f %f %f %f %f %f \
+	/* AHF file structure:
+	   ID(1)  hostHalo(2)     numSubStruct(3) Mvir(4) npart(5)        Xc(6)   Yc(7)   Zc(8)   VXc(9)  VYc(10) VZc(11) 
+	   Rvir(12)        Rmax(13)        r2(14)  mbp_offset(15)  com_offset(16)  Vmax(17)        v_esc(18)       sigV(19)
+           lambda(20)      lambdaE(21)     Lx(22)  Ly(23)  Lz(24)  b(25)   c(26)   Eax(27) Eay(28) Eaz(29) Ebx(30) Eby(31) 
+	   Ebz(32) Ecx(33) Ecy(34) Ecz(35) ovdens(36)      nbins(37)       fMhires(38)     Ekin(39)        Epot(40)        
+	   SurfP(41)       Phi0(42)        cNFW(43)        n_gas(44)       M_gas(45)       lambda_gas(46)  lambdaE_gas(47) 
+	   Lx_gas(48)      Ly_gas(49)      Lz_gas(50)      b_gas(51)       c_gas(52)       Eax_gas(53)     Eay_gas(54)     
+	   Eaz_gas(55)     Ebx_gas(56)     Eby_gas(57)     Ebz_gas(58)     Ecx_gas(59)     Ecy_gas(60)     Ecz_gas(61)     
+	   Ekin_gas(62)    Epot_gas(63)    n_star(64)      M_star(65)      lambda_star(66) lambdaE_star(67)        
+           Lx_star(68)     Ly_star(69)     Lz_star(70)     b_star(71)      c_star(72)      Eax_star(73)    Eay_star(74) Eaz_star(75)    
+	   Ebx_star(76)    Eby_star(77)    Ebz_star(78)    Ecx_star(79)    Ecy_star(80)    Ecz_star(81)    Ekin_star(82)Epot_star(83) */
+
+	/* Col:		    1   2    3  4  5  6  7  8  9 10 11 */
+	sscanf(lineRead, "%llu %llu %d %f %d \
+			  %f   %f   %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f", 
 			&halo->ID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
 			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 	// 11
 			&halo->rVir, &dummy, &dummy, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
 			&halo->L[0], &halo->L[1], &halo->L[2]); 
-	
+
+	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
@@ -465,13 +478,8 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	halo->nPart[5] = 0;
 	halo->nPart[6] = tmpNpart;
 
-	// Compute max velocity and sub box edges while reading the halo file
+	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);
-
-	// TODO
-	// nPart[0] = nGas //44
-	// nPart[4] = nStar //64
-	// nPart[1] = DM // subtract gas & star from the total
 
 	if (vHalo > locVmax)
 		locVmax = vHalo;

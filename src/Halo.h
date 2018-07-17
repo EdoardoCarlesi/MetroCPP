@@ -10,10 +10,6 @@
 
 using namespace std;
 
-#define NPTYPES 6	/* This needs to be defined at compile time so that the Halo class has a well-defined size,
-			 * which makes MPI communication easier
-			 */
-
 
 class Halo {
 
