@@ -120,6 +120,48 @@ int Grid::Index(int i, int j, int k)
 };
 
 
+
+vector<int> Grid::ListNearbyHalos(float *X, float R)
+{
+	vector<int> haloIndex;
+
+	float xMax[3], xMin[3];
+	int nHalos, thisNode, indHalo, *ixMax, *ixMin;
+
+	for (int iX = 0; iX < 3; iX++)
+	{
+		xMax[iX] = (X[iX] + R);
+		xMin[iX] = (X[iX] - R);
+		//cout << iX << "] max= " << xMax[iX] << ", min= " << xMin[iX] << endl;
+	}
+
+	ixMax = GridCoord(xMax);	
+	ixMin = GridCoord(xMin);	
+
+	for (int iX = ixMin[0]; iX <= ixMax[0]; iX++)
+		for (int iY = ixMin[1]; iY <= ixMax[1]; iY++)
+			for (int iZ = ixMin[2]; iZ <= ixMax[2]; iZ++)
+			{
+				thisNode = Index(iX, iY, iZ);		
+				nHalos = haloOnGridNode[thisNode].size();
+			
+				for (int iH = 0; iH < nHalos; iH++)
+				{
+					indHalo = haloOnGridNode[thisNode][iH];
+
+					/* Beware: indHalo can be positive (halos on the local grid) or negative (halos on the buffer) */
+					haloIndex.push_back(indHalo);
+
+					//cout << 
+				}
+			}
+
+	return haloIndex;
+
+};
+
+
+
 int * Grid::GridCoord(float *X)
 {
 	int * iX; iX = new int[3]; 
@@ -215,14 +257,10 @@ void Grid::AssignToGrid(float *X, int index)
 
 	iX = GridCoord(X);
 	thisNode = Index(iX[0], iX[1], iX[2]);
-	haloOnGridNode[thisNode].push_back(index);
-	taskOnGridNode[thisNode] = locTask + 1;	// Add one to distinguish from empty node!
+	haloOnGridNode[thisNode].push_back(index);	// index is positive for locHalos and negative for locBuffHalos
+	taskOnGridNode[thisNode] = locTask + 1;		// Add one to distinguish from empty node!
 
 	locNodes.push_back(thisNode);
-
-//	if (index < 50) 	// Sanity check
-//		printf("%d) Halo=%d grid=(%d, %d, %d) x=(%.2f, %.2f, %.2f) node=%d\n", 
-//			locTask, index, iX[0], iX[1], iX[2], X[0], X[1], X[2], thisNode);
 	free(iX);
 };
 

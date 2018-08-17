@@ -18,6 +18,7 @@
 #include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
+#include "MergerTree.h"
 
 using namespace std;
 
@@ -71,14 +72,14 @@ int main(int argv, char **argc)
 		SettingsIO.ReadHalos();
 		SettingsIO.ReadParticles();	
 
-		// Now every task knows which nodes belongs to which task
+		/* Now every task knows which nodes belongs to which task */
 		CommTasks.BroadcastAndGatherGrid();
 
-		// After reading in the second halo catalog, each task finds out which buffer nodes it needs to request to the other tasks
-		// The nodes are located on grid 1 based on the distribution of the nodes on grid 0
+		/* After reading in the second halo catalog, each task finds out which nodes it gets from the other tasks
+		   The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 
-		// Now exchange the halos in the requested buffer zones among the different tasks
+		/* Now exchange the halos in the requested buffer zones among the different tasks */
 		CommTasks.BufferSendRecv();
 
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -135,7 +136,7 @@ int main(int argv, char **argc)
 	if (locTask == 0)	
 		cout << "MPI finalized, memory cleaned. Exiting the program." << endl;
 
-	//exit(0);
+	exit(0);
 }
 
 

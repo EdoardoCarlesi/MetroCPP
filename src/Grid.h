@@ -46,6 +46,9 @@ public:
 	int * Index2Grid(int);		// Given and index, i, j, k it position in grid coordinates
 	int * GridCoord(float *);	// Given x, y, z determine their position in the array in grid coordinates
 
+	/* This functions returns a list of the haloes contained within a given volume around a point inside the box */
+	vector<int> ListNearbyHalos(float *, float);
+
 	// Some tasks may share parts of the same node, so take care of them separately in a vector of vectors
 	// This variable tracks the task number that is storing halos on a given grid node
 	vector<vector<int>> globalTaskOnGridNode;	

@@ -23,14 +23,6 @@ void CleanMemory(int);
 
 void ShiftHalosPartsGrids(void);
 
-bool CompareHalos(int, int, int, int);
-
-void FindProgenitors(int, int);
 
 vector<string> SplitString(string, string);
-
-vector<int> CommonParticles(vector<vector<unsigned long long int>>, 
-vector<vector<unsigned long long int>>);
-
-
 #endif

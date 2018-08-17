@@ -520,6 +520,7 @@ void IOSettings::ReadHalos()
 				nPartHalo = tmpHalos[iTmpHalos].nPart[nPTypes];	// All particle types!
 
 				// Assign halo to its nearest grid point - assign the absolute local index number
+				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
 
 				iLocHalos++;

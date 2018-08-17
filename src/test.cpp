@@ -1,3 +1,10 @@
+/* The main file is a wrapper for all the functions that need to be invoked to 
+ * compute the merger trees. 
+ * First, we read an input file containing the necessary settings.
+ * Then halo/particle files are distributed and read in by the tasks.
+ * Buffers along the borders of the subvolume contained by each task are then computed and distributed across the tasks.
+ * Halo merger trees are then computed consistently on each individual task. */
+
 #include <mpi.h>
 
 #include <vector>
@@ -11,6 +18,7 @@
 #include "Communication.h"
 #include "IOSettings.h"
 #include "Halo.h"
+#include "MergerTree.h"
 
 using namespace std;
 
@@ -21,34 +29,21 @@ int main(int argv, char **argc)
 	IOSettings SettingsIO;
 	Communication CommTasks;
 
-	// TODO Make these parameters readable from an input file
-	int totCat = 2;	
-	boxSize = 1.0e+5; 	// Using kpc/h units
-	nGrid = 100;	
-	nChunks = 2;
-	dMaxFactor = 1.5;
-
 	string configFile = argc[1];
 
+	/* Read configuration file and initialize variables */
+	SettingsIO.ReadConfigFile(configFile);
+
+	/* Fire off MPI */
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
 
+	/* These are the local variables and I/O settings that are defined for each task*/
 	InitLocVariables();
-	//SettingsIO.ReadConfigFile(configFile);
-
-	// TODO make this readable from input file
-	SettingsIO.pathMetroCpp = "/home/eduardo/CLUES/MetroC++/";
-	SettingsIO.pathInput = "/home/eduardo/CLUES/DATA/FullBox/01/";
-	SettingsIO.catFormat = "AHF_halos";
-	SettingsIO.haloSuffix = "AHF_halos";
-	SettingsIO.partSuffix = "AHF_particles";
-	SettingsIO.haloPrefix = "snapshot_";
-	SettingsIO.partPrefix = "snapshot_";
-
 	SettingsIO.Init();
 
-	// We are assuming that each task reads more than one file
+	// We are assuming that each task reads more than one file. TODO load balancing
 	SettingsIO.DistributeFilesAmongTasks();
 
 	/* This is a global variable */
@@ -58,14 +53,18 @@ int main(int argv, char **argc)
 	SettingsIO.ReadHalos();
 	SettingsIO.ReadParticles();	
 
-	// TODO some load balancing
-	// Split the files among the tasks in case ntask > nfiles to be read in
+#ifdef VERBOSE
+	if (locTask == 0)
+		SettingsIO.CheckStatus();
+#endif
 
 	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
 
+	int nUseCat = 2;	// THIS IS A LOCAL VARIABLE used for TEST only
+
 	/* Loop on halo and particle catalogs */
-	for (iNumCat = 1; iNumCat < totCat; iNumCat++)
+	for (iNumCat = 1; iNumCat < nUseCat; iNumCat++)
 	{
 		clock_t iniTime = clock();
 
@@ -73,14 +72,14 @@ int main(int argv, char **argc)
 		SettingsIO.ReadHalos();
 		SettingsIO.ReadParticles();	
 
-		// Now every task knows which nodes belongs to which task
+		/* Now every task knows which nodes belongs to which task */
 		CommTasks.BroadcastAndGatherGrid();
 
-		// After reading in the second halo catalog, each task finds out which buffer nodes it needs to request to the other tasks
-		// The nodes are located on grid 1 based on the distribution of the nodes on grid 0
+		/* After reading in the second halo catalog, each task finds out which nodes it gets from the other tasks
+		   The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 
-		// Now exchange the halos in the requested buffer zones among the different tasks
+		/* Now exchange the halos in the requested buffer zones among the different tasks */
 		CommTasks.BufferSendRecv();
 
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -95,7 +94,6 @@ int main(int argv, char **argc)
 
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
-	
 
 #ifdef TEST
 		clock_t iniTime = clock();
@@ -138,7 +136,7 @@ int main(int argv, char **argc)
 	if (locTask == 0)	
 		cout << "MPI finalized, memory cleaned. Exiting the program." << endl;
 
-	//exit(0);
+	exit(0);
 }
 
 

@@ -394,6 +394,10 @@ void Communication::BufferSendRecv()
 		}
 	}	/* Loop on all the send/recv tasks */
 
+	/* Now assign the halos on the buffer to the respective nodes */
+	for (int iH = 0; iH < iBuffTotHalo; iH++)
+		GlobalGrid[iUseCat].AssignToGrid(locBuffHalos[iH].X, -iH);	// iH is negative - this is used for halos on the buffer
+
 #ifdef VERBOSE
 	cout << "Gathered " << locBuffHalos.size() << " halos in the buffer on task=" << locTask << endl;
 	cout << "Gathered " << iBuffTotHalo << " halos in the buffer on task=" << locTask << endl;
