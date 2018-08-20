@@ -222,7 +222,7 @@ void Communication::BufferSendRecv()
 	vector<Halo> buffRecvHalos;
 
 	/* Buffers and buffer sizes */
-	void *buffSendParts = NULL, *buffRecvParts = NULL;
+	void *buffSendParts = nullptr, *buffRecvParts = nullptr;
 	size_t buffSendSizeParts = 0, buffRecvSizeParts = 0;
 	size_t buffSendSizeHalos = 0, buffRecvSizeHalos = 0;
 	int nTmpPart = 0;
@@ -345,11 +345,11 @@ void Communication::BufferSendRecv()
 		MPI_Sendrecv(&buffSendSizeParts, sizeof(size_t), MPI_BYTE, sendTask, 0, 
 			     &buffRecvSizeParts, sizeof(size_t), MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
 
-		/* Check that the receiving buffer is NULL before allocating it */
-		if (buffRecvParts != NULL)
+		/* Check that the receiving buffer is a null pointer before allocating it */
+		if (buffRecvParts != nullptr)
 		{
 			free(buffRecvParts);
-			buffRecvParts = NULL;
+			buffRecvParts = nullptr;
 		}
 
 		buffRecvParts = (void *) malloc(buffRecvSizeParts);

@@ -5,10 +5,10 @@
 #include "MergerTree.h"
 #include "Halo.h"
 
+#include "utils.h"
 #include "global_vars.h"
 
 using namespace std;
-
 
 
 
@@ -16,14 +16,15 @@ MergerTree::MergerTree()
 {
 };
 
+
 MergerTree::~MergerTree()
 {
 };
 
+
 void MergerTree::sortByMerit(void)
 {
 };
-
 
 
        /************************************************************************* 
@@ -33,14 +34,24 @@ void MergerTree::sortByMerit(void)
 /* Given two halos, decide whether to compare their particle content or not */
 bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 {
-	float rMax = 0.0;
+	float min = 100000.0, max = 0.0;
+	float rMax = 0.0, vMax = 0.0, fVel = 0.5e-2, vOne = 0.0, vTwo = 0.0;
+	Halo cmpHalo;
 
+	// TODO introduce more checks on the time, velocity and so on
 	// do some check - if jHalo > nLocHalos ---> go look into the buffer halos FIXME
+	if (jHalo >= 0)
+		cmpHalo = locHalos[iTwo][jHalo];
+	if (jHalo < 0)
+		cmpHalo = locBuffHalos[-jHalo];
 
-	rMax = locHalos[iOne][iHalo].rVir + locHalos[iTwo][jHalo].rVir; rMax *= dMaxFactor;
+	rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir; 
+	vOne = VectorModule(locHalos[iOne][iHalo].V); vTwo = VectorModule(cmpHalo.V);
+	vMax = (vOne + vTwo) * fVel;
+	rMax *= dMaxFactor * vMax;
 
 	// Only check for pairwise distance
-	if (locHalos[iOne][iHalo].Distance(locHalos[iTwo][jHalo].X) < rMax)
+	if (locHalos[iOne][iHalo].Distance(cmpHalo.X) < rMax)
 		return true;
 	else 
 		return false;
@@ -52,18 +63,70 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 void FindProgenitors(int iOne, int iTwo)
 {
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
-	vector<int> nCommon;
+	float rSearch = 0, facRSearch = 20.0;
+	vector<int> nCommon, indexes;
+	int totCmp = 0, totSkip = 0, totNCommon = 0;
 
 		for (int i = 0; i < nLocHalos[iOne]; i++)
 		{
 			if (i == nStepsCounter * floor(i / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 
-			// FIXME instead of looping on all haloes ONLY select those within neighbouring nodes
-			for (int j = 0; j < nLocHalos[iTwo]; j++)
-				if (CompareHalos(i, j, iOne, iTwo))
-					nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
-		}
+#ifdef CMP_ALL	/* Compare ALL the halos located on the task - used only as a benchmark */
+
+			for (int j = 0; j < locHalos[iTwo].size(); j++)
+				nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
+						
+			if (nCommon[1] > 10) 
+			{		
+				totNCommon += nCommon[1];
+				totCmp++;
+			}
+
+			for (int j = 0; j < locBuffHalos.size(); j++)
+				nCommon = CommonParticles(locParts[iOne][i], locBuffParts[-j]);
+						
+			if (nCommon[1] > 10) 
+			{		
+				totNCommon += nCommon[1];
+				totCmp++;
+			}
+
+#else		/* Compare to a subset of halos */
+
+			Halo thisHalo = locHalos[iOne][i];
+			rSearch = facRSearch * thisHalo.rVir;
+
+			/* We only loop on a subset of halos */
+			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
+
+			for (int j = 0; j < indexes.size(); j++)
+			{
+				int k = indexes[j];
+
+				/* Compare halos --> this functions checks whether the two halos are too far 
+				   or velocities are oriented on opposite directions */
+				if (CompareHalos(i, k, iOne, iTwo))
+				{	
+					if (k >= 0)
+						nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][k]);
+					else
+						nCommon = CommonParticles(locParts[iOne][i], locBuffParts[-k]);
+
+					if (nCommon[1] > 10) 
+					{		
+						totCmp++;
+						totNCommon += nCommon[1];
+					} else {
+						totSkip++;
+					}
+				} // Halo Comparison
+
+			}	// for j, k = index(j)
+#endif
+		} // for i halo, the main one
+
+		cout << "\n" << locTask << ") TotComp: " << totCmp << ", totComm: " << totNCommon << " skip: " << totSkip << endl; 
 };
 
 
@@ -85,9 +148,6 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 		{
 			// This is the maximum possible number of common particles
 			thisCommon.resize(thisSize);
-
-			//cout << "Task=" << locTask << " type=" << iT << " nPart=" << partsHaloOne[iT].size() << endl;
-			//cout << "Task=" << locTask << " type=" << iT << " nPart=" << partsHaloTwo[iT].size() << endl;
 	
 			// Find out how many particles are shared among the two arrays
 			iter = set_intersection(partsHaloOne[iT].begin(), partsHaloOne[iT].end(), 
@@ -100,8 +160,6 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 			// Now compute how many particles in common are there
 			nCommon[iT] = thisCommon.size();
 		
-			//cout << "Task=" << locTask << " type=" << iT << " nCommon=" << nCommon[iT] << endl;
-	
 			// Clear the vector and free all the allocated memory
 			thisCommon.clear();
 	 		thisCommon.shrink_to_fit();

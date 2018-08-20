@@ -151,8 +151,9 @@ vector<int> Grid::ListNearbyHalos(float *X, float R)
 
 					/* Beware: indHalo can be positive (halos on the local grid) or negative (halos on the buffer) */
 					haloIndex.push_back(indHalo);
-
-					//cout << 
+				
+					//if (indHalo < 0) 
+					//	cout << iH << ", IndHalo: " << indHalo << endl;
 				}
 			}
 
