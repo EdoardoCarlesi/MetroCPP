@@ -6,7 +6,6 @@
 #include <iostream>
 #include <malloc.h>
 
-//#include "global_vars.h"
 
 using namespace std;
 
