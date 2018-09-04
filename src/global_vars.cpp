@@ -14,11 +14,15 @@ int locTask;
 int totTask;
 MPI_Status status;
 
+#ifndef ZOOM
 Grid GlobalGrid[2];
 Grid BufferGrid;
+#endif
 
 vector<vector<Halo>> locHalos;
+#ifndef ZOOM
 vector<Halo> locBuffHalos;
+#endif
 size_t locHalosSize[2];
 
 int iNumCat; // Halo catalog number in use, from 0 to N
@@ -28,7 +32,9 @@ int nTotHalos[2];
 int nLocHalos[2];
 
 vector<vector<vector<vector<unsigned long long int>>>> locParts;
+#ifndef ZOOM
 vector<vector<vector<unsigned long long int>>> locBuffParts;
+#endif
 size_t locPartsSize[2];
 
 size_t sizeHalo;

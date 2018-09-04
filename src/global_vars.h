@@ -11,23 +11,28 @@
 using namespace std;
 
 
-class Grid;
 class Halo;
+
+#ifndef ZOOM
+class Grid;
 
 // This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid[2];
 extern Grid BufferGrid;
+#endif
 
 // MPI variables
 extern int locTask;
 extern int totTask;
 extern MPI_Status status;
 
-// Halo & particle related variables for each task
+/* Halo & particle related variables for each task */
 extern vector<vector<Halo>> locHalos;
 
+#ifndef ZOOM
 /* Extra halos coming from the buffer nodes communicated from other tasks */
 extern vector<Halo> locBuffHalos;
+#endif
 
 extern size_t locHalosSize[2];
 
@@ -44,8 +49,10 @@ extern int iUseCat;
 /* Particles on task, also allocated by particle type within each halo */
 extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
 
+#ifndef ZOOM
 /* Extra particles coming from the buffer areas located on other tasks */
 extern vector<vector<vector<unsigned long long int>>> locBuffParts;
+#endif
 
 extern size_t sizePart;
 extern size_t sizeHalo;
