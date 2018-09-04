@@ -49,8 +49,6 @@ public:
 
 	void ReadLineAHF(const char *, Halo *);
 	void ReadParticles();
-	//void ReadLineFOF(const char *);
-	//void ReadLineHalo();
 	void ReadHalos();
 	void WriteTrees();
 

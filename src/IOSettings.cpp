@@ -41,7 +41,14 @@ void IOSettings::FindCatID()
 	char *tmpLine;
 	int iS = 0, sysOut = 0;
 
-	optionsSh = pathInput + " " + haloSuffix;
+#ifdef ZOOM
+	string boolZoom = "true"
+#else
+	string boolZoom = "false"
+#endif
+
+	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
+
 	outputTmp = pathMetroCpp + tmpIdOut;
 	inputSh = pathMetroCpp + findIDsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;	
@@ -179,7 +186,13 @@ void IOSettings::FindCatZ()
 	string cleanTmp;
 	string lineIn;
 
-	optionsSh = pathInput + " " + haloSuffix;
+#ifdef ZOOM
+	string boolZoom = "true"
+#else
+	string boolZoom = "false"
+#endif
+
+	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
 	outputTmp = pathMetroCpp + tmpZOut;
 	inputSh = pathMetroCpp + findZsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;	
@@ -232,7 +245,14 @@ void IOSettings::FindCatN()
 	string lineIn;
 	string cleanTmp;
 
-	optionsSh = pathInput + " " + haloSuffix;
+#ifdef ZOOM
+	string boolZoom = "true"
+#else
+	string boolZoom = "false"
+#endif
+
+	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
+
 	outputTmp = pathMetroCpp + tmpNOut;
 	inputSh = pathMetroCpp + findNsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;
@@ -334,12 +354,8 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	int locChunk = 0;
 	string strZ;
 
-	// TODO This function should optimize the halo distribution es. giving each task a slab of haloes, which 
-	// would also make the FFTW operation much faster, if planning to implement a purely PM grid to compute 
-	// the gravitational force at each step
-
-	//if (locTask == 0)
-	cout << "Each task is reading " << nChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
+	if (locTask == 0)
+		cout << "Each task is reading " << nChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
 
 	haloFiles.resize(nCat);
 	partFiles.resize(nCat);
@@ -347,16 +363,26 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	for (int i = 0; i < nCat; i++)
 	{
 		sprintf(charZ, "%.3f", redShift[i]);	
-		haloFiles[i].resize(nChunks);
+		haloFiles[i].resize(nChunks);	/* in ZOOM mode there is only one chunk */
 		partFiles[i].resize(nChunks);
 
 		for (int j = 0; j < nChunks; j++)
 		{
+#ifdef ZOOM
+			if (locTask == 0)
+			{	
+				haloFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".z" + charZ + "." + haloSuffix;
+				partFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".z" + charZ + "." + partSuffix;
+			}
+
+#else		/* No ZOOM, distribute the files as usually */
+
 			locChunk = j + locTask * nChunks;
 			sprintf(charCpu, "%04d", locChunk);	
 			haloFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
 			partFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + partSuffix;
 
+#endif
 			//cout << locTask << ") " << haloFiles[i][j] << endl; 
 
 			ifstream haloExists(haloFiles[i][j]);
@@ -366,7 +392,6 @@ void IOSettings::DistributeFilesAmongTasks(void)
 			ifstream partExists(haloFiles[i][j]);
 			if (partExists.fail())
 				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
-
 		}
 	}
 };
@@ -389,6 +414,11 @@ void IOSettings::ReadParticles(void)
 
 #ifdef VERBOSE
 	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
+#endif
+
+#ifdef ZOOM	/* Only read on one task */
+	if (locTask == 0)
+	{
 #endif
 
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
@@ -432,7 +462,7 @@ void IOSettings::ReadParticles(void)
 			} else {
 
 				if (inputFormat == "AHF")
-		        	        sscanf(lineRead, "%llu %hd", &partID, &partType);
+		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
 
 				tmpParts[partType].push_back(partID);
 				iLocParts++;
@@ -475,6 +505,17 @@ void IOSettings::ReadParticles(void)
 			} // else iLine not 0 or 1
 		} // end while
 	} // End for loop on file chunks
+
+#ifdef ZOOM
+	/* There is no actual loop but we close the reading of the file on task 0 */
+
+#ifdef VERBOSE
+	} else {
+		cout << "Task=" << locTask << " is waiting for communication from Task 0 " << endl;
+#endif
+	}	
+#endif
+
 	
 #ifdef VERBOSE
 	cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;

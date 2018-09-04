@@ -5,16 +5,24 @@
 
 path=$1
 format=$2
+zoom=$3
 cpus='0000'
 tmp='ahf.tmp'
 cd $path
+
+if [ "$zoom" == "true" ]
+then
+ 	cpus='.'
+else
+	cpus='.0000.'
+fi
 
 if [ -f "$tmp_out" ]
 then
 	rm $tmp_out
 fi
 
-for f_ahf in `ls *.$cpus.*$format`
+for f_ahf in `ls *$cpus*$format`
 do
 	echo $f_ahf > $tmp
 	this_z=`grep -o _[0-9][0-9][0-9] $tmp | sed 's/_//g ' `
