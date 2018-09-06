@@ -14,6 +14,7 @@ Halo::Halo()
 	mTot = 0.0; 	mGas = 0.0; 	mDM = 0.0; 	
 	rVir = 0.0;	lambda = 0.0;
 	ID = 0;		hostID = 0;
+	fMhires = 1.000;
 	isToken = false; 	
 	
 	for (int iT = 0; iT < nPTypes; iT++)

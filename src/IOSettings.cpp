@@ -354,8 +354,13 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	int locChunk = 0;
 	string strZ;
 
+#ifdef ZOOM
+	if (locTask == 0)
+		cout << "Reading halo/particle files on Task=0. Total number of tasks= " << totTask << endl; 
+#else
 	if (locTask == 0)
 		cout << "Each task is reading " << nChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
+#endif
 
 	haloFiles.resize(nCat);
 	partFiles.resize(nCat);
@@ -372,7 +377,29 @@ void IOSettings::DistributeFilesAmongTasks(void)
 			if (locTask == 0)
 			{	
 				haloFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".z" + charZ + "." + haloSuffix;
+
+				ifstream haloExists(haloFiles[i][j]);
+				if (haloExists.fail())
+				{
+					haloFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".0000.z" + charZ + "." + haloSuffix;
+
+					ifstream haloExists(haloFiles[i][j]);
+						if (haloExists.fail())
+							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << haloFiles[i][j] << endl;
+				}
+
 				partFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".z" + charZ + "." + partSuffix;
+
+				ifstream partExists(partFiles[i][j]);
+				if (partExists.fail())
+				{
+					partFiles[i][0] = pathInput + partPrefix + strSnaps[i] + ".0000.z" + charZ + "." + partSuffix;
+
+					ifstream partExists(partFiles[i][j]);
+						if (partExists.fail())
+							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << partFiles[i][j] << endl;
+				}
+
 			}
 
 #else		/* No ZOOM, distribute the files as usually */
@@ -382,16 +409,17 @@ void IOSettings::DistributeFilesAmongTasks(void)
 			haloFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
 			partFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + partSuffix;
 
-#endif
-			//cout << locTask << ") " << haloFiles[i][j] << endl; 
-
 			ifstream haloExists(haloFiles[i][j]);
 			if (haloExists.fail())
 				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
 
-			ifstream partExists(haloFiles[i][j]);
+			ifstream partExists(partFiles[i][j]);
 			if (partExists.fail())
 				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
+
+
+#endif
+			//cout << locTask << ") " << haloFiles[i][j] << endl; 
 		}
 	}
 };
@@ -442,7 +470,6 @@ void IOSettings::ReadParticles(void)
 		while (getline(fileIn, lineIn))
 		{
 			const char *lineRead = lineIn.c_str();		
-
 			
 			if (iLine == 0)
 			{
@@ -456,41 +483,60 @@ void IOSettings::ReadParticles(void)
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
 
+#ifdef ZOOM
+			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
+#endif
 				locParts[iUseCat][iLocHalos].resize(nPTypes);
-				iLine++;
 
+				iLine++;
 			} else {
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
 
 				tmpParts[partType].push_back(partID);
-				iLocParts++;
 				iTmpParts++;
+				iLocParts++;
 
+#ifdef ZOOM
+				if (iTmpParts == nPartHalo)
+#else
 				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[nPTypes])
+#endif
 				{	
+
 					// Sort the ordered IDs
 					for (int iT = 0; iT < nPTypes; iT++)
 					{	
 						if (tmpParts[iT].size() > 0)
 						{
-							sort(tmpParts[iT].begin(), tmpParts[iT].end());
+#ifdef ZOOM
+							if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
+							{
+#endif
+								sort(tmpParts[iT].begin(), tmpParts[iT].end());
 						
-							locParts[iUseCat][iLocHalos][iT].insert(locParts[iUseCat][iLocHalos][iT].end(), 
-								tmpParts[iT].begin(), tmpParts[iT].end());
-							
+								locParts[iUseCat][iLocHalos][iT].insert(locParts[iUseCat][iLocHalos][iT].end(), 
+									tmpParts[iT].begin(), tmpParts[iT].end());
+#ifdef ZOOM
+							} // Zoom mode, making sure the current halo is in the list of the high-res ones
+#endif
 							// Clean the temporary read-in buffer
 							tmpParts[iT].clear();
 							tmpParts[iT].shrink_to_fit();
 						}
 					}
 
-					// Set some counters
+#ifdef ZOOM
+					if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
+#endif
+						iLocHalos++;
+
+					iLocParts++;
+
+					// Set/reset some counters
 					iTmpParts = 0;
 					iTmpHalos++;
-					iLocHalos++;
-					iLocParts++;
 
 					// Check if all of the halos in the current file chunk have been read in
 					if (iTmpHalos == nFileHalos)
@@ -500,7 +546,6 @@ void IOSettings::ReadParticles(void)
 					} else {
 						iLine = 1;	
 					}
-
 				}
 			} // else iLine not 0 or 1
 		} // end while
@@ -533,6 +578,11 @@ void IOSettings::ReadHalos()
 
 	// Initialize outside of the files loop
 	int iLocHalos = 0; 
+
+#ifdef ZOOM	/* Only read on one task */
+	if (locTask == 0)
+	{
+#endif
 
 	for (int iChunk = 0; iChunk < nChunks; iChunk++)
 	{
@@ -572,16 +622,40 @@ void IOSettings::ReadHalos()
 
 		fileIn.close();
 
+#ifdef ZOOM	/* When in ZOOM mode ONLY! store the high density region halos */
+		iLocHalos = 0;
+
+		for (int iH = 0; iH < tmpHalos.size(); iH++)
+		{
+			if (tmpHalos[iH].fMhires > 0.95)
+			{
+				locHalos[iUseCat].push_back(tmpHalos[iH]);
+				iLocHalos++;
+			}
+		}
+
+#ifdef VERBOSE
+		cout << "Total halos: " << tmpHalos.size() << ", high-res= " << iLocHalos << endl;
+#endif
+
+		tmpHalos.clear();
+		tmpHalos.shrink_to_fit();
+#else
+	
 #ifdef VERBOSE
 		cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 #endif
-		// Append to the locHalo file
+	// Append to the locHalo file
 		locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
 		tmpHalos.clear();
 		tmpHalos.shrink_to_fit();
-
+#endif
 	} // Loop on files per task
 	
+#ifdef ZOOM
+	}
+#endif
+
 	nLocHalos[iUseCat] = iLocHalos;
 
 #ifndef ZOOM
@@ -597,7 +671,7 @@ void IOSettings::ReadHalos()
 
 void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 {
-	float dummy, vHalo;
+	float dummy, vHalo, fMhires;
 	unsigned int tmpNpart, nGas = 0, nStar = 0;
 
 	/* AHF file structure:
@@ -616,11 +690,16 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	sscanf(lineRead, "%llu %llu %d %f %d \
 			  %f   %f   %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
-			  %f   %f   %f", 
+			  %f   %f   %f \
+			  %f   %f   %f %f %f %f %f %f %f %f \
+			  %f   %f   %f %f ",
+ 
 			&halo->ID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
-			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 	// 11
-			&halo->rVir, &dummy, &dummy, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
-			&halo->L[0], &halo->L[1], &halo->L[2]); 
+			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 				// 11
+			&halo->rVir, &dummy, &dummy, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, 	// 21
+			&halo->L[0], &halo->L[1], &halo->L[2],									// 24
+			&dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy,				// 34
+			&dummy, &dummy, &dummy, &fMhires); 					// 38
 
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
@@ -631,6 +710,7 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	halo->nPart[4] = 0;
 	halo->nPart[5] = 0;
 	halo->nPart[6] = tmpNpart;
+	halo->fMhires = fMhires;
 
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);

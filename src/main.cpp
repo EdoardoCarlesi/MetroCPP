@@ -50,20 +50,31 @@ int main(int argv, char **argc)
 	iUseCat = 0;
 
 	/* Read particles and catalogs */
-	SettingsIO.ReadHalos();
-	SettingsIO.ReadParticles();	
+#ifdef ZOOM
+	if (locTask ==0)
+	{
+#endif
+		SettingsIO.ReadHalos();
+		SettingsIO.ReadParticles();	
+#ifdef ZOOM
+	}
+#endif
+
 
 #ifdef VERBOSE
 	if (locTask == 0)
 		SettingsIO.CheckStatus();
 #endif
 
-#ifndef ZOOM
+#ifdef ZOOM
+	/* Broadcast all the halos on all tasks */
+	CommTasks.BufferSendRecv();
+#else
 	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
 #endif
 
-	int nUseCat = 2;	// THIS IS A LOCAL VARIABLE used for TEST only
+	int nUseCat = 8;	// THIS IS A LOCAL VARIABLE used for TEST only
 
 	/* Loop on halo and particle catalogs */
 	for (iNumCat = 1; iNumCat < nUseCat; iNumCat++)
@@ -104,7 +115,6 @@ int main(int argv, char **argc)
 
 		if (locTask == 0)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
-
 	
 		FindProgenitors(1, 0);
 

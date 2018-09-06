@@ -71,11 +71,46 @@ void FindProgenitors(int iOne, int iTwo)
 	vector<int> nCommon, indexes;
 	int totCmp = 0, totSkip = 0, totNCommon = 0;
 
+#ifdef ZOOM
+	vector<int> locHaloPos;
+	int thisIndex = 0;
+	int halosPerTask = 0, halosRemaind = 0;
+
+	halosPerTask = int(nLocHalos[iOne] / totTask);
+	halosRemaind = nLocHalos[iOne] % totTask;
+
+	/* The first halosRemaind tasks get one halo more */
+	if (locTask < halosRemaind)
+		halosPerTask += 1;
+
+	for (int i = 0; i < halosPerTask; i++)
+	{
+		thisIndex = locTask + i * totTask;
+		Halo thisHalo = locHalos[iOne][thisIndex];
+
+			for (int j = 0; j < locHalos[iTwo].size(); j++)
+			{
+				nCommon = CommonParticles(locParts[iOne][thisIndex], locParts[iTwo][j]);
+				//cout << j << " onTask= " << locTask << ", npart= " << locParts[iOne][thisIndex][1].size() << endl;
+			}
+	
+			if (locTask == 1)
+				cout << i << " " << thisIndex << " " << nCommon[1] << endl;
+					
+			if (nCommon[1] > 10) 
+			{		
+				totNCommon += nCommon[1];
+				totCmp++;
+			}
+
+	}
+
+#else	/* Standard comparison */
+
 		for (int i = 0; i < nLocHalos[iOne]; i++)
 		{
 			if (i == nStepsCounter * floor(i / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
-
 #ifdef CMP_ALL	/* Compare ALL the halos located on the task - used only as a benchmark */
 
 			for (int j = 0; j < locHalos[iTwo].size(); j++)
@@ -101,10 +136,6 @@ void FindProgenitors(int iOne, int iTwo)
 			Halo thisHalo = locHalos[iOne][i];
 			rSearch = facRSearch * thisHalo.rVir;
 
-#ifdef ZOOM
-			// do some task dependent loop - all the locHalos[0] are compared to a subset of the locHalos[1]
-			// TODO split the locHalos[1] across the tasks
-#else
 			/* We only loop on a subset of halos */
 			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
 
@@ -131,12 +162,15 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 
 			}	// for j, k = index(j)
-#endif		// ifdef ZOOM
 
-#endif
+#endif		// compare all halos
 		} // for i halo, the main one
 
-		cout << "\n" << locTask << ") TotComp: " << totCmp << ", totComm: " << totNCommon << " skip: " << totSkip << endl; 
+#endif		// ifdef ZOOM
+
+
+		if (locTask == 0)
+			cout << "\n" << locTask << ") TotComp: " << totCmp << ", totComm: " << totNCommon << " skip: " << totSkip << endl; 
 };
 
 

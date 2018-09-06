@@ -20,6 +20,7 @@ public:
 	float mTot, mDM, mGas, mFM, mStar, rVir;
 	float lambda, vMax, sigV;
 	float X[3], V[3], L[3];
+	float fMhires;
 
 	// Token halos keeping track of "lost" subhalos need to set this to TRUE
 	bool isToken;
