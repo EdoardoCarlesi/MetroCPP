@@ -21,8 +21,9 @@ void InitLocVariables(void);
 
 void CleanMemory(int);
 
+#ifndef ZOOM
 void ShiftHalosPartsGrids(void);
-
+#endif
 
 vector<string> SplitString(string, string);
 #endif

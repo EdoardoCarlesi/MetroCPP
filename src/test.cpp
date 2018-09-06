@@ -58,8 +58,10 @@ int main(int argv, char **argc)
 		SettingsIO.CheckStatus();
 #endif
 
+#ifndef ZOOM
 	/* Now every task knows which subvolumes of the box belong to which task */
 	CommTasks.BroadcastAndGatherGrid();
+#endif
 
 	int nUseCat = 2;	// THIS IS A LOCAL VARIABLE used for TEST only
 
@@ -72,12 +74,14 @@ int main(int argv, char **argc)
 		SettingsIO.ReadHalos();
 		SettingsIO.ReadParticles();	
 
+#ifndef ZOOM
 		/* Now every task knows which nodes belongs to which task */
 		CommTasks.BroadcastAndGatherGrid();
 
 		/* After reading in the second halo catalog, each task finds out which nodes it gets from the other tasks
 		   The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
+#endif
 
 		/* Now exchange the halos in the requested buffer zones among the different tasks */
 		CommTasks.BufferSendRecv();
@@ -111,8 +115,11 @@ int main(int argv, char **argc)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
 #endif
+
+#ifndef ZOOM
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
+#endif
 		CleanMemory(1);
 	}
 	

@@ -115,8 +115,11 @@ int main(int argv, char **argc)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
 #endif
+
+#ifndef ZOOM
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
+#endif
 		CleanMemory(1);
 	}
 	

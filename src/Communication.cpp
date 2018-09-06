@@ -19,6 +19,7 @@ void Comm::Optimize()	// Write some function that optimizes the memory distribut
 {};
 */
 
+#ifndef ZOOM
 /* 
  * This function collects all the non-empty grid nodes and broadcasts them to all the tasks.
  * Some nodes may be shared among several tasks, so we need to be careful when MPI_Gather-ing them.
@@ -196,11 +197,14 @@ void Communication::SetSendRecvTasks()
 #endif
 };
 
+#endif	// ifndef ZOOM
 
 
 #ifdef ZOOM
-/* In ZOOM mode we distribute halos from task 0 across all other tasks */
-void Communication::BufferSendRecv()
+/* In ZOOM mode we distribute both halo catalogs from task 0 across all other tasks 
+ * It is assumed that halo catalogs in zoom simulations are small, and they can be stored on each task at the same time. 
+ */
+void Communication::BufferSendRecv(void)
 {
 	/* Tasks receiving and sending messages */
 	int recvTask = 0, sendTask = 0;
@@ -209,197 +213,91 @@ void Communication::BufferSendRecv()
 	int iBuffTotHalo = 0;
 	int iBuffTotPart = 0;
 
-	/* These buffers hold the number of halos to be sent/recvd to/from multiple tasks */
-	int nBuffSendHalos = 0, nBuffRecvHalos = 0; 
-	int buffIndexHalo = 0, buffIndexPart = 0;
+	void *buffSendParts = nullptr; 
+	size_t buffSendSizeParts; 
+	size_t buffSendSizeHalos;
+	vector<Halo> buffSendHalos;
 
-	/* Task 0 is sending to all the others */
-	if (locTask == 0)
-	{
-		void *buffSendParts = nullptr; 
-		size_t buffSendSizeParts = 0; 
-		size_t buffSendSizeHalos = 0;
-		vector<Halo> buffSendHalos;
-	} else {
-		void *buffRecvParts = nullptr;
-		size_t buffRecvSizeHalos = 0;
-		size_t buffRecvSizeParts = 0;
-		vector<Halo> buffRecvHalos;
-	}
+	void *buffRecvParts = nullptr;
+	size_t buffRecvSizeHalos = 0;
+	size_t buffRecvSizeParts = 0;
+	vector<Halo> buffRecvHalos;
 
-		// TODO: use some algorithm to distribute halos across tasks
-
-	int nTmpPart = 0;
-
-	if (locTask == 0)
-		cout << "Exchanging halos in the buffer region across all tasks..." << endl; 
+	/* Here the master task decides how to distribute the halos across the other tasks */
+	MPI_Bcast(&nLocHalos[iUseCat], 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&locHalos[iUseCat][0], nLocHalos[iUseCat] * sizeHalo, MPI_BYTE, 0, MPI_COMM_WORLD);
 
 	/*
 	 * 		FIRST EXCHANGE HALO BUFFERS
 	 */
-
-	/* Loop on all the tasks, minus one - the local one */
-	for (int iT = 1; iT < totTask; iT++)
-	{
-		sendTask = 0;
-		recvTask = iT;
-
-		/* Now compute the size of the particle buffer and copy the halos into the buffer to be communicated */
-		buffSendSizeParts = 0;
-
-		/* At this step, locTask will send nBuffSendHalos to sendTask */
-		nBuffSendHalos = buffIndexSendHalo[sendTask].size();
-
-		for (int iP = 0; iP < nBuffSendHalos; iP ++)
-		{
-			int iH = buffIndexSendHalo[sendTask][iP];
-			
-			buffSendHalos.push_back(locHalos[iUseCat][iH]);
-			
-			for (int iT = 0; iT < nPTypes; iT ++)
-				buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
-		
-			if (iH > locHalos[iUseCat].size())	// Sanity check 
-				cout << "WARNING " << iH << " not in locHalos " << locTask << "-->" << sendTask << endl;
-		}
-
-		buffSendSizeHalos = nBuffSendHalos * sizeHalo;
-
-		MPI_Sendrecv(&nBuffSendHalos, 1, MPI_INT, sendTask, 0, 
-			     &nBuffRecvHalos, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
-
-		buffRecvSizeHalos = nBuffRecvHalos * sizeHalo;
-		buffRecvHalos.resize(nBuffRecvHalos);	
 
 #ifdef VERBOSE
 		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " to " << recvTask <<endl;
 		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " by " << sendTask <<endl;
 #endif
 
-		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
-			     &buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
-
-		/* Clean the send buffer after Sendrecv */
-		if (buffSendHalos.size() > 0)
-		{
-			buffSendHalos.clear();
-			buffSendHalos.shrink_to_fit();
-		}
-
-		/* Add the halos to the local buffer AND a local grid node which is now part of the buffer grid */
-		for (int iH = 0; iH < nBuffRecvHalos; iH++)
-		{
-			locBuffHalos.push_back(buffRecvHalos[iH]);
-			buffIndexHalo = locBuffHalos.size() - 1; 
-			BufferGrid.AssignToGrid(buffRecvHalos[iH].X, buffIndexHalo);
-		}
-
-		/* Clean the recv halo buffer */
-		if (buffRecvHalos.size() > 0)
-		{
-			buffRecvHalos.clear();
-			buffRecvHalos.shrink_to_fit();
-		}
 
 		/*
 		 * 		COMMUNICATE PARTICLE BUFFERS
 		 */
 
 		/* Local particles to be sent will be mpi-packed into this buffer */
-		buffSendParts = (void *) malloc(buffSendSizeParts);
-
-		locBuffParts.resize(locBuffHalos.size());
+		buffSendParts = (void *) malloc(nLocParts[iUseCat] * sizePart);
 
 #ifdef VERBOSE
 		cout << "Allocating " << buffSendSizeParts/1024/1024 << "MB send buffer for " << nBuffSendHalos << endl;
 #else
-		if (locTask == 0 && iT == 0)
+		if (locTask == 0)
 			cout << "Allocating particle send buffer... " << endl;
 #endif
 
-		/* MPI_Pack variables - for some reason if defined at the beginning MPI_Pack crashes... */
 		int posSendPart = 0;
 
 		/* Pack all the selected particles into a single buffer */
-		for (int iI = 0; iI < nBuffSendHalos; iI ++)
+		for (int iH = 0; iH < nLocHalos[iUseCat]; iH ++)
 		{
-			int iH = buffIndexSendHalo[sendTask][iI];
-
 			for (int iP = 0; iP < nPTypes; iP ++)
 			{
 				if (locHalos[iUseCat][iH].nPart[iP] > 0)
 				{
+					//MPI_Pack(&locParts[iUseCat][iH][iP][0], locHalos[iUseCat][iH].nPart[iP] * sizePart, MPI_BYTE, 
 					MPI_Pack(&locParts[iUseCat][iH][iP][0], locHalos[iUseCat][iH].nPart[iP] * sizePart, MPI_BYTE, 
-						  buffSendParts, buffSendSizeParts, &posSendPart, MPI_COMM_WORLD);
+						  buffSendParts, sizePart * nLocParts[iUseCat], &posSendPart, MPI_COMM_WORLD);
 				}
 			}
 		}
 
+
 		/* Communicate the MPI_Pack-ed buffer sizes */
-		MPI_Sendrecv(&buffSendSizeParts, sizeof(size_t), MPI_BYTE, sendTask, 0, 
-			     &buffRecvSizeParts, sizeof(size_t), MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
+		MPI_Bcast(buffSendParts, nLocParts[iUseCat] * sizePart, MPI_BYTE, 0, MPI_COMM_WORLD);
+		//MPI_Bcast(&buffSendParts[0], nLocParts[iUseCat] * sizePart, MPI_BYTE, 0, MPI_COMM_WORLD);
 
-		/* Check that the receiving buffer is a null pointer before allocating it */
-		if (buffRecvParts != nullptr)
-		{
-			free(buffRecvParts);
-			buffRecvParts = nullptr;
-		}
-
-		buffRecvParts = (void *) malloc(buffRecvSizeParts);
-
-#ifdef VERBOSE
-		cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
-#else
-		if (locTask == 0 && iT == 0)
-			cout << "Allocating particle recv buffer..." << endl;
-#endif
-
-		/* Send and recv the MPI_Pack-ed buffers */
-		MPI_Sendrecv(buffSendParts, buffSendSizeParts, MPI_BYTE, sendTask, 0, 
-			     buffRecvParts, buffRecvSizeParts, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
-
-		/* Particles have been sent, free the buffer */
-		free(buffSendParts);
-
-		int posRecvPart = 0;
+		posSendPart = 0; int nTmpPart = 0;
 
 		/* Unpack the particle buffer */
-		for (int iH = 0; iH < nBuffRecvHalos; iH ++)
+		for (int iH = 0; iH < nLocHalos[iUseCat]; iH ++)
 		{
-			locBuffParts[iBuffTotHalo].resize(nPTypes);
+			locParts[iH].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT ++)
 			{	
-				nTmpPart = locBuffHalos[iBuffTotHalo].nPart[iT];
+				nTmpPart = locHalos[iUseCat][iH].nPart[iT];
 				iBuffTotPart += nTmpPart;
 
 				if (nTmpPart > 0)
 				{
-					locBuffParts[iBuffTotHalo][iT].resize(nTmpPart);
-	
-					MPI_Unpack(buffRecvParts, buffRecvSizeParts, &posRecvPart, &locBuffParts[iBuffTotHalo][iT][0], 
+					locParts[iH][iT].resize(nTmpPart);
+					MPI_Unpack(buffSendParts, buffSendSizeParts, &posSendPart, &locParts[iH][iT][0], 
 							nTmpPart * sizePart, MPI_BYTE, MPI_COMM_WORLD);
 				}
-			
 			}
-
-			iBuffTotHalo++;		// Keep track of the total number of halos in the buffer
 		}
-	}	/* Loop on all the send/recv tasks */
 
-	/* Now assign the halos on the buffer to the respective nodes */
-	for (int iH = 0; iH < iBuffTotHalo; iH++)
-		GlobalGrid[iUseCat].AssignToGrid(locBuffHalos[iH].X, -iH);	// iH is negative - this is used for halos on the buffer
+	/* Particles have been unpacked, free the buffer */
+	free(buffSendParts);
 
-#ifdef VERBOSE
-	cout << "Gathered " << locBuffHalos.size() << " halos in the buffer on task=" << locTask << endl;
-	cout << "Gathered " << iBuffTotHalo << " halos in the buffer on task=" << locTask << endl;
-	cout << "Gathered " << iBuffTotPart << " parts in the buffer on task=" << locTask << endl;
-#else
 	if (locTask == 0)
 		cout << "Gathered halo and particle buffers. " << endl;
-#endif
 };
 
 

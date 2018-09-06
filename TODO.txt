@@ -1,17 +1,12 @@
 TO DO NEXT:
 
-Medium improvement: determine the haloes to be compared defining a region on the grid and on the buffer grid.
 
+Fix the zoom-in mode and do some tests
+The zoom-in mode should only read halos within the high-res region!!
 
 Expand: 
 Cosmology class (to compute the expansion factor of the universe) 
 Gravity class (to compute the gravitational field at each point due to the neighbouring objects). 
 Make it simple at first, use it only for objects with no progenitor to guess the position at the previous step and 
 put a placeholder
-
-Zoom in mode:
-Devise a different load-balancing and comparison scheme for the zoom-in mode.
-E.G. find the largest haloes (outside of each other's viral radius) and distribute them to different processors.
-A grid can be re-defined on the zoom in region only - or eliminate the need for a grid altogether.
-
 

@@ -38,12 +38,16 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 	float rMax = 0.0, vMax = 0.0, fVel = 0.5e-2, vOne = 0.0, vTwo = 0.0;
 	Halo cmpHalo;
 
+#ifdef ZOOM
+
+#else
 	// TODO introduce more checks on the time, velocity and so on
 	// do some check - if jHalo > nLocHalos ---> go look into the buffer halos FIXME
 	if (jHalo >= 0)
 		cmpHalo = locHalos[iTwo][jHalo];
 	if (jHalo < 0)
 		cmpHalo = locBuffHalos[-jHalo];
+#endif
 
 	rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir; 
 	vOne = VectorModule(locHalos[iOne][iHalo].V); vTwo = VectorModule(cmpHalo.V);
@@ -97,6 +101,10 @@ void FindProgenitors(int iOne, int iTwo)
 			Halo thisHalo = locHalos[iOne][i];
 			rSearch = facRSearch * thisHalo.rVir;
 
+#ifdef ZOOM
+			// do some task dependent loop - all the locHalos[0] are compared to a subset of the locHalos[1]
+			// TODO split the locHalos[1] across the tasks
+#else
 			/* We only loop on a subset of halos */
 			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
 
@@ -123,6 +131,8 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 
 			}	// for j, k = index(j)
+#endif		// ifdef ZOOM
+
 #endif
 		} // for i halo, the main one
 

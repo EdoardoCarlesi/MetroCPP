@@ -10,14 +10,17 @@ public:
 	Communication() { };
 	~Communication() { };	
 
+#ifndef ZOOM
 	void BroadcastAndGatherGrid(void);
+#endif
 	void BufferSendRecv(void);	
 
 private:
 	// Determine the send and recv tasks consistently
-	void SetSendRecvTasks(void);
 	vector<int> sendTasks;
 	vector<int> recvTasks;
+#ifndef ZOOM
+	void SetSendRecvTasks(void);
 
 	// Communicate the buffers across all tasks
 	void ExchangeBuffers(void);
@@ -27,5 +30,6 @@ private:
 	
 	// Here we store the full list of halo indexes
 	vector<vector<int>> buffIndexSendHalo;
+#endif
 };
 #endif

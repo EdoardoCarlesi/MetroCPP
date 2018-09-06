@@ -25,9 +25,11 @@ void InitLocVariables(void)
 	locParts.resize(2);
 	locHalos.resize(2);
 
+#ifndef ZOOM
 	GlobalGrid[0].Init(nGrid, boxSize);
 	GlobalGrid[1].Init(nGrid, boxSize);
 	BufferGrid.Init(nGrid, boxSize);
+#endif
 
 	sizeHalo = sizeof(Halo);
 	sizePart = sizeof(unsigned long long int);
@@ -86,8 +88,9 @@ void CleanMemory(int iCat)
 
 		locParts[iCat].clear();
 		locParts[iCat].shrink_to_fit();
-		
+#ifndef ZOOM		
 		GlobalGrid[iCat].Clean();
+#endif
 };
 
 
@@ -122,7 +125,7 @@ vector<string> SplitString (string strIn, string delim)
     return cleanResults;
 }
 
-
+#ifndef ZOOM
 void ShiftHalosPartsGrids()
 {
 	CleanMemory(0);
@@ -151,6 +154,7 @@ void ShiftHalosPartsGrids()
 	GlobalGrid[0].haloOnGridNode = GlobalGrid[1].haloOnGridNode;
 	GlobalGrid[0].buffOnGridNode = GlobalGrid[1].buffOnGridNode;
 };
+#endif
 
 
 float VectorModule(float *V)
