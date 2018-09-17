@@ -68,8 +68,10 @@ void FindProgenitors(int iOne, int iTwo)
 {
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	float rSearch = 0, facRSearch = 20.0;
-	vector<int> nCommon, indexes;
-	int totCmp = 0, totSkip = 0, totNCommon = 0;
+	vector<int> nCommon, indexes, totNCommon;
+	int totCmp = 0, totSkip = 0; 
+
+	totNCommon.resize(nPTypes);
 
 #ifdef ZOOM
 	vector<int> locHaloPos;
@@ -91,18 +93,18 @@ void FindProgenitors(int iOne, int iTwo)
 			for (int j = 0; j < locHalos[iTwo].size(); j++)
 			{
 				nCommon = CommonParticles(locParts[iOne][thisIndex], locParts[iTwo][j]);
-				//cout << j << " onTask= " << locTask << ", npart= " << locParts[iOne][thisIndex][1].size() << endl;
-			}
 	
-			if (locTask == 1)
-				cout << i << " " << thisIndex << " " << nCommon[1] << endl;
-					
-			if (nCommon[1] > 10) 
-			{		
-				totNCommon += nCommon[1];
-				totCmp++;
-			}
+				/* This is very important: we keep track of the merging history ONLY based on the number 
+				   of common DM particles */
+				if (nCommon[1] > 10) 
+				{		
+					for (int iT = 0; iT < nPTypes; iT++)
+						totNCommon[iT] += nCommon[iT];
 
+					totCmp++;
+				}
+
+			}
 	}
 
 #else	/* Standard comparison */
@@ -118,7 +120,9 @@ void FindProgenitors(int iOne, int iTwo)
 						
 			if (nCommon[1] > 10) 
 			{		
-				totNCommon += nCommon[1];
+				for (int iT = 0; iT < nPTypes; iT++)
+					totNCommon[iT] += nCommon[iT];
+
 				totCmp++;
 			}
 
@@ -127,7 +131,9 @@ void FindProgenitors(int iOne, int iTwo)
 						
 			if (nCommon[1] > 10) 
 			{		
-				totNCommon += nCommon[1];
+				for (int iT = 0; iT < nPTypes; iT++)
+					totNCommon[iT] += nCommon[iT];
+
 				totCmp++;
 			}
 
@@ -154,8 +160,10 @@ void FindProgenitors(int iOne, int iTwo)
 
 					if (nCommon[1] > 10) 
 					{		
+						for (int iT = 0; iT < nPTypes; iT++)
+							totNCommon[iT] += nCommon[iT];
+
 						totCmp++;
-						totNCommon += nCommon[1];
 					} else {
 						totSkip++;
 					}
@@ -170,7 +178,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 
 		if (locTask == 0)
-			cout << "\n" << locTask << ") TotComp: " << totCmp << ", totComm: " << totNCommon << " skip: " << totSkip << endl; 
+			cout << "\n" << locTask << ") TotComp: " << totCmp << ", DM TotComm: " << totNCommon[1] << endl; 
 };
 
 
@@ -187,9 +195,12 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 	for (int iT = 0; iT < nPTypes; iT++)
 	{
 		int thisSize = partsHaloOne[iT].size();
-		
+
 		if (thisSize > 0)
 		{
+			//cout << locTask << " " << iT << " " << partsHaloOne[iT][0] << " " << partsHaloOne[iT][1]
+			//	<< " " << partsHaloTwo[iT][0] << " " << partsHaloTwo[iT][1] << endl;
+
 			// This is the maximum possible number of common particles
 			thisCommon.resize(thisSize);
 	

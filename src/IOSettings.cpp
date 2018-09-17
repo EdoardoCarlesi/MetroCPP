@@ -482,7 +482,7 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-
+					//cout << locTask << " " << nPartHalo << " " << iLine << " " << locHaloID << endl;
 #ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 #endif
@@ -494,6 +494,7 @@ void IOSettings::ReadParticles(void)
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
 
+				//cout << locTask << " " << iLine << " " << partID << endl;
 				tmpParts[partType].push_back(partID);
 				iTmpParts++;
 				iLocParts++;
@@ -514,10 +515,14 @@ void IOSettings::ReadParticles(void)
 							if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 							{
 #endif
+								//cout << locTask << " " << tmpParts[iT].size() << endl;
 								sort(tmpParts[iT].begin(), tmpParts[iT].end());
 						
-								locParts[iUseCat][iLocHalos][iT].insert(locParts[iUseCat][iLocHalos][iT].end(), 
-									tmpParts[iT].begin(), tmpParts[iT].end());
+								locParts[iUseCat][iLocHalos][iT].insert(
+										locParts[iUseCat][iLocHalos][iT].end(), 
+											tmpParts[iT].begin(), tmpParts[iT].end());
+
+								//cout << locTask << " " << locParts[iUseCat][iLocHalos][iT][0] << endl;
 #ifdef ZOOM
 							} // Zoom mode, making sure the current halo is in the list of the high-res ones
 #endif
@@ -630,6 +635,10 @@ void IOSettings::ReadHalos()
 			if (tmpHalos[iH].fMhires > 0.95)
 			{
 				locHalos[iUseCat].push_back(tmpHalos[iH]);
+
+				//if (tmpHalos[iH].mTot > 1.e+11)
+				//	tmpHalos[iH].Info();
+
 				iLocHalos++;
 			}
 		}

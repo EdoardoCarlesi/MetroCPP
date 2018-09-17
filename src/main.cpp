@@ -74,7 +74,7 @@ int main(int argv, char **argc)
 	CommTasks.BroadcastAndGatherGrid();
 #endif
 
-	int nUseCat = 8;	// THIS IS A LOCAL VARIABLE used for TEST only
+	int nUseCat = 2;	// THIS IS A LOCAL VARIABLE used for TEST only
 
 	/* Loop on halo and particle catalogs */
 	for (iNumCat = 1; iNumCat < nUseCat; iNumCat++)
