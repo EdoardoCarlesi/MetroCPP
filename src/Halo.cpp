@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+#include "Cosmology.h"
 #include "global_vars.h"
 #include "Halo.h"
 
@@ -47,7 +48,6 @@ float Halo::Distance(float *Pos)
 float Halo::M_NFW(float r)
 {	
 	//float = 4.0 * 3.14159 // Cosmology --> ;
-	
 };
 
 
@@ -58,4 +58,3 @@ void Halo::Info(void)
 		mTot, ID, nPart[nPTypes], X[0], X[1], X[2], V[0], V[1], V[2], fMhires);
 
 };
-
