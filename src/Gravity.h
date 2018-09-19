@@ -5,10 +5,15 @@
 
 #include "Cosmology.h"
 
+
 class Gravity {
 
 	Gravity();
 	~Gravity();
+
+	float G_MpcMsunS = 4.51737014558e-48;
+
+	void TestGravity();
 
 };
 

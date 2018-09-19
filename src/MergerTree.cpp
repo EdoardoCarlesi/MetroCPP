@@ -22,7 +22,7 @@ MergerTree::~MergerTree()
 };
 
 
-void MergerTree::sortByMerit(void)
+void sortByMerit()
 {
 };
 

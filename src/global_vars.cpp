@@ -35,13 +35,19 @@ vector<vector<vector<vector<unsigned long long int>>>> locParts;
 #ifndef ZOOM
 vector<vector<vector<unsigned long long int>>> locBuffParts;
 #endif
-size_t locPartsSize[2];
 
+size_t locPartsSize[2];
 size_t sizeHalo;
 size_t sizePart;
 
 int nPTypes;
 int nLocParts[2];
+
+/* Maps that contain halo ids and a link to the locHalo index */
+#ifndef ZOOM
+map <unsigned long long int, int> locId2Index;
+#endif
+map <unsigned long long int, int> id2Index;
 
 /* Factors and variables */
 float dMaxFactor;

@@ -29,6 +29,12 @@ extern MPI_Status status;
 /* Halo & particle related variables for each task */
 extern vector<vector<Halo>> locHalos;
 
+/* Maps that contain halo ids and a link to the locHalo index */
+#ifndef ZOOM
+extern map <unsigned long long int, int> locId2Index;
+#endif
+extern map <unsigned long long int, int> id2Index;
+
 #ifndef ZOOM
 /* Extra halos coming from the buffer nodes communicated from other tasks */
 extern vector<Halo> locBuffHalos;

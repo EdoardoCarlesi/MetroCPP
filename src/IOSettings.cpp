@@ -615,15 +615,18 @@ void IOSettings::ReadHalos()
 				ReadLineAHF(lineRead, &tmpHalos[iTmpHalos]);
 				nPartHalo = tmpHalos[iTmpHalos].nPart[nPTypes];	// All particle types!
 
+#ifndef ZOOM
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
-#ifndef ZOOM
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
+				locId2Index.insert(pair <unsigned long long int, int> (tmpHalos[iTmpHalos].ID, iLocHalos));
+#else
+				id2Index.insert(pair <unsigned long long int, int> (tmpHalos[iTmpHalos].ID, iLocHalos));
 #endif
 				iLocHalos++;
 				iTmpHalos++;
 			}
-		}	// While Read Line
+		}	/* While Read Line */
 
 		fileIn.close();
 
@@ -635,10 +638,6 @@ void IOSettings::ReadHalos()
 			if (tmpHalos[iH].fMhires > 0.95)
 			{
 				locHalos[iUseCat].push_back(tmpHalos[iH]);
-
-				//if (tmpHalos[iH].mTot > 1.e+11)
-				//	tmpHalos[iH].Info();
-
 				iLocHalos++;
 			}
 		}
@@ -654,7 +653,7 @@ void IOSettings::ReadHalos()
 #ifdef VERBOSE
 		cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 #endif
-	// Append to the locHalo file
+		/* Append to the locHalo file */
 		locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
 		tmpHalos.clear();
 		tmpHalos.shrink_to_fit();
@@ -680,7 +679,7 @@ void IOSettings::ReadHalos()
 
 void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 {
-	float dummy, vHalo, fMhires;
+	float dummy, vHalo;
 	unsigned int tmpNpart, nGas = 0, nStar = 0;
 
 	/* AHF file structure:
@@ -701,14 +700,14 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
-			  %f   %f   %f %f ",
+			  %f   %f   %f %f %f %f %f %f %f %f ",
  
 			&halo->ID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
 			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 				// 11
-			&halo->rVir, &dummy, &dummy, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, 	// 21
+			&halo->rVir, &dummy, &halo->rsNFW, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
 			&halo->L[0], &halo->L[1], &halo->L[2],									// 24
-			&dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy,				// 34
-			&dummy, &dummy, &dummy, &fMhires); 					// 38
+			&dummy, &dummy, &dummy, &dummy,   &dummy, &dummy, &dummy, &dummy, &dummy, &dummy,			// 34
+			&dummy, &dummy, &dummy, &halo->fMhires, &dummy, &dummy, &dummy, &dummy, &halo->cNFW, &dummy);		 // 44
 
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
@@ -719,7 +718,6 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	halo->nPart[4] = 0;
 	halo->nPart[5] = 0;
 	halo->nPart[6] = tmpNpart;
-	halo->fMhires = fMhires;
 
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);

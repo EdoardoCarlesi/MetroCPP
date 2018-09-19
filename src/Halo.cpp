@@ -44,6 +44,13 @@ float Halo::Distance(float *Pos)
 };
 
 
+float Halo::M_NFW(float r)
+{	
+	//float = 4.0 * 3.14159 // Cosmology --> ;
+	
+};
+
+
 void Halo::Info(void)
 {
 	cout << "Task " << locTask << " Halo ID " << ID << endl;

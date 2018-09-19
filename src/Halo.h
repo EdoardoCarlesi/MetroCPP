@@ -18,6 +18,7 @@ public:
 	~Halo();
 
 	float mTot, mDM, mGas, mFM, mStar, rVir;
+	float cNFW, rsNFW;			// NFW parameters
 	float lambda, vMax, sigV;
 	float X[3], V[3], L[3];
 	float fMhires;
@@ -33,7 +34,10 @@ public:
 
 	// Compute the halo distance from a given point
 	float Distance(float *);
-		
+	
+	/* NFW Mass at a given radius */
+	float M_NFW(float);
+	
 	// Velocity (module) of the halo wrt a given velocity vector
 	float RelativeVelocity(float *);
 
