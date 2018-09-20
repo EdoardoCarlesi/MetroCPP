@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <math.h>
 
 #include "MergerTree.h"
 #include "Halo.h"
@@ -9,6 +10,23 @@
 #include "global_vars.h"
 
 using namespace std;
+
+
+
+HaloTree::HaloTree()
+{
+};
+
+
+HaloTree::~HaloTree()
+{
+	Clean();
+};
+
+
+void HaloTree::Clean()
+{
+};
 
 
 
@@ -22,8 +40,9 @@ MergerTree::~MergerTree()
 };
 
 
-void sortByMerit()
+void MergerTree::sortByMerit()
 {
+	// merit = pow( common/(nP1 * nP2), 2.0 )
 };
 
 
@@ -72,6 +91,9 @@ void FindProgenitors(int iOne, int iTwo)
 	int totCmp = 0, totSkip = 0; 
 
 	totNCommon.resize(nPTypes);
+	locMTrees[iOne].resize(nLocHalos[iOne]);
+
+	//cout << locTask << ") nHalos= " << nLocHalos[iOne] << endl;
 
 #ifdef ZOOM
 	vector<int> locHaloPos;
@@ -90,6 +112,8 @@ void FindProgenitors(int iOne, int iTwo)
 		thisIndex = locTask + i * totTask;
 		Halo thisHalo = locHalos[iOne][thisIndex];
 
+		locMTrees[iOne][thisIndex].nCommon.resize(nPTypes);
+
 			for (int j = 0; j < locHalos[iTwo].size(); j++)
 			{
 				nCommon = CommonParticles(locParts[iOne][thisIndex], locParts[iTwo][j]);
@@ -99,7 +123,13 @@ void FindProgenitors(int iOne, int iTwo)
 				if (nCommon[1] > 10) 
 				{		
 					for (int iT = 0; iT < nPTypes; iT++)
+					{
 						totNCommon[iT] += nCommon[iT];
+						locMTrees[iOne][thisIndex].nCommon[iT].push_back(nCommon[iT]);
+					}
+
+					locMTrees[iOne][thisIndex].idProgenitor.push_back(locHalos[iTwo][j].ID);
+					locMTrees[iOne][thisIndex].indexProgenitor.push_back(j);
 
 					totCmp++;
 				}
@@ -111,28 +141,45 @@ void FindProgenitors(int iOne, int iTwo)
 
 		for (int i = 0; i < nLocHalos[iOne]; i++)
 		{
+			locMTrees[iOne][i].nCommon.resize(nPTypes);
+
 			if (i == nStepsCounter * floor(i / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 #ifdef CMP_ALL	/* Compare ALL the halos located on the task - used only as a benchmark */
 
 			for (int j = 0; j < locHalos[iTwo].size(); j++)
+			{
 				nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
 						
-			if (nCommon[1] > 10) 
-			{		
-				for (int iT = 0; iT < nPTypes; iT++)
-					totNCommon[iT] += nCommon[iT];
+				if (nCommon[1] > 10) 
+				{		
+					for (int iT = 0; iT < nPTypes; iT++)
+					{
+						totNCommon[iT] += nCommon[iT];
+						locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
+					}
 
-				totCmp++;
+					locMTrees[iOne][i].idProgenitor.push_back(locHalos[iTwo][j].ID);
+					locMTrees[iOne][i].indexProgenitor.push_back(j);
+					totCmp++;
+				}
 			}
 
 			for (int j = 0; j < locBuffHalos.size(); j++)
-				nCommon = CommonParticles(locParts[iOne][i], locBuffParts[-j]);
-						
-			if (nCommon[1] > 10) 
-			{		
-				for (int iT = 0; iT < nPTypes; iT++)
-					totNCommon[iT] += nCommon[iT];
+			{
+				nCommon = CommonParticles(locParts[iOne][i], locBuffParts[j]);
+							
+				if (nCommon[1] > 10) 
+				{		
+					for (int iT = 0; iT < nPTypes; iT++)
+					{
+						totNCommon[iT] += nCommon[iT];
+						locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
+					}
+
+					locMTrees[iOne][i].idProgenitor.push_back(locBuffHalos[j].ID);
+					locMTrees[iOne][i].indexProgenitor.push_back(-j);
+				}
 
 				totCmp++;
 			}
@@ -145,9 +192,12 @@ void FindProgenitors(int iOne, int iTwo)
 			/* We only loop on a subset of halos */
 			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
 
+			/* The vector "indexes" contains the list of haloes (in the local memory & buffer) to be compared */
 			for (int j = 0; j < indexes.size(); j++)
 			{
 				int k = indexes[j];
+
+				locMTrees[iOne][i].nCommon.resize(nPTypes);
 
 				/* Compare halos --> this functions checks whether the two halos are too far 
 				   or velocities are oriented on opposite directions */
@@ -161,7 +211,18 @@ void FindProgenitors(int iOne, int iTwo)
 					if (nCommon[1] > 10) 
 					{		
 						for (int iT = 0; iT < nPTypes; iT++)
+						{
+							locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
 							totNCommon[iT] += nCommon[iT];
+						}
+	
+					if (k >= 0)
+					
+						locMTrees[iOne][i].idProgenitor.push_back(locHalos[k].ID);
+					else 
+						locMTrees[iOne][i].idProgenitor.push_back(locBuffHalos[-k].ID);
+						
+					locMTrees[iOne][i].indexProgenitor.push_back(k);
 
 						totCmp++;
 					} else {
@@ -224,4 +285,50 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 	return nCommon;
 
 };
+
+
+
+void CleanTrees(int iStep)
+{
+	if (iStep == 0)
+		allHTrees.resize(1);
+
+	for (int iSim = 0; iSim < 2; iSim++)
+		for (int iTree = 0; iTree < locMTrees[iSim].size(); iTree++)
+			locMTrees[iSim][iTree].sortByMerit();
+
+	for (int iTree = 0; iTree < locMTrees[0].size(); iTree++)
+	{
+		unsigned long long int mainID = locHalos[0][iTree].ID;
+
+		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
+		   reconstruction of the full merger history. This will be done later and saved into the allHaloTrees	*/
+		HaloTree haloTree;
+		haloTree.mTree.resize(1);
+		haloTree.mainHalo.resize(1);
+	
+		haloTree.mTree[0].nCommon.resize(nPTypes);
+		haloTree.mainHalo[0] = locHalos[0][iTree];
+
+		for (int iProg = 0; iProg < locMTrees[0][iTree].indexProgenitor.size(); iProg++)
+		{
+			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
+			unsigned long long int progID = locMTrees[1][jTree].idProgenitor[0];
+		
+			if (mainID == progID)
+			{
+				haloTree.mTree[0].idProgenitor.push_back(progID);	
+				
+				for(int iT = 0; iT < nPTypes; iT++)
+					haloTree.mTree[0].nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+			}
+
+			locHTrees[iStep].push_back(haloTree);
+		}
+
+		haloTree.Clean();
+	}
+
+};
+
 

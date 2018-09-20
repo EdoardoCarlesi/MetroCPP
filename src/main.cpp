@@ -60,7 +60,6 @@ int main(int argv, char **argc)
 	}
 #endif
 
-
 #ifdef VERBOSE
 	if (locTask == 0)
 		SettingsIO.CheckStatus();
@@ -101,7 +100,8 @@ int main(int argv, char **argc)
 
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
-	
+		
+		/* This function also allocates the MergerTrees */
 		FindProgenitors(0, 1);
 
 		clock_t endTime = clock();

@@ -7,10 +7,11 @@
 
 #include "Grid.h"
 #include "Halo.h"
+#include "MergerTree.h"
 
 using namespace std;
 
-
+class MergerTree;
 class Halo;
 
 #ifndef ZOOM
@@ -21,13 +22,22 @@ extern Grid GlobalGrid[2];
 extern Grid BufferGrid;
 #endif
 
-// MPI variables
+/* MPI variables */
 extern int locTask;
 extern int totTask;
 extern MPI_Status status;
 
 /* Halo & particle related variables for each task */
 extern vector<vector<Halo>> locHalos;
+
+/* Here we store the pairwise connections between halos in catalog 0 and 1, before being sorted */
+extern vector<vector<MergerTree>> locMTrees;
+
+/* This variables stores the number of (clean) connections between halos in catalog 0 and catalog 1, two steps at the time */
+extern vector<vector<HaloTree>> locHTrees;
+
+/* Here we save the fully reconstructed (with missing subhalos and smoothed) merger history */
+extern vector<vector<HaloTree>> allHTrees;
 
 /* Maps that contain halo ids and a link to the locHalo index */
 #ifndef ZOOM

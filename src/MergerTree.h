@@ -7,25 +7,52 @@
 
 using namespace std;
 
-
+/* Due to the reliance of this class on vector template, we cannot directly MPI_Sendrecv the MergerTrees */
 class MergerTree {
 
 public:
-
 	MergerTree();
 	~MergerTree();
 
-	int nPart;
-	int nProg; 			// At each step store the number of progenitors found
+	int nPart;					// Number of particles per halo
 
-	//Halo mainHalo;			// At each step stores one main halo
-	//Halo **haloProgenitors;	// Multiple array containing at each step all progenitors
+	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
+	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
+	vector<unsigned long long int> indexProgenitor;	// local array index of progenitors
+
+	void sortByMerit(void);				// Once possible progenitors have been found, compare
+};
+
+
+/* This class stores the main halo and its progenitors at each step */
+class HaloTree {
+	
+public:
+	HaloTree();
+	~HaloTree();
+
+	int nStep;
+	
+	vector<MergerTree> mTree; 
+	vector<Halo> mainHalo;					// This traces the main progenitor
+
+	void SmoothTree(void);				// Smooths over fly-bys 
+	void FixTree(void);				// Looks for missing subhalos and fixes with token halos at the missing positions
+
+	void Clean(void);
+	void WriteMergerTree(void);			// Prints all the informations 
+	void WriteTrajectory(void);
+	void WriteMAH(void);
+	void WriteIDs(void);				// Only print the ID of each halo and its main progenitor
 };
 
 
 /*
  * Functions used to build the merger trees 
  */
+
+void CleanTrees(void);
+
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);
@@ -35,7 +62,5 @@ bool CompareHalos(int, int, int, int);
 
 // Given two (sorted) vectors, compare their content and return the number of common elements
 vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);
-
-void sortByMerit(void);	// Once possible progenitors have been found, compare
 
 #endif

@@ -24,6 +24,7 @@ void InitLocVariables(void)
 
 	locParts.resize(2);
 	locHalos.resize(2);
+	locMTrees.resize(2);
 
 #ifndef ZOOM
 	GlobalGrid[0].Init(nGrid, boxSize);

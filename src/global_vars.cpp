@@ -19,6 +19,10 @@ Grid GlobalGrid[2];
 Grid BufferGrid;
 #endif
 
+vector<vector<MergerTree>> locMTrees;
+vector<vector<HaloTree>> locHTrees;
+vector<vector<HaloTree>> allHTrees;
+
 vector<vector<Halo>> locHalos;
 #ifndef ZOOM
 vector<Halo> locBuffHalos;
