@@ -297,6 +297,9 @@ void CleanTrees(int iStep)
 		for (int iTree = 0; iTree < locMTrees[iSim].size(); iTree++)
 			locMTrees[iSim][iTree].sortByMerit();
 
+	if (locTask == 0)
+		cout << "Cleaning Merger Tree connections, back and forth..." << endl;
+
 	for (int iTree = 0; iTree < locMTrees[0].size(); iTree++)
 	{
 		unsigned long long int mainID = locHalos[0][iTree].ID;
@@ -309,24 +312,42 @@ void CleanTrees(int iStep)
 	
 		haloTree.mTree[0].nCommon.resize(nPTypes);
 		haloTree.mainHalo[0] = locHalos[0][iTree];
+		//haloTree.mainHalo[0].Info();
 
 		for (int iProg = 0; iProg < locMTrees[0][iTree].indexProgenitor.size(); iProg++)
 		{
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
-			unsigned long long int progID = locMTrees[1][jTree].idProgenitor[0];
-		
-			if (mainID == progID)
+			//unsigned long long int progID = 0; 
+			//unsigned long long int progID = locMTrees[1][jTree].idProgenitor[0];	// The progenitor in the "inverted" tree
+												// is the most likely descendant
+
+			//cout <<  "(" << progID << ") " << mainID << endl;
+			cout <<  locTask<< ") ("<< iTree<< ") ("<< jTree<< ") "<< locMTrees[0][iTree].indexProgenitor.size() << endl;
+			
+			//if (mainID == progID)
 			{
-				haloTree.mTree[0].idProgenitor.push_back(progID);	
-				
-				for(int iT = 0; iT < nPTypes; iT++)
-					haloTree.mTree[0].nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+				//haloTree.mainHalo[0].Info();
+
+#ifdef TEST
+				//if (haloTree.mTree[0].idProgenitor.size() < 1)
+				//if (haloTree.mTree[0].nCommon.size() < 1)
+				{
+					//cout << "HaloMTreeSize: " << haloTree.mTree[0].nCommon.size() << endl;
+					//haloTree.mTree[0].idProgenitor.resize(1);
+					//haloTree.mTree[0].idProgenitor.push_back(progID);	
+				} else {
+					//haloTree.mTree[0].idProgenitor.push_back(progID);	
+				}
+
+				//for(int iT = 0; iT < nPTypes; iT++)
+				//	haloTree.mTree[0].nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+#endif
 			}
 
 			locHTrees[iStep].push_back(haloTree);
 		}
 
-		haloTree.Clean();
+		//haloTree.Clean();
 	}
 
 };

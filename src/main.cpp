@@ -75,6 +75,8 @@ int main(int argv, char **argc)
 
 	int nUseCat = 2;	// THIS IS A LOCAL VARIABLE used for TEST only
 
+	locHTrees.resize(nUseCat);
+
 	/* Loop on halo and particle catalogs */
 	for (iNumCat = 1; iNumCat < nUseCat; iNumCat++)
 	{
@@ -104,15 +106,6 @@ int main(int argv, char **argc)
 		/* This function also allocates the MergerTrees */
 		FindProgenitors(0, 1);
 
-		clock_t endTime = clock();
-		double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
-
-		if (locTask == 0)
-			cout << "\nDone in " << elapsed << "s. " << endl;
-
-#ifdef TEST
-		clock_t iniTime = clock();
-
 		if (locTask == 0)
 			cout << "\nFinding halo progentors, backwards..." << flush ;
 	
@@ -124,9 +117,9 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
-#endif
-
+		CleanTrees(iNumCat);
 #ifndef ZOOM
+
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
 #endif

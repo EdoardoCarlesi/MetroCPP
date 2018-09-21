@@ -51,7 +51,7 @@ public:
  * Functions used to build the merger trees 
  */
 
-void CleanTrees(void);
+void CleanTrees(int);
 
 
 // Pairwise comparison of halos
