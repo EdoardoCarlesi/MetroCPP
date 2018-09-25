@@ -126,7 +126,6 @@ vector<string> SplitString (string strIn, string delim)
     return cleanResults;
 }
 
-#ifndef ZOOM
 void ShiftHalosPartsGrids()
 {
 	CleanMemory(0);
@@ -148,14 +147,15 @@ void ShiftHalosPartsGrids()
 			locParts[0][iH][iT] = locParts[1][iH][iT];
 	}
 	
+#ifndef ZOOM
 	GlobalGrid[0].globalTaskOnGridNode = GlobalGrid[1].globalTaskOnGridNode;
 	GlobalGrid[0].taskOnGridNode = GlobalGrid[1].taskOnGridNode;
 	GlobalGrid[0].locNodes = GlobalGrid[1].locNodes;
 	GlobalGrid[0].buffNodes = GlobalGrid[1].buffNodes;
 	GlobalGrid[0].haloOnGridNode = GlobalGrid[1].haloOnGridNode;
 	GlobalGrid[0].buffOnGridNode = GlobalGrid[1].buffOnGridNode;
-};
 #endif
+};
 
 
 float VectorModule(float *V)

@@ -9,6 +9,7 @@
 #include "global_vars.h"
 #include "Grid.h"
 #include "Halo.h"
+#include "MergerTree.h"
 #include "Communication.h"
 
 using namespace std;

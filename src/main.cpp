@@ -73,9 +73,12 @@ int main(int argv, char **argc)
 	CommTasks.BroadcastAndGatherGrid();
 #endif
 
-	int nUseCat = 2;	// THIS IS A LOCAL VARIABLE used for TEST only
+	int nUseCat = 4;	// THIS IS A LOCAL VARIABLE used for TEST only
 
-	locHTrees.resize(nUseCat);
+	// TODO put all these functions somewhere into the MergerTree file
+	locCleanTrees.resize(nUseCat-1);
+//	allHalos.resize(nUseCat);
+//	copy(locHalos[0].begin(), locHalos[0].end(), back_inserter(allHalos[iNumCat]));
 
 	/* Loop on halo and particle catalogs */
 	for (iNumCat = 1; iNumCat < nUseCat; iNumCat++)
@@ -98,7 +101,7 @@ int main(int argv, char **argc)
 		/* Now exchange the halos in the requested buffer zones among the different tasks */
 		CommTasks.BufferSendRecv();
 
-		MPI_Barrier(MPI_COMM_WORLD);
+		//MPI_Barrier(MPI_COMM_WORLD);
 
 		if (locTask == 0)
 			cout << "Finding halo progentors, forwards..." << flush ;
@@ -118,27 +121,26 @@ int main(int argv, char **argc)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 	
 		CleanTrees(iNumCat);
-#ifndef ZOOM
 
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
-#endif
+
+		//copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
 		CleanMemory(1);
 	}
 	
-#ifdef TEST_BLOCK
 	if (locTask == 0)
 		cout << "The loop on halo and particle catalogs has finished." << endl;
 
+#ifndef ZOOM
 	// Retrieve some informations on the grid - sanity check
 	//GlobalGrid.Info();
-
-	// Get the maximum halo velocity to compute buffer size
-
-
-	//cout << "Finished on task=" << locTask << endl;
-
 #endif
+
+	//MPI_Barrier(MPI_COMM_WORLD);
+
+	//DebugTrees();
+
 	CleanMemory(0);
 
 	MPI_Finalize();

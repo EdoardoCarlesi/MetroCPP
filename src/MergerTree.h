@@ -15,12 +15,15 @@ public:
 	~MergerTree();
 
 	int nPart;					// Number of particles per halo
+	unsigned long long int idDescendant;
 
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
 	vector<unsigned long long int> indexProgenitor;	// local array index of progenitors
 
 	void sortByMerit(void);				// Once possible progenitors have been found, compare
+	void Clean(void);
+	void Info(void);
 };
 
 
@@ -34,12 +37,12 @@ public:
 	int nStep;
 	
 	vector<MergerTree> mTree; 
-	vector<Halo> mainHalo;					// This traces the main progenitor
+	vector<Halo> mainHalo;				// This traces the main progenitor
 
 	void SmoothTree(void);				// Smooths over fly-bys 
 	void FixTree(void);				// Looks for missing subhalos and fixes with token halos at the missing positions
-
 	void Clean(void);
+
 	void WriteMergerTree(void);			// Prints all the informations 
 	void WriteTrajectory(void);
 	void WriteMAH(void);
@@ -52,7 +55,7 @@ public:
  */
 
 void CleanTrees(int);
-
+void DebugTrees(void);
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);
