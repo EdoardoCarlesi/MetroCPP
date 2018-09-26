@@ -19,6 +19,10 @@ void InitLocVariables(void)
 	totVmax = 0.0;
         locHalosSize[0] = 0; locHalosSize[1] = 0;
 	nLocParts[0] = 0; nLocParts[1] = 0;
+	nTokenHalos = 0;
+
+	minPartCmp = 10;
+	minPartHalo = 30;
 
 	nPTypes = NPTYPES;
 

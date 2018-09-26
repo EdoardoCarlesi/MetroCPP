@@ -73,12 +73,12 @@ int main(int argv, char **argc)
 	CommTasks.BroadcastAndGatherGrid();
 #endif
 
-	int nUseCat = 4;	// THIS IS A LOCAL VARIABLE used for TEST only
+	int nUseCat = 10;	// THIS IS A LOCAL VARIABLE used for TEST only
 
 	// TODO put all these functions somewhere into the MergerTree file
 	locCleanTrees.resize(nUseCat-1);
-//	allHalos.resize(nUseCat);
-//	copy(locHalos[0].begin(), locHalos[0].end(), back_inserter(allHalos[iNumCat]));
+	allHalos.resize(nUseCat);
+	copy(locHalos[0].begin(), locHalos[0].end(), back_inserter(allHalos[iNumCat]));
 
 	/* Loop on halo and particle catalogs */
 	for (iNumCat = 1; iNumCat < nUseCat; iNumCat++)
@@ -125,12 +125,17 @@ int main(int argv, char **argc)
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
 
-		//copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
+		// TODO move this copy somewhere else
+		copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
 		CleanMemory(1);
 	}
 	
 	if (locTask == 0)
 		cout << "The loop on halo and particle catalogs has finished." << endl;
+
+
+	// The trees have now been built
+
 
 #ifndef ZOOM
 	// Retrieve some informations on the grid - sanity check
@@ -139,7 +144,7 @@ int main(int argv, char **argc)
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 
-	//DebugTrees();
+	DebugTrees();
 
 	CleanMemory(0);
 

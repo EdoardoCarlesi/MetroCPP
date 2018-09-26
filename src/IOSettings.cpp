@@ -17,6 +17,8 @@
 #include "utils.h"
 #include "global_vars.h"
 
+#define FMHIRESFAC 0.90
+
 using namespace std;
 
 
@@ -635,16 +637,15 @@ void IOSettings::ReadHalos()
 
 		for (int iH = 0; iH < tmpHalos.size(); iH++)
 		{
-			if (tmpHalos[iH].fMhires > 0.95)
+			if (tmpHalos[iH].fMhires >= FMHIRESFAC)
 			{
 				locHalos[iUseCat].push_back(tmpHalos[iH]);
 				iLocHalos++;
 			}
 		}
 
-#ifdef VERBOSE
-		cout << "Total halos: " << tmpHalos.size() << ", high-res= " << iLocHalos << endl;
-#endif
+		//if (locTask == 0)
+		//	cout << "Total halos: " << tmpHalos.size() << ", high-res= " << iLocHalos << endl;
 
 		tmpHalos.clear();
 		tmpHalos.shrink_to_fit();

@@ -37,6 +37,7 @@ int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
 int nTypePart = NPTYPES;
 int nTotHalos[2];
 int nLocHalos[2];
+int nTokenHalos;
 
 vector<vector<vector<vector<unsigned long long int>>>> locParts;
 #ifndef ZOOM
@@ -62,6 +63,9 @@ float totVmax;
 float locVmax;
 float maxBufferThick;
 float boxSize;
+
+int minPartCmp;
+int minPartHalo;
 
 int nGrid;
 int nChunks;

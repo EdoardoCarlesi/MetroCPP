@@ -15,8 +15,10 @@ public:
 	~MergerTree();
 
 	int nPart;					// Number of particles per halo
-	unsigned long long int idDescendant;
 
+	unsigned long long int idDescendant;		// ID of the descendant halo
+	bool tokenProgenitor;				// If no progenitor is found, then create a token halo
+							// with the same particle content to keep tracking it at subsequent steps
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
 	vector<unsigned long long int> indexProgenitor;	// local array index of progenitors

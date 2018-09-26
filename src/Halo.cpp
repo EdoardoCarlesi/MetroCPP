@@ -53,7 +53,11 @@ float Halo::M_NFW(float r)
 
 void Halo::Info(void)
 {
-	cout << "Task " << locTask << " Halo ID " << ID << endl;
+	if (isToken)
+		cout << "Task " << locTask << " (TOKEN) Halo ID " << ID << endl;
+	else
+		cout << "Task " << locTask << " Halo ID " << ID << endl;
+		
 	printf("Mtot: %.3e, ID: %.llu, Npart: %d, X:(%.2f, %.2f, %.2f), V:(%.2f, %.2f, %.2f), fMhires:%.3f\n", 
 		mTot, ID, nPart[nPTypes], X[0], X[1], X[2], V[0], V[1], V[2], fMhires);
 

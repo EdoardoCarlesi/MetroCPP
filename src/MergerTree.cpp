@@ -36,7 +36,7 @@ void HaloTree::Clean()
 
 void MergerTree::Info()
 {
-	if (nPart > 1000)
+	//if (nPart > 1000)
 	{
 		cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
 
@@ -151,17 +151,24 @@ void FindProgenitors(int iOne, int iTwo)
 
 		Halo thisHalo = locHalos[iOne][thisIndex];
 		
+		/* Save some halo properties on the mtree vector */
 		locMTrees[iOne][thisIndex].idDescendant = thisHalo.ID;
 		locMTrees[iOne][thisIndex].nPart = thisHalo.nPart[nPTypes];
 		locMTrees[iOne][thisIndex].nCommon.resize(nPTypes);
 
+			/* In a zoom-in run, we loop over all the halos on the iTwo step */
 			for (int j = 0; j < locHalos[iTwo].size(); j++)
 			{
 				nCommon = CommonParticles(locParts[iOne][thisIndex], locParts[iTwo][j]);
 	
-				/* This is very important: we keep track of the merging history ONLY based on the number 
-				   of common DM particles */
-				if (nCommon[1] > 10) 
+				int totComm = 0;
+
+				for (int iC = 0; iC < nCommon.size(); iC++)
+					totComm += nCommon[iC];
+
+				/* This is very important: we keep track of the merging history ONLY if the number 
+				   of common particles is above a given threshold */
+				if (totComm > minPartCmp) 
 				{		
 					for (int iT = 0; iT < nPTypes; iT++)
 					{
@@ -176,6 +183,33 @@ void FindProgenitors(int iOne, int iTwo)
 				}
 
 			}
+
+			if (locHalos[iOne][thisIndex].isToken && iOne < iTwo && locMTrees[iOne][thisIndex].idProgenitor.size() > 0)
+			{
+				cout << "**** on Task= " << locTask << " found a progenitor for orphan halo: " << endl; 
+				locHalos[iOne][thisIndex].Info();
+				locHalos[iTwo][locMTrees[iOne][thisIndex].indexProgenitor[0]].Info();
+				locMTrees[iOne][thisIndex].Info();
+				cout << "****" << endl;
+			}
+
+			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
+			 * minPartHalo, then we append it to the locHalos[] and locParts[]
+			 * TODO: shift the position of the token halo using gravity. For now it stays the same.
+			 */
+			if (locMTrees[iOne][thisIndex].idProgenitor.size() == 0 && 
+				locMTrees[iOne][thisIndex].nPart > minPartHalo && iOne < iTwo)
+			{
+				cout << "\n----Orphan halo on task=" << locTask << ", index= " << thisIndex << endl;
+				locHalos[iOne][thisIndex].Info();
+				cout << "----" << endl;
+				locHalos[iTwo].push_back(locHalos[iOne][thisIndex]);
+				locParts[iTwo].push_back(locParts[iOne][thisIndex]);
+				locHalos[iTwo][nLocHalos[iTwo]].isToken = true;
+				nLocHalos[iTwo]++;
+				nTokenHalos++;
+			}	// TODO !!!!!! SYNCHRONIZE THIS THROUGH ALL TASKS!!!!!
+				
 
 #ifdef DEBUG		// Sanity check
 			if (locMTrees[iOne][thisIndex].nPart > 1000)
@@ -290,7 +324,8 @@ void FindProgenitors(int iOne, int iTwo)
 
 		if (locTask == 0)
 			cout << "\n" "Compared a total of : " << totCmp 
-				<< " halos, with a total number of: " << totNCommon[1] << " DM particles in common. " << endl; 
+				<< " halos, with a total number of: " << totNCommon[1] << " Type 1 DM particles in common and "
+				<< "  a total number of: " << totNCommon[2] << " Type 2 DM particles in common. " << endl; 
 };
 
 
@@ -402,10 +437,10 @@ void DebugTrees()
  
 	for (int iC = 0; iC < locCleanTrees.size(); iC++)
 	{	
-		cout << "Task=(" << locTask << ") Size=(" << locCleanTrees.size() << ") Step=(" << iC << ") " << endl;
+		cout << "Task=(" << locTask << ") Size=(" << locCleanTrees[iC].size() << ") Step=(" << iC << ") " << endl;
 
-		for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
-				locCleanTrees[iC][iT].Info();
+		//for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
+		//		locCleanTrees[iC][iT].Info();
 	}
 };
 

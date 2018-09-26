@@ -55,7 +55,11 @@ extern vector<Halo> locBuffHalos;
 
 extern size_t locHalosSize[2];
 
+extern int minPartCmp;
+extern int minPartHalo;
+
 extern int nPTypes;
+extern int nTokenHalos;
 extern int nTotHalos[2];
 extern int nLocHalos[2];
 
