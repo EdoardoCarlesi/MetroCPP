@@ -19,7 +19,6 @@ void InitLocVariables(void)
 	totVmax = 0.0;
         locHalosSize[0] = 0; locHalosSize[1] = 0;
 	nLocParts[0] = 0; nLocParts[1] = 0;
-	nTokenHalos = 0;
 
 	minPartCmp = 10;
 	minPartHalo = 30;
@@ -75,6 +74,8 @@ void CleanMemory(int iCat)
 
 	if (locTask ==0)
 		cout << "Cleaning memory for catalog " << iCat << endl;		
+
+	copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
 
 	locHalos[iCat].clear();
 	locHalos[iCat].shrink_to_fit();

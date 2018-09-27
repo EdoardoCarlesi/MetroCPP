@@ -28,6 +28,8 @@ public:
 	string partSuffix;
 	string haloPrefix;
 	string partPrefix;
+	string outPrefix;
+	string outSuffix;
 
 	string catFormat;
 	string pathMetroCpp;	// Where the program is installed

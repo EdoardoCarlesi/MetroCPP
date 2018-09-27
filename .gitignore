@@ -2,6 +2,8 @@
 *.bkp
 *.dat
 *.o
+*.tmp.*
+*.mtree
 MetroCPP
 bin/MetroCPP
 bin/test

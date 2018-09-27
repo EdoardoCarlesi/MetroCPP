@@ -56,6 +56,7 @@ public:
  * Functions used to build the merger trees 
  */
 
+void InitTrees(int);
 void CleanTrees(int);
 void DebugTrees(void);
 

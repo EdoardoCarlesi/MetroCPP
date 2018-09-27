@@ -151,6 +151,8 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
 	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
+	else if (arg[0] == "outPrefix")		outPrefix = stof(arg[1]);
+	else if (arg[0] == "outSuffix")		outSuffix = stof(arg[1]);
 	else {
 		cout << "Arg= " << arg[0] << " does not exist." << endl;
 	}
@@ -670,11 +672,13 @@ void IOSettings::ReadHalos()
 #ifndef ZOOM
 	// After reading in all the catalogs, find out, sort and remove duplicates of nodes being allocated to the task
 	GlobalGrid[iUseCat].SortLocNodes();
+#else
+	cout << "On task=" << locTask << " a subset of " << nLocHalos[iUseCat] << " haloes has been read in." << endl; 
 #endif
 
-#ifdef VERBOSE
-	cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
-#endif
+//#ifdef VERBOSE
+	//cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
+//#endif
 };
 
 
@@ -731,6 +735,47 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
    
 void IOSettings::WriteTrees()
 {
+        string strCpu = to_string(locTask);
 
+        for (int iC = 0; iC < locCleanTrees.size(); iC++)
+        {
+                string strFnm = to_string(iC);
+                string outName = "out_" + strFnm + "." + strCpu + ".mtree";
+		string orphan;
+
+		ofstream fileOut;
+		fileOut.open(outName);//.c_str());
+	//file << "Please writr this text to a file.\n this text is written using C++\n";
+
+                if (locTask == 0)
+                        cout << "Printing trees to file " << outName << endl;
+
+                for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
+                {
+			MergerTree thisTree = locCleanTrees[iC][iT];
+			fileOut << thisTree.idDescendant << " " << thisTree.nPart << " " << thisTree.idProgenitor.size() << endl;
+
+			if (thisTree.tokenProgenitor)
+				orphan = "true";	
+			else
+				orphan = "false";
+
+                        for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
+			{
+				int thisIndex = thisTree.indexProgenitor[iP];
+
+                                fileOut << thisTree.idProgenitor[iP] 			<< " "
+					//<< allHalos[iC][thisIndex].mTot		<< " " 	
+					//<< allHalos[iC][thisIndex].nPart[nPTypes]	<< " " 	
+					<< thisTree.nCommon[1][iP] 			<< " " 
+					<< orphan << endl;
+					
+			}
+				
+                                        //cout << "ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
+                }
+		
+		fileOut.close();
+                //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
+        }
 };
-

@@ -36,6 +36,12 @@ extern vector<vector<Halo>> allHalos;
 /* Here we store the pairwise connections between halos in catalog 0 and 1, before being sorted */
 extern vector<vector<MergerTree>> locMTrees;
 
+#ifdef ZOOM
+/* This variable keeps track of the halos that should be used on each task for the backward comparison, 
+ * to avoid looping on all the halos */
+extern vector<int> locTreeIndex;	
+#endif
+
 /* This variables stores the number of (clean) connections between halos in catalog 0 and catalog 1, two steps at the time */
 extern vector<vector<MergerTree>> locCleanTrees;
 
@@ -58,8 +64,10 @@ extern size_t locHalosSize[2];
 extern int minPartCmp;
 extern int minPartHalo;
 
+// We keep track of the orphan halos to synchronize them afterwards
+extern vector<int> orphanHaloIndex;
+
 extern int nPTypes;
-extern int nTokenHalos;
 extern int nTotHalos[2];
 extern int nLocHalos[2];
 

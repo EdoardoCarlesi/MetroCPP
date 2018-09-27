@@ -534,3 +534,65 @@ void Communication::BufferSendRecv()
 
 #endif	// ZOOM mode
 
+
+/* Once the merger trees have been built, we communicate orphan halo properties across different tasks 
+ * This is especially important in ZOOM mode */
+void Communication::SyncOrphanHalos()
+{
+	int locOrphans = orphanHaloIndex.size();
+	int totOrphans = 0;
+	int *posOrphans, *indexOrphans, *dispOrphans;
+
+	if (locTask == 0)
+		cout << "Synchronizing orphan halo information across all tasks..." << endl;
+
+#ifdef ZOOM	
+	posOrphans = (int *) calloc(totTask, sizeof(int));
+	dispOrphans = (int *) calloc(totTask, sizeof(int));
+
+	MPI_Allreduce(&locOrphans, &totOrphans, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+	indexOrphans = (int *) calloc(totOrphans, sizeof(int));
+
+	if (locTask == 0)
+		cout << "In total, " << totOrphans << " orphan halos have been found." << endl;
+
+	/* Let every task know how many orphan halo ids it needs to receive from each task */
+	MPI_Allgather(&locOrphans, 1, MPI_INT, posOrphans, 1, MPI_INT, MPI_COMM_WORLD);
+
+	dispOrphans[0] = 0; 
+
+	/* Let every task know which indexes to receive */
+	MPI_Allgatherv(&orphanHaloIndex[0], orphanHaloIndex.size(), 
+		MPI_INT, indexOrphans, posOrphans, dispOrphans, MPI_INT, MPI_COMM_WORLD);
+
+	/* Now each task updates the "1" locHalo vector with orphan halos to keep track of them at the next step */
+	for (int iL = 0; iL < totOrphans; iL++)
+	{
+		int thisIndex = indexOrphans[iL];
+
+		locMTrees[0][thisIndex].tokenProgenitor = true;
+	
+		/* The orphan (token) halo is stored in memory for the next step */
+		locHalos[1].push_back(locHalos[0][thisIndex]);
+		locHalos[1][nLocHalos[1]].isToken = true;
+		locParts[1].push_back(locParts[0][thisIndex]);
+
+		//locMTrees[1].push_back(locMTrees[0][thisIndex]);
+		//locMTrees[1][nLocHalos[1]].indexProgenitor.push_back(nLocHalos[1]);
+		//locMTrees[1][nLocHalos[1]].idProgenitor.push_back(locMTrees[0][thisIndex].idDescendant);
+
+		/* Remember to loop also over this halo at the next step */
+		locTreeIndex.push_back(nLocHalos[1]);
+		nLocHalos[1]++;
+	}
+#endif
+
+	// SANITY CHECK
+	//cout << "Task=" << locTask << " has " << nLocHalos[1] << " (" << locHalos[1].size() << ") halos including orphans. " << endl; 
+
+	/* Once the orphans have been found, clear this vector */
+	orphanHaloIndex.clear();
+};
+
+
+

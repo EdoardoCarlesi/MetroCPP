@@ -15,10 +15,14 @@ public:
 #endif
 	void BufferSendRecv(void);	
 
+	/* Communicate orphan halo properties among different tasks */
+	void SyncOrphanHalos(void);
+
 private:
 	// Determine the send and recv tasks consistently
 	vector<int> sendTasks;
 	vector<int> recvTasks;
+
 #ifndef ZOOM
 	void SetSendRecvTasks(void);
 

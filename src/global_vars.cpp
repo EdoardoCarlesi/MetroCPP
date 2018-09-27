@@ -25,6 +25,10 @@ vector<vector<MergerTree>> locCleanTrees;
 //vector<vector<HaloTree>> allHTrees;
 vector<vector<HaloTree>> allMTrees;
 
+#ifdef ZOOM
+vector<int> locTreeIndex;
+#endif
+
 vector<vector<Halo>> allHalos;
 vector<vector<Halo>> locHalos;
 #ifndef ZOOM
@@ -37,7 +41,9 @@ int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
 int nTypePart = NPTYPES;
 int nTotHalos[2];
 int nLocHalos[2];
-int nTokenHalos;
+
+// We keep track of the orphan halos to synchronize them afterwards
+vector<int> orphanHaloIndex;
 
 vector<vector<vector<vector<unsigned long long int>>>> locParts;
 #ifndef ZOOM
