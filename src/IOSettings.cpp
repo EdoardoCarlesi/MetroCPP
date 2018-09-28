@@ -744,8 +744,7 @@ void IOSettings::WriteTrees()
 		string orphan;
 
 		ofstream fileOut;
-		fileOut.open(outName);//.c_str());
-	//file << "Please writr this text to a file.\n this text is written using C++\n";
+		fileOut.open(outName);
 
                 if (locTask == 0)
                         cout << "Printing trees to file " << outName << endl;
@@ -755,24 +754,29 @@ void IOSettings::WriteTrees()
 			MergerTree thisTree = locCleanTrees[iC][iT];
 			fileOut << thisTree.idDescendant << " " << thisTree.nPart << " " << thisTree.idProgenitor.size() << endl;
 
+			//Halo thisHalo = 
+			//allHalos[iC][iT].Info();
+
 			if (thisTree.tokenProgenitor)
-				orphan = "true";	
+				orphan = "orphan";	
 			else
-				orphan = "false";
+				orphan = "";
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
 				int thisIndex = thisTree.indexProgenitor[iP];
 
+				//cout << iP << " " << thisIndex << endl;
+				//allHalos[iC][thisIndex].Info();
+
                                 fileOut << thisTree.idProgenitor[iP] 			<< " "
-					//<< allHalos[iC][thisIndex].mTot		<< " " 	
-					//<< allHalos[iC][thisIndex].nPart[nPTypes]	<< " " 	
+					<< allHalos[iC+1][thisIndex].mTot		<< " " 	
+					<< allHalos[iC+1][thisIndex].nPart[nPTypes]	<< " " 	
 					<< thisTree.nCommon[1][iP] 			<< " " 
 					<< orphan << endl;
 					
 			}
 				
-                                        //cout << "ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
                 }
 		
 		fileOut.close();

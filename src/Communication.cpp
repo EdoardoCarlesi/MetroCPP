@@ -535,8 +535,7 @@ void Communication::BufferSendRecv()
 #endif	// ZOOM mode
 
 
-/* Once the merger trees have been built, we communicate orphan halo properties across different tasks 
- * This is especially important in ZOOM mode */
+/* Once the forward correlations of the trees have been built, we communicate orphan halo properties across different tasks */
 void Communication::SyncOrphanHalos()
 {
 	int locOrphans = orphanHaloIndex.size();
@@ -549,7 +548,8 @@ void Communication::SyncOrphanHalos()
 #ifdef ZOOM	
 	posOrphans = (int *) calloc(totTask, sizeof(int));
 	dispOrphans = (int *) calloc(totTask, sizeof(int));
-
+	
+	/* Get the total number of orphan halos across all tasks */
 	MPI_Allreduce(&locOrphans, &totOrphans, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 	indexOrphans = (int *) calloc(totOrphans, sizeof(int));
 
@@ -571,15 +571,13 @@ void Communication::SyncOrphanHalos()
 		int thisIndex = indexOrphans[iL];
 
 		locMTrees[0][thisIndex].tokenProgenitor = true;
+		locMTrees[0][thisIndex].idProgenitor.push_back(locMTrees[0][thisIndex].idDescendant);
+		locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
 	
 		/* The orphan (token) halo is stored in memory for the next step */
 		locHalos[1].push_back(locHalos[0][thisIndex]);
 		locHalos[1][nLocHalos[1]].isToken = true;
 		locParts[1].push_back(locParts[0][thisIndex]);
-
-		//locMTrees[1].push_back(locMTrees[0][thisIndex]);
-		//locMTrees[1][nLocHalos[1]].indexProgenitor.push_back(nLocHalos[1]);
-		//locMTrees[1][nLocHalos[1]].idProgenitor.push_back(locMTrees[0][thisIndex].idDescendant);
 
 		/* Remember to loop also over this halo at the next step */
 		locTreeIndex.push_back(nLocHalos[1]);

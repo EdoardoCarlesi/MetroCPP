@@ -41,8 +41,12 @@ void MergerTree::Info()
 		//cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
 		cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
 
-		for (int iP = 0; iP < idProgenitor.size(); iP++)
-			cout << "ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
+		if (tokenProgenitor)
+			for (int iP = 0; iP < idProgenitor.size(); iP++)
+				cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << endl;
+		else
+			for (int iP = 0; iP < idProgenitor.size(); iP++)
+				cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
 
 		//cout << "--" << endl;
 	}
@@ -157,11 +161,13 @@ void FindProgenitors(int iOne, int iTwo)
 
 		cout << "Task=" << locTask << " is looping on " << halosPerTask << " halos in the forward loop." << endl;
 	} else {		// If doing backward correlation we have to loop on all halos (ZOOM mode)
-		//halosPerTask = nLocHalos[iOne];
 		halosPerTask = locTreeIndex.size();
+		
+		/*
 		cout << "Task=" << locTask << " is looping on " << halosPerTask << " halos in the backward loop." << endl;
 		cout <<  locHalos[iOne].size() << ", nHalos=" << nLocHalos[iOne] << ", indexMax=" << locTreeIndex[halosPerTask-1] << endl;
 		cout <<  locHalos[iTwo].size() << ", nHalos=" << nLocHalos[iTwo] << ", indexMax=" << locTreeIndex[halosPerTask-1] << endl;
+		*/
 	}
 
 	for (int i = 0; i < halosPerTask; i++)
@@ -205,8 +211,10 @@ void FindProgenitors(int iOne, int iTwo)
 						locMTrees[iOne][thisIndex].indexProgenitor.push_back(j);
 					
 						if (locMTrees[iOne][thisIndex].idDescendant == locHalos[iTwo][j].ID)
+						{
 							locMTrees[iOne][thisIndex].tokenProgenitor == true;
 							//cout << "Found orphan progenitor " << locHalos[iTwo][j].ID << endl;
+						}
 
 						/* We keep track of the halos on iTwo that have been matched on iOne on the 
 						 * local task, so that we can avoid looping on all iTwo halos afterwards */
@@ -235,9 +243,14 @@ void FindProgenitors(int iOne, int iTwo)
 			if (locMTrees[iOne][thisIndex].idProgenitor.size() == 0 && 
 				locMTrees[iOne][thisIndex].nPart > minPartHalo && iOne < iTwo)
 				{
-					//locTreeIndex.push_back(thisIndex);
+					for (int iT = 0; iT < nPTypes; iT++)
+						locMTrees[iOne][thisIndex].nCommon[iT].push_back(locHalos[iOne][thisIndex].nPart[iT]);
+
+				//locTreeIndex.push_back(thisIndex);
 					orphanHaloIndex.push_back(thisIndex);
 					locMTrees[iOne][thisIndex].tokenProgenitor = true;
+					//locMTrees[iOne][thisIndex].idProgenitor.push_back(locHalos[iOne][thisIndex].ID);
+					//locMTrees[iOne][thisIndex].indexProgenitor.push_back();
 				} else {
 					locMTrees[iOne][thisIndex].tokenProgenitor = false;
 				}
@@ -448,16 +461,13 @@ void CleanTrees(int iStep)
 		mergerTree.tokenProgenitor = locMTrees[0][iTree].tokenProgenitor;
 		mergerTree.nPart = locHalos[0][iTree].nPart[nPTypes];
 	
-		if (locMTrees[0][iTree].tokenProgenitor)
-				cout << locMTrees[0][iTree].idDescendant << endl;
-			
 		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
 		   reconstruction of the full merger history. This will be done later. */
 		for (int iProg = 0; iProg < locMTrees[0][iTree].idProgenitor.size(); iProg++)
 		{
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
-			unsigned long long int descID = locMTrees[1][jTree].idProgenitor[0];	// The progenitor in the "inverted" tree
+			unsigned long long int descID = locMTrees[1][jTree].idProgenitor[0];	// The progenitor in the backwards tree
 
 #ifdef DEBUG
 			// Useful for debugging
@@ -474,14 +484,33 @@ void CleanTrees(int iStep)
 			if (mainID == descID)
 			{
 				if (locMTrees[0][iTree].tokenProgenitor)
-					cout << locMTrees[0][iTree].idDescendant << endl;
+				{
+					mergerTree.idProgenitor.push_back(locMTrees[0][iTree].idDescendant);
+					//mergerTree.indexProgenitor.push_back(locMTrees[0][iTree].indexProgenitor[0]);
 
-				mergerTree.idProgenitor.push_back(progID);
+					for(int iT = 0; iT < nPTypes; iT++)
+						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 
-				for(int iT = 0; iT < nPTypes; iT++)
-					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+				} else {
+					mergerTree.idProgenitor.push_back(progID);
+					mergerTree.indexProgenitor.push_back(jTree);
+
+					for(int iT = 0; iT < nPTypes; iT++)
+						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+				}
 			}
 		}
+
+/*
+		if (mergerTree.tokenProgenitor)
+		{
+			//locMTrees[0][iTree].Info();
+			//cout << locMTrees[0][iTree].idDescendant << endl;
+			//cout << locMTrees[0][iTree].idProgenitor.size() << endl;
+			//mergerTree.idProgenitor[0] = locMTrees[0][iTree].idDescendant;
+			//cout << "token " << mergerTree.idProgenitor.size() << endl;
+		}
+*/
 
 		if (mergerTree.idProgenitor.size() > 0)
 			locCleanTrees[iStep-1].push_back(mergerTree);

@@ -85,7 +85,6 @@ int main(int argv, char **argc)
 		iUseCat = 1;
 		SettingsIO.ReadHalos();
 		SettingsIO.ReadParticles();	
-
 #ifndef ZOOM
 		/* Now every task knows which nodes belongs to which task */
 		CommTasks.BroadcastAndGatherGrid();
@@ -94,7 +93,6 @@ int main(int argv, char **argc)
 		   The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 #endif
-
 		/* Now exchange the halos in the requested buffer zones among the different tasks */
 		CommTasks.BufferSendRecv();
 
@@ -126,7 +124,7 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 
-		CleanTrees(iNumCat);
+		//CleanTrees(iNumCat);
 
 		// Now shift the halo catalog from 1 to 0, and clean the buffers
 		ShiftHalosPartsGrids();
@@ -148,7 +146,7 @@ int main(int argv, char **argc)
 
 	//MPI_Barrier(MPI_COMM_WORLD);
 
-	SettingsIO.WriteTrees();
+	//SettingsIO.WriteTrees();
 
 	//DebugTrees();
 
