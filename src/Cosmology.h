@@ -1,6 +1,10 @@
 #ifndef COSMOLOGY_H
 #define COSMOLOGY_H
+
 #include <iostream>
+#include "Halo.h"
+//#include "global_vars.h"
+
 
 class Cosmology {
 
@@ -12,8 +16,13 @@ public:
 	void SetWMAP7();
 	void SetArbitrary();	// TODO	
 
+	
+	float A2Sec(float, float);
 	float Rho0(float, int);
 	float RhoC(float, int);
+		
+	/* This function computes the gravitational acceleration due to the neighbouring halos for a token halo */
+	void GravAcc(Halo, float, float);
 
 	/* Cosmological parameters */
 	float omegaL;

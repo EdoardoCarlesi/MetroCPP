@@ -1,6 +1,7 @@
 
 #include <math.h>
 
+#include "Halo.h"
 #include "utils.h"
 #include "global_vars.h"
 #include "Cosmology.h"
@@ -32,10 +33,56 @@ float Cosmology::Rho0(float boxSizeMpc, int nPart)
 
 
 /* Compute the gravitational acceleration around a given halo */
-float Cosmology::GravAcc()
+void Cosmology::GravAcc(Halo useHalo, float a0, float a1)
 {
+	float useM, deltaT, deltaV;
+	float *rNorm;	rNorm = (float *) calloc(3, sizeof(float));
+
+	/* Percentage of accuracy on the interpolated velocity computation */
+	deltaV = VectorModule(useHalo.V) * 0.1;
+	deltaT = A2Sec(a0, a1);
+
+
+	/* It is faster to simply start the loop on all halos */
+	for (int iH = 0; iH < locHalos[0].size(); iH++)
+	{
+		Halo thisHalo; thisHalo = locHalos[0][iH];
+		float rHalos = useHalo.Distance(thisHalo.X);
+		
+		/* The cutoff radius depends on the mass of each halo */
+		float rCutoff = sqrt((G_MpcMsunS * thisHalo.mTot * deltaT) / deltaV); 
+
+		/* Now use the halo for comparison only if it is within a given radius */
+		if (rHalos < rCutoff)
+		{
+			float thisAcc = G_MpcMsunS * thisHalo.mTot / (rHalos * rHalos);
+
+			for (int iX = 0; iX < 3; iX++) 
+				rNorm[iX] = (useHalo.X[iX] - thisHalo.X[iX]);	
+
+			rNorm = UnitVector(rNorm);
+
+			for (int iX = 0; iX < 3; iX++) 
+				useHalo.V[iX] += rNorm[iX] * thisAcc;
+
+			// TODO do some kind of leapfrog interpolation to compute the position at this intermediate step
+
+		}
+		
+	}
+
 };
 
+
+
+float Cosmology::A2Sec(float a0, float a1)
+{
+	float time;
+
+	// function a0, a1
+
+	return time;
+};
 
 
 float Cosmology::RhoC(float boxSizeMpc, int nPart)

@@ -17,6 +17,8 @@ unsigned int NumLines(const char *);
 
 float VectorModule(float *);
 
+float* UnitVector(float *);
+
 void InitLocVariables(void);
 
 void CleanMemory(int);

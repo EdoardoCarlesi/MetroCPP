@@ -169,6 +169,21 @@ float VectorModule(float *V)
 };
 
 
+float *UnitVector(float *V)
+{
+	float *nV; nV = (float *) calloc(3, sizeof(float));
+	float normV; normV = VectorModule(V);
+
+	for (int iN = 0; iN < 3; iN++)
+	{
+		nV[iN] = V[iN] / normV;
+	}
+
+	return nV;
+};
+
+
+
 //int SortIndexes(vector<float> vec) {
 vector<int> SortIndexes(vector<float> vec) {
 	int nVec = vec.size();
