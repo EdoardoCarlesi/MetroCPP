@@ -24,4 +24,6 @@ void CleanMemory(int);
 void ShiftHalosPartsGrids(void);
 
 vector<string> SplitString(string, string);
+
+vector<int> SortIndexes(vector<float>);
 #endif

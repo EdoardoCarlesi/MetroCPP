@@ -545,6 +545,8 @@ void Communication::SyncOrphanHalos()
 	if (locTask == 0)
 		cout << "Synchronizing orphan halo information across all tasks..." << endl;
 
+	//cout << "-->Task=" << locTask << " has " << locOrphans << endl;
+
 #ifdef ZOOM	
 	posOrphans = (int *) calloc(totTask, sizeof(int));
 	dispOrphans = (int *) calloc(totTask, sizeof(int));
@@ -556,14 +558,33 @@ void Communication::SyncOrphanHalos()
 	if (locTask == 0)
 		cout << "In total, " << totOrphans << " orphan halos have been found." << endl;
 
+	//for (int iL = 0; iL < locOrphans; iL++)
+	//	cout << "-->Task=" << locTask << " " << orphanHaloIndex[iL] << " " << iL << endl;
+
 	/* Let every task know how many orphan halo ids it needs to receive from each task */
 	MPI_Allgather(&locOrphans, 1, MPI_INT, posOrphans, 1, MPI_INT, MPI_COMM_WORLD);
 
+	//for (int iT = 0; iT < totTask; iT++)
+	//	cout << "@ Task=" << locTask << " " << posOrphans[iT] << " " << endl;
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	dispOrphans[0] = 0; 
+
+	for (int iD = 0; iD < totTask-1; iD++)
+		dispOrphans[iD+1] = posOrphans[iD] + dispOrphans[iD]; 
 
 	/* Let every task know which indexes to receive */
 	MPI_Allgatherv(&orphanHaloIndex[0], orphanHaloIndex.size(), 
 		MPI_INT, indexOrphans, posOrphans, dispOrphans, MPI_INT, MPI_COMM_WORLD);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	//for (int iL = 0; iL < locOrphans; iL++)
+		//cout << "### Task= " << locTask << ", " << iL << ", " << indexOrphans[iL] << endl;
+	//for (int iL = 0; iL < totOrphans; iL++)
+	//	cout << "### Task= " << locTask << ", " << iL << ", " << indexOrphans[iL] << endl;
+
 
 	/* Now each task updates the "1" locHalo vector with orphan halos to keep track of them at the next step */
 	for (int iL = 0; iL < totOrphans; iL++)
@@ -571,9 +592,13 @@ void Communication::SyncOrphanHalos()
 		int thisIndex = indexOrphans[iL];
 
 		locMTrees[0][thisIndex].tokenProgenitor = true;
-		locMTrees[0][thisIndex].idProgenitor.push_back(locMTrees[0][thisIndex].idDescendant);
+		//locMTrees[0][thisIndex].idProgenitor.push_back(locMTrees[0][thisIndex].idDescendant);
+		locMTrees[0][thisIndex].idProgenitor.push_back(locMTrees[0][thisIndex].mainHalo.ID);
 		locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
 	
+		//cout << "Updating orphans on task = " << locTask << ", " << locMTrees[0][thisIndex].idDescendant << " " 
+		//	<< nLocHalos[1] << " " << iL << "/" << totOrphans << endl;
+
 		/* The orphan (token) halo is stored in memory for the next step */
 		locHalos[1].push_back(locHalos[0][thisIndex]);
 		locHalos[1][nLocHalos[1]].isToken = true;
@@ -590,6 +615,7 @@ void Communication::SyncOrphanHalos()
 
 	/* Once the orphans have been found, clear this vector */
 	orphanHaloIndex.clear();
+	orphanHaloIndex.shrink_to_fit();
 };
 
 

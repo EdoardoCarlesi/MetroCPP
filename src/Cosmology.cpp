@@ -1,5 +1,10 @@
-#include "Cosmology.h"
+
 #include <math.h>
+
+#include "utils.h"
+#include "global_vars.h"
+#include "Cosmology.h"
+
 
 Cosmology::Cosmology()
 {
@@ -10,6 +15,7 @@ Cosmology::Cosmology()
 
 Cosmology::~Cosmology()
 {};
+
 
 
 float Cosmology::Rho0(float boxSizeMpc, int nPart)
@@ -24,13 +30,19 @@ float Cosmology::Rho0(float boxSizeMpc, int nPart)
 };
 
 
-//float Cosmology::SetPlanck(){};
+
+/* Compute the gravitational acceleration around a given halo */
+float Cosmology::GravAcc()
+{
+};
+
 
 
 float Cosmology::RhoC(float boxSizeMpc, int nPart)
 {
 	return Rho0(boxSizeMpc, nPart) * (1.0 / (1.0 - omegaL));
 };
+
 
 
 void Cosmology::SetPlanck()
@@ -41,6 +53,7 @@ void Cosmology::SetPlanck()
 	omegaB = 0.05;
 	h = 0.67;
 };
+
 
 	
 void Cosmology::SetWMAP7()

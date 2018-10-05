@@ -10,8 +10,6 @@
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
-//#include <stdio.h>
-//#include <stdlib.h>
 
 #include "IOSettings.h"
 #include "utils.h"
@@ -151,8 +149,9 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
 	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
-	else if (arg[0] == "outPrefix")		outPrefix = stof(arg[1]);
-	else if (arg[0] == "outSuffix")		outSuffix = stof(arg[1]);
+	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
+	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
+	else if (arg[0] == "pathOutput")	pathOutput = arg[1];
 	else {
 		cout << "Arg= " << arg[0] << " does not exist." << endl;
 	}
@@ -673,7 +672,7 @@ void IOSettings::ReadHalos()
 	// After reading in all the catalogs, find out, sort and remove duplicates of nodes being allocated to the task
 	GlobalGrid[iUseCat].SortLocNodes();
 #else
-	cout << "On task=" << locTask << " a subset of " << nLocHalos[iUseCat] << " haloes has been read in." << endl; 
+	//cout << "On task=" << locTask << " a subset of " << nLocHalos[iUseCat] << " haloes has been read in." << endl; 
 #endif
 
 //#ifdef VERBOSE
@@ -732,15 +731,18 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 };
 
 
-   
+
 void IOSettings::WriteTrees()
 {
         string strCpu = to_string(locTask);
+	int totTrees = locCleanTrees.size();
 
-        for (int iC = 0; iC < locCleanTrees.size(); iC++)
+        for (int iC = 0; iC < totTrees; iC++)
         {
-                string strFnm = to_string(iC);
-                string outName = "out_" + strFnm + "." + strCpu + ".mtree";
+		char *strFnm;	strFnm = (char *) calloc(4, sizeof(char));
+		//sprintf(strFnm, "%03d", totTrees-iC-1);
+		sprintf(strFnm, "%03d", iC);
+                string outName = pathOutput + outPrefix + strFnm + "." + strCpu + "." + outSuffix;
 		string orphan;
 
 		ofstream fileOut;
@@ -749,37 +751,36 @@ void IOSettings::WriteTrees()
                 if (locTask == 0)
                         cout << "Printing trees to file " << outName << endl;
 
+		if (locTask == 0)
+		{
+			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)" << endl;
+			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)   Orphan[0=no, 1=yes](4)" << endl;
+		} 
+
                 for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
                 {
 			MergerTree thisTree = locCleanTrees[iC][iT];
-			fileOut << thisTree.idDescendant << " " << thisTree.nPart << " " << thisTree.idProgenitor.size() << endl;
-
-			//Halo thisHalo = 
-			//allHalos[iC][iT].Info();
+			fileOut << thisTree.mainHalo.ID << " " 
+				<< thisTree.mainHalo.nPart[1] << " " 
+				<< thisTree.idProgenitor.size() << endl;
 
 			if (thisTree.tokenProgenitor)
-				orphan = "orphan";	
+				orphan = "1";	
 			else
-				orphan = "";
+				orphan = "0";
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
-				int thisIndex = thisTree.indexProgenitor[iP];
+				Halo subHalo = thisTree.subHalos[iP];
 
-				//cout << iP << " " << thisIndex << endl;
-				//allHalos[iC][thisIndex].Info();
-
-                                fileOut << thisTree.idProgenitor[iP] 			<< " "
-					<< allHalos[iC+1][thisIndex].mTot		<< " " 	
-					<< allHalos[iC+1][thisIndex].nPart[nPTypes]	<< " " 	
-					<< thisTree.nCommon[1][iP] 			<< " " 
+				fileOut	<< thisTree.nCommon[1][iP]		<< " " 
+                                	<< thisTree.idProgenitor[iP] 		<< " "
+					<< subHalo.nPart[1]			<< " "
 					<< orphan << endl;
-					
 			}
-				
                 }
 		
-		fileOut.close();
                 //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
+		fileOut.close();
         }
 };

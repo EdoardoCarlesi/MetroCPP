@@ -75,7 +75,7 @@ void CleanMemory(int iCat)
 	if (locTask ==0)
 		cout << "Cleaning memory for catalog " << iCat << endl;		
 
-	copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
+	//copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
 
 	locHalos[iCat].clear();
 	locHalos[iCat].shrink_to_fit();
@@ -168,4 +168,40 @@ float VectorModule(float *V)
 	return sqrt(V[0]*V[0] + V[1]*V[1] + V[2]*V[2]);
 };
 
+
+//int SortIndexes(vector<float> vec) {
+vector<int> SortIndexes(vector<float> vec) {
+	int nVec = vec.size();
+
+	vector<int> idx;
+	idx.resize(nVec);
+	
+	for (int iV = 0; iV < nVec; iV++)
+		idx[iV] = iV;
+
+	sort(idx.begin(), idx.end(), [&vec](int i1, int i2) 
+		{return vec[i1] > vec[i2];});
+
+	/*
+	//int idx0 = 0; 
+	//float maxV = 100000.0;
+	//float maxV = 0.0;
+	//for (int iD = 0; iD < nVec; iD++)
+	//	cout << "* " << iD << " vec=" << vec[iD] << " idx=" << idx[iD] << endl;
+	//sort(idx.begin(), idx.end(), [&vec](int i1, int i2)
+	//	{return vec[i1] < vec[i2];});
+
+	for (int iD = 0; iD < nVec; iD++)
+	{
+		if (vec[iD] > maxV)
+		{
+			maxV = vec[iD];
+			idx0 = iD;
+		}
+	}
+	//return idx0;
+	*/
+
+	return idx;
+};
 

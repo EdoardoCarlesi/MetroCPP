@@ -13,7 +13,7 @@ using namespace std;
 class Halo {
 
 public:
-	// Standard constructor / destructor
+	/* Standard constructor / destructor */
 	Halo();
 	~Halo();
 
@@ -25,7 +25,11 @@ public:
 
 	// Token halos keeping track of "lost" subhalos need to set this to TRUE
 	bool isToken;
-
+	
+	// Number of time steps during which the halo has been "orphan" of a progenitor
+	int nOrphan;
+	
+	// Number of subhalos
 	int nSub;
 	
 	// Total number of particles is set to 7
@@ -40,8 +44,6 @@ public:
 	
 	// Velocity (module) of the halo wrt a given velocity vector
 	float RelativeVelocity(float *);
-
-	// Set methods: sets the halo properties reading from different formats of halo catalogs
 
 	// Cout some infos on the halo (velocity, position, etc.)
 	void Info(void);

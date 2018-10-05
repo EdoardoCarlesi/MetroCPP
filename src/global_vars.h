@@ -45,9 +45,6 @@ extern vector<int> locTreeIndex;
 /* This variables stores the number of (clean) connections between halos in catalog 0 and catalog 1, two steps at the time */
 extern vector<vector<MergerTree>> locCleanTrees;
 
-/* Here we save the fully reconstructed (with missing subhalos and smoothed) merger history */
-extern vector<vector<HaloTree>> allMTrees;
-
 /* Maps that contain halo ids and a link to the locHalo index */
 #ifndef ZOOM
 extern map <unsigned long long int, int> locId2Index;

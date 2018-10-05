@@ -1,8 +1,7 @@
 TO DO NEXT:
 
+Fix the cleaning of the *tmp files with halo & particle files lists
 
-Fix the zoom-in mode and do some tests
-The zoom-in mode should only read halos within the high-res region!!
 
 Expand: 
 Cosmology class (to compute the expansion factor of the universe) 

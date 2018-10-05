@@ -21,9 +21,6 @@ Grid BufferGrid;
 
 vector<vector<MergerTree>> locMTrees;
 vector<vector<MergerTree>> locCleanTrees;
-//vector<vector<HaloTree>> locHTrees;
-//vector<vector<HaloTree>> allHTrees;
-vector<vector<HaloTree>> allMTrees;
 
 #ifdef ZOOM
 vector<int> locTreeIndex;

@@ -7,6 +7,7 @@
 
 using namespace std;
 
+
 /* Due to the reliance of this class on vector template, we cannot directly MPI_Sendrecv the MergerTrees */
 class MergerTree {
 
@@ -14,16 +15,16 @@ public:
 	MergerTree();
 	~MergerTree();
 
-	int nPart;					// Number of particles per halo
+	vector<Halo> subHalos;				// SubHalos of the main tree
+	Halo mainHalo;					// Main halo of the MTree, to be stored in the cleantree only
 
-	unsigned long long int idDescendant;		// ID of the descendant halo
 	bool tokenProgenitor;				// If no progenitor is found, then create a token halo
 							// with the same particle content to keep tracking it at subsequent steps
-	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
-	vector<unsigned long long int> indexProgenitor;	// local array index of progenitors
+	vector<int> indexProgenitor;			// local array index of progenitors
+	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 
-	void sortByMerit(void);				// Once possible progenitors have been found, compare
+	void sortByMerit(int);				// Once possible progenitors have been found, compare
 	void Clean(void);
 	void Info(void);
 };

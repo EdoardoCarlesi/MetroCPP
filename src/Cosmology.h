@@ -29,5 +29,6 @@ public:
 	float Myr2s = 3.153e+13;
 	float H100s = 3.241e-18;
 	float Msun2g = 1.988e+33;
+
 };
 #endif

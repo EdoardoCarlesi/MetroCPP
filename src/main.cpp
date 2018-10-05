@@ -73,7 +73,7 @@ int main(int argv, char **argc)
 	CommTasks.BroadcastAndGatherGrid();
 #endif
 
-	int nUseCat = 5;	// THIS IS A LOCAL VARIABLE used for TEST only
+	int nUseCat = 55;	// THIS IS A LOCAL VARIABLE used for TEST only
 
 	InitTrees(nUseCat);
 
@@ -90,7 +90,7 @@ int main(int argv, char **argc)
 		CommTasks.BroadcastAndGatherGrid();
 
 		/* After reading in the second halo catalog, each task finds out which nodes it gets from the other tasks
-		   The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
+		 * The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 		GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 #endif
 		/* Now exchange the halos in the requested buffer zones among the different tasks */
@@ -124,9 +124,9 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "\nDone in " << elapsed << "s. " << endl;
 
-		//CleanTrees(iNumCat);
+		CleanTrees(iNumCat);
 
-		// Now shift the halo catalog from 1 to 0, and clean the buffers
+		/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 		ShiftHalosPartsGrids();
 
 		CleanMemory(1);
@@ -135,18 +135,16 @@ int main(int argv, char **argc)
 	if (locTask == 0)
 		cout << "The loop on halo and particle catalogs has finished." << endl;
 
-
 	// The trees have now been built
-
 
 #ifndef ZOOM
 	// Retrieve some informations on the grid - sanity check
 	//GlobalGrid.Info();
 #endif
 
-	//MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
 
-	//SettingsIO.WriteTrees();
+	SettingsIO.WriteTrees();
 
 	//DebugTrees();
 

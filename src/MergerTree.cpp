@@ -36,21 +36,17 @@ void HaloTree::Clean()
 
 void MergerTree::Info()
 {
-	//if (nPart > 1000)
-	{
-		//cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
-		cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
+	cout << "Task=" << locTask << " " << mainHalo.ID << " " << idProgenitor.size() << endl;
 
-		if (tokenProgenitor)
-			for (int iP = 0; iP < idProgenitor.size(); iP++)
-				cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << endl;
+	if (tokenProgenitor)
+		for (int iP = 0; iP < idProgenitor.size(); iP++)
+			cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << endl;
 		else
 			for (int iP = 0; iP < idProgenitor.size(); iP++)
 				cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
 
-		//cout << "--" << endl;
-	}
 };
+
 
 
 void MergerTree::Clean()
@@ -61,10 +57,12 @@ void MergerTree::Clean()
 };
 
 
+
 MergerTree::MergerTree()
 {
 	//tokenProgenitor = false;
 };
+
 
 
 MergerTree::~MergerTree()
@@ -72,9 +70,70 @@ MergerTree::~MergerTree()
 };
 
 
-void MergerTree::sortByMerit()
+/* This sorting algorithm might be very inefficient but it's straightforward to implement, 
+ * plus we will rarely deal with halos with more than 10^6 progenitors */
+void MergerTree::sortByMerit(int jSimu)
 {
-	// merit = pow( common/(nP1 * nP2), 2.0 )
+	vector<unsigned long long int> tmpIdx;
+	vector<float> allMerit;
+	vector<int> idx, tmpIndex;
+	//vector<Halo> tmpSubHalos;
+
+	int iSimu = (jSimu + 1) % 2; 
+	float merit = 0.0;
+
+	for (int iM = 0; iM < idProgenitor.size(); iM++)
+	{
+		int thisIndex = indexProgenitor[iM];
+		Halo thisProgHalo = locHalos[iSimu][thisIndex];
+		int nComm = 0;
+
+		for(int iC = 0; iC < nPTypes; iC++)
+				nComm += nCommon[iC][iM];
+
+		merit = ((float) nComm * nComm) / (mainHalo.nPart[1] * thisProgHalo.nPart[1]);
+		merit *= merit;
+
+		//cout << iM << " " << merit << " " << thisProgHalo.mTot << " " << endl;
+
+		allMerit.push_back(merit);
+	}
+	
+	idx = SortIndexes(allMerit);
+	tmpIndex.resize(idx.size());
+	tmpIdx.resize(idx.size());
+	//tmpSubHalos.resize(idx.size());
+
+	for (int iM = 0; iM < idProgenitor.size(); iM++)
+	{
+		//cout << iM << ", " << idx[iM] << ", " << idProgenitor[iM] << ", " << idProgenitor.size() << endl;
+		tmpIdx[iM] = idProgenitor[idx[iM]];
+		tmpIndex[iM] = indexProgenitor[idx[iM]];
+		//tmpSubHalos[iM] = subHalos[idx[iM]];
+	}	
+
+	idProgenitor = tmpIdx;
+	indexProgenitor = tmpIndex;
+	//subHalos = tmpSubHalos;
+
+	/*	
+	cout << idx << ", " << locHalos[iSimu][indexProgenitor[idx]].mTot << endl;
+	cout << 0   << ", " << locHalos[iSimu][indexProgenitor[0]].mTot << endl;
+	cout << "........." << endl;
+
+	int idx = 0;
+	for (int iM = 0; iM < idProgenitor.size(); iM++)
+	{
+		cout << locTask << "] (" << idx[iM] << ", " << iM << ") (" 
+			<< allMerit[idx[iM]] << ", " << allMerit[iM] << ") (" 
+			<< locHalos[iSimu][indexProgenitor[iM]].mTot << ", " 
+			<< locHalos[iSimu][indexProgenitor[idx[iM]]].mTot << ") " << endl; 
+	}
+		cout << endl;
+	}*/
+
+
+
 };
 
 
@@ -89,11 +148,10 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 	float rMax = 0.0, vMax = 0.0, fVel = 0.5e-2, vOne = 0.0, vTwo = 0.0;
 	Halo cmpHalo;
 
-#ifdef ZOOM
-
+#ifdef ZOOM	// TODO this is not clear yet
 	cmpHalo = locHalos[iTwo][jHalo];
 	rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir;
-	rMax *= 20.0; 
+	rMax *= 25.0; 
 	//rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir; 
 	//rMax *= dMaxFactor * 5.0;
 	
@@ -119,11 +177,25 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 	vMax = (vOne + vTwo) * fVel;
 	rMax *= dMaxFactor * vMax;
 
+	// If we are dealing with token halos, enlarge the search radius
+	if (locHalos[iOne][iHalo].isToken || cmpHalo.isToken)
+			rMax *= 2.0;
+	
 	// Only check for pairwise distance
 	if (locHalos[iOne][iHalo].Distance(cmpHalo.X) < rMax)
+	{
+		//cout << "Halo comparison: " << locHalos[iOne][iHalo].Distance(cmpHalo.X) << " r: " << rMax << endl;
+		//locHalos[iOne][iHalo].Info();
+		//cmpHalo.Info();
+		//cout << "--" << endl;
 		return true;
-	else 
+	} else {
+		//cout << "Skipping halo comparison: " << endl;
+		//locHalos[iOne][iHalo].Info();
+		//cmpHalo.Info();
+		//cout << "--" << endl;
 		return false;
+	}
 	
 };
 
@@ -133,88 +205,93 @@ void FindProgenitors(int iOne, int iTwo)
 {
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	float rSearch = 0, facRSearch = 20.0;
-	vector<int> nCommon, indexes, totNCommon;
+	vector<int> thisNCommon, indexes, totNCommon;
 	int totCmp = 0, totSkip = 0; 
-
-	totNCommon.resize(nPTypes);
 
 	locMTrees[iOne].clear();
 	locMTrees[iOne].shrink_to_fit();
 	locMTrees[iOne].resize(nLocHalos[iOne]);
 
-	//cout << locTask << ") nHalos= " << nLocHalos[iOne] << endl;
-
 #ifdef ZOOM
 	vector<int> locHaloPos;
-	int thisIndex = 0;
-	int halosPerTask = 0, halosRemaind = 0;
+	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
 
-	if (iOne < iTwo)	// Only forward comparison is split, when doing backward comparison each task need to 
-				// control all the halos, otherwise the trees will not be built correctly (in ZOOM mode)
+	/* For consistency across tasks and to keep track of all possible orphans, IDs need to be initialized here */
+	for (int iT = 0; iT < locHalos[iOne].size(); iT++)
+		locMTrees[iOne][iT].mainHalo.ID = locHalos[iOne][iT].ID;
+
+	/* The way forward/backward comparisons are done is different: in the forward mode, halos are split among the tasks as 
+	 * Task 1 --> halo 1, task 2 ---> halo 2, assuming that the halos are ordered with increasing (decreasing) number of particles.
+	 * In the backward mode, we assign to each task only those halos which have been matched in the fwd step, to avoid unnecessary
+	 * comparisons.   */
+	if (iOne < iTwo)	
 	{
 		halosPerTask = int(nLocHalos[iOne] / totTask);
 		halosRemaind = nLocHalos[iOne] % totTask;
+		locTreeIndex.clear();
+		locTreeIndex.shrink_to_fit();
 
 		/* The first halosRemaind tasks get one halo more */
 		if (locTask < halosRemaind)
 			halosPerTask += 1;
 
-		cout << "Task=" << locTask << " is looping on " << halosPerTask << " halos in the forward loop." << endl;
-	} else {		// If doing backward correlation we have to loop on all halos (ZOOM mode)
+		if (locTask == 0)
+			cout << "Looping on " << halosPerTask << " halos in the forward loop." << endl;
+	} else {
+
+		/* If doing backward correlation we have to loop on all halos (ZOOM mode) */
 		halosPerTask = locTreeIndex.size();
 		
-		/*
-		cout << "Task=" << locTask << " is looping on " << halosPerTask << " halos in the backward loop." << endl;
-		cout <<  locHalos[iOne].size() << ", nHalos=" << nLocHalos[iOne] << ", indexMax=" << locTreeIndex[halosPerTask-1] << endl;
-		cout <<  locHalos[iTwo].size() << ", nHalos=" << nLocHalos[iTwo] << ", indexMax=" << locTreeIndex[halosPerTask-1] << endl;
-		*/
+		if (locTask == 0)
+			cout << "Looping on " << halosPerTask << " halos in the backward loop." << endl;
 	}
 
 	for (int i = 0; i < halosPerTask; i++)
 	{
+		/* This distribution assumes that halos are ordered per number of particles, to improve the load balancing */
 		if (iOne < iTwo)
 			thisIndex = locTask + i * totTask;
 		else
 			thisIndex = locTreeIndex[i];
-			//thisIndex = i;
 
 		Halo thisHalo = locHalos[iOne][thisIndex];
 		
 		/* Save some halo properties on the mtree vector */
-		locMTrees[iOne][thisIndex].idDescendant = thisHalo.ID;
-		locMTrees[iOne][thisIndex].nPart = thisHalo.nPart[nPTypes];
+		locMTrees[iOne][thisIndex].mainHalo = thisHalo;
 		locMTrees[iOne][thisIndex].nCommon.resize(nPTypes);
-
+	
+		//thisHalo.Info();
+		//cout << iOne << ", " << i << ", " << thisHalo.ID << endl;
+	
 			/* In a zoom-in run, we loop over all the halos on the iTwo step */
 			for (int j = 0; j < locHalos[iTwo].size(); j++)
 			{ 
-                                //if (CompareHalos(i, j, iOne, iTwo))
+				thisNCommon.resize(nPTypes);
+                                //if (CompareHalos(i, j, iOne, iTwo))	// TODO this does not really improve speed, need to do more tests
 				{
-					nCommon = CommonParticles(locParts[iOne][thisIndex], locParts[iTwo][j]);
+					thisNCommon = CommonParticles(locParts[iOne][thisIndex], locParts[iTwo][j]);
 	
 					int totComm = 0;
-
-					for (int iC = 0; iC < nCommon.size(); iC++)
-						totComm += nCommon[iC];
+					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
 
 					/* This is very important: we keep track of the merging history ONLY if the number 
-					   of common particles is above a given threshold */
+					 * of common particles is above a given threshold */
 					if (totComm > minPartCmp) 
-					{		
+					{	
+						/* Common particles are separated per particle type */	
 						for (int iT = 0; iT < nPTypes; iT++)
-						{
-							totNCommon[iT] += nCommon[iT];
-							locMTrees[iOne][thisIndex].nCommon[iT].push_back(nCommon[iT]);
+						{	
+							//cout << j << ", " << iT << ", " << thisNCommon[iT] << endl;
+							locMTrees[iOne][thisIndex].nCommon[iT].push_back(thisNCommon[iT]);
 						}
 
 						locMTrees[iOne][thisIndex].idProgenitor.push_back(locHalos[iTwo][j].ID);
 						locMTrees[iOne][thisIndex].indexProgenitor.push_back(j);
 					
-						if (locMTrees[iOne][thisIndex].idDescendant == locHalos[iTwo][j].ID)
-						{
+						/* If the two halos have the same ID, we are dealing with a token halo
+						 * placed to trace the progenitor of an orphan halo */
+						if (locMTrees[iOne][thisIndex].mainHalo.ID == locHalos[iTwo][j].ID)
 							locMTrees[iOne][thisIndex].tokenProgenitor == true;
-							//cout << "Found orphan progenitor " << locHalos[iTwo][j].ID << endl;
-						}
 
 						/* We keep track of the halos on iTwo that have been matched on iOne on the 
 						 * local task, so that we can avoid looping on all iTwo halos afterwards */
@@ -222,47 +299,30 @@ void FindProgenitors(int iOne, int iTwo)
 							locTreeIndex.push_back(j);
 					
 						totCmp++;
+				
 					}
+
 				} // CompareHalos
+				
+				thisNCommon.clear();
+				thisNCommon.shrink_to_fit();
 			}
 
-			/*
-			if (locHalos[iOne][thisIndex].isToken && iOne < iTwo && locMTrees[iOne][thisIndex].idProgenitor.size() > 0)
-			{
-				cout << "**** on Task= " << locTask << " found a progenitor for orphan halo: " << endl; 
-				locHalos[iOne][thisIndex].Info();
-				locHalos[iTwo][locMTrees[iOne][thisIndex].indexProgenitor[0]].Info();
-				locMTrees[iOne][thisIndex].Info();
-				cout << "****" << endl;
-			}
-			*/
+			locMTrees[iOne][thisIndex].sortByMerit(iOne);
 
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
-			 * minPartHalo, then we keep track of its position in the global locHalos[iOne] array
-			 */
+			 * minPartHalo, then we keep track of its position in the global locHalos[iOne] array  */
 			if (locMTrees[iOne][thisIndex].idProgenitor.size() == 0 && 
-				locMTrees[iOne][thisIndex].nPart > minPartHalo && iOne < iTwo)
+				locMTrees[iOne][thisIndex].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
 				{
 					for (int iT = 0; iT < nPTypes; iT++)
 						locMTrees[iOne][thisIndex].nCommon[iT].push_back(locHalos[iOne][thisIndex].nPart[iT]);
 
-				//locTreeIndex.push_back(thisIndex);
 					orphanHaloIndex.push_back(thisIndex);
 					locMTrees[iOne][thisIndex].tokenProgenitor = true;
-					//locMTrees[iOne][thisIndex].idProgenitor.push_back(locHalos[iOne][thisIndex].ID);
-					//locMTrees[iOne][thisIndex].indexProgenitor.push_back();
 				} else {
 					locMTrees[iOne][thisIndex].tokenProgenitor = false;
 				}
-			/*
-			if (locMTrees[iOne][thisIndex].idProgenitor.size() == 0 && 
-				locMTrees[iOne][thisIndex].nPart > minPartHalo && iOne < iTwo)
-			{
-				cout << "\n----Orphan halo on task=" << locTask << ", index= " << thisIndex << endl;
-				locHalos[iOne][thisIndex].Info();
-				cout << "----" << endl;
-			}	
-			*/
 
 #ifdef DEBUG		// Sanity check
 			if (locMTrees[iOne][thisIndex].nPart > 1000)
@@ -274,56 +334,19 @@ void FindProgenitors(int iOne, int iTwo)
 	sort(locTreeIndex.begin(), locTreeIndex.end());
 	locTreeIndex.erase(unique(locTreeIndex.begin(), locTreeIndex.end()), locTreeIndex.end());
 
-#else	/* Standard comparison */
+#else	/* Comparison for fullbox simulations */
 
 		for (int i = 0; i < nLocHalos[iOne]; i++)
 		{
-			locMTrees[iOne][i].idDescendant = locHalos[iOne].ID;
-			locMTrees[iOne][i].nPart = locHalos[iOne].nPart[nPTypes];
+			//locMTrees[iOne][i].idDescendant = locHalos[iOne].ID;
+			locMTrees[iOne][i].mainHalo = locHalos[iOne];
+			//locMTrees[iOne][i].nPart = locHalos[iOne].nPart[nPTypes];
 			locMTrees[iOne][i].nCommon.resize(nPTypes);
 
 			if (i == nStepsCounter * floor(i / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
-#ifdef CMP_ALL	/* Compare ALL the halos located on the task - used only as a benchmark */
 
-			for (int j = 0; j < locHalos[iTwo].size(); j++)
-			{
-				nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
-						
-				if (nCommon[1] > 10) 
-				{		
-					for (int iT = 0; iT < nPTypes; iT++)
-					{
-						totNCommon[iT] += nCommon[iT];
-						locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
-					}
-
-					locMTrees[iOne][i].idProgenitor.push_back(locHalos[iTwo][j].ID);
-					locMTrees[iOne][i].indexProgenitor.push_back(j);
-					totCmp++;
-				}
-			}
-
-			for (int j = 0; j < locBuffHalos.size(); j++)
-			{
-				nCommon = CommonParticles(locParts[iOne][i], locBuffParts[j]);
-							
-				if (nCommon[1] > 10) 
-				{		
-					for (int iT = 0; iT < nPTypes; iT++)
-					{
-						totNCommon[iT] += nCommon[iT];
-						locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
-					}
-
-					locMTrees[iOne][i].idProgenitor.push_back(locBuffHalos[j].ID);
-					locMTrees[iOne][i].indexProgenitor.push_back(-j);
-				}
-
-				totCmp++;
-			}
-
-#else		/* Compare to a subset of halos */
+#ifndef CMP_ALL		/* Compare to a subset of halos, not to all of them */
 
 			Halo thisHalo = locHalos[iOne][i];
 			rSearch = facRSearch * thisHalo.rVir;
@@ -336,8 +359,9 @@ void FindProgenitors(int iOne, int iTwo)
 			{
 				int k = indexes[j];
 
-				locMTrees[iOne][i].idDescendant = locHalos[iOne].ID;
-				locMTrees[iOne][i].nPart = locHalos[iOne].nPart[nPTypes];
+				//locMTrees[iOne][i].idDescendant = locHalos[iOne].ID;
+				//locMTrees[iOne][i].nPart = locHalos[iOne].nPart[nPTypes];
+				locMTrees[iOne][i].mainHalo = locHalos[iOne];
 				locMTrees[iOne][i].nCommon.resize(nPTypes);
 
 				/* Compare halos --> this functions checks whether the two halos are too far 
@@ -354,7 +378,6 @@ void FindProgenitors(int iOne, int iTwo)
 						for (int iT = 0; iT < nPTypes; iT++)
 						{
 							locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
-							totNCommon[iT] += nCommon[iT];
 						}
 	
 					if (k >= 0)
@@ -373,17 +396,48 @@ void FindProgenitors(int iOne, int iTwo)
 
 			}	// for j, k = index(j)
 
+#else			/* Compare ALL the halos located on the task - used only as a benchmark */
+
+			for (int j = 0; j < locHalos[iTwo].size(); j++)
+			{
+				nCommon = CommonParticles(locParts[iOne][i], locParts[iTwo][j]);
+						
+				if (nCommon[1] > 10) 
+				{		
+					for (int iT = 0; iT < nPTypes; iT++)
+					{
+						locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
+					}
+
+					locMTrees[iOne][i].idProgenitor.push_back(locHalos[iTwo][j].ID);
+					locMTrees[iOne][i].indexProgenitor.push_back(j);
+					totCmp++;
+				}
+			}
+
+			for (int j = 0; j < locBuffHalos.size(); j++)
+			{
+				nCommon = CommonParticles(locParts[iOne][i], locBuffParts[j]);
+							
+				if (nCommon[1] > 10) 
+				{		
+					for (int iT = 0; iT < nPTypes; iT++)
+					{
+						locMTrees[iOne][i].nCommon[iT].push_back(nCommon[iT]);
+					}
+
+					locMTrees[iOne][i].idProgenitor.push_back(locBuffHalos[j].ID);
+					locMTrees[iOne][i].indexProgenitor.push_back(-j);
+				}
+
+				totCmp++;
+			}
+
+
 #endif		// compare all halos
 		} // for i halo, the main one
 
 #endif		// ifdef ZOOM
-
-/*
-		if (locTask == 0)
-			cout << "\n" "Compared a total of : " << totCmp 
-				<< " halos, with a total number of: " << totNCommon[1] << " Type 1 DM particles in common and "
-				<< "  a total number of: " << totNCommon[2] << " Type 2 DM particles in common. " << endl; 
-*/
 };
 
 
@@ -435,39 +489,43 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 void InitTrees(int nUseCat)
 {
 	locCleanTrees.resize(nUseCat-1);
-	allHalos.resize(nUseCat);
-	copy(locHalos[0].begin(), locHalos[0].end(), back_inserter(allHalos[iNumCat]));
+	//allHalos.resize(nUseCat);
+	//copy(locHalos[0].begin(), locHalos[0].end(), back_inserter(allHalos[iNumCat]));
 };
 
 
 
 void CleanTrees(int iStep)
 {
-	// TODO implement the sort by merit function!!!!!
-	for (int iSim = 0; iSim < 2; iSim++)
-		for (int iTree = 0; iTree < locMTrees[iSim].size(); iTree++)
-			locMTrees[iSim][iTree].sortByMerit();
+	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
+
+        halosPerTask = int(nLocHalos[0] / totTask);
+        halosRemaind = nLocHalos[0] % totTask;
+
+	if (locTask < halosRemaind)
+		halosPerTask += 1;
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections, back and forth..." << endl;
 
-	for (int iTree = 0; iTree < locMTrees[0].size(); iTree++)
+	for (int kTree = 0; kTree < halosPerTask; kTree++)
 	{
+		int iTree = locTask + kTree * totTask;
 		unsigned long long int mainID = locHalos[0][iTree].ID;
 
 		MergerTree mergerTree;
 		mergerTree.nCommon.resize(nPTypes);
-		mergerTree.idDescendant = mainID;
+		mergerTree.mainHalo = locHalos[0][iTree];
 		mergerTree.tokenProgenitor = locMTrees[0][iTree].tokenProgenitor;
-		mergerTree.nPart = locHalos[0][iTree].nPart[nPTypes];
 	
 		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
-		   reconstruction of the full merger history. This will be done later. */
+		 * reconstruction of the full merger history. This will be done later. */
 		for (int iProg = 0; iProg < locMTrees[0][iTree].idProgenitor.size(); iProg++)
 		{
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
 			unsigned long long int descID = locMTrees[1][jTree].idProgenitor[0];	// The progenitor in the backwards tree
+			Halo subHalo;	subHalo = locMTrees[1][jTree].mainHalo;
 
 #ifdef DEBUG
 			// Useful for debugging
@@ -480,37 +538,27 @@ void CleanTrees(int iStep)
 				locHalos[1][jTree].Info();
 			}
 #endif
-
 			if (mainID == descID)
 			{
 				if (locMTrees[0][iTree].tokenProgenitor)
 				{
-					mergerTree.idProgenitor.push_back(locMTrees[0][iTree].idDescendant);
-					//mergerTree.indexProgenitor.push_back(locMTrees[0][iTree].indexProgenitor[0]);
+					mergerTree.idProgenitor.push_back(locMTrees[0][iTree].mainHalo.ID);
+					mergerTree.indexProgenitor.push_back(jTree);
+					mergerTree.subHalos.push_back(locHalos[0][iTree]);
 
 					for(int iT = 0; iT < nPTypes; iT++)
-						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+						mergerTree.nCommon[iT].push_back(locHalos[0][iTree].nPart[iT]);
 
 				} else {
 					mergerTree.idProgenitor.push_back(progID);
 					mergerTree.indexProgenitor.push_back(jTree);
+					mergerTree.subHalos.push_back(subHalo);
 
 					for(int iT = 0; iT < nPTypes; iT++)
 						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 				}
 			}
-		}
-
-/*
-		if (mergerTree.tokenProgenitor)
-		{
-			//locMTrees[0][iTree].Info();
-			//cout << locMTrees[0][iTree].idDescendant << endl;
-			//cout << locMTrees[0][iTree].idProgenitor.size() << endl;
-			//mergerTree.idProgenitor[0] = locMTrees[0][iTree].idDescendant;
-			//cout << "token " << mergerTree.idProgenitor.size() << endl;
-		}
-*/
+		}	// kTree & iTree loop
 
 		if (mergerTree.idProgenitor.size() > 0)
 			locCleanTrees[iStep-1].push_back(mergerTree);
