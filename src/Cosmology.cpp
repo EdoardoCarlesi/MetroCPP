@@ -42,7 +42,6 @@ void Cosmology::GravAcc(Halo useHalo, float a0, float a1)
 	deltaV = VectorModule(useHalo.V) * 0.1;
 	deltaT = A2Sec(a0, a1);
 
-
 	/* It is faster to simply start the loop on all halos */
 	for (int iH = 0; iH < locHalos[0].size(); iH++)
 	{

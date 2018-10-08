@@ -96,6 +96,6 @@ extern float totVmax;
 extern float locVmax;
 extern float maxBufferThick;
 
-extern int nCat;
+extern int nSnaps;
 extern int nChunks;	// Each halo catalog / particle file is split into this number of files
 #endif 

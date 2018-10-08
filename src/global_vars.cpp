@@ -72,4 +72,4 @@ int minPartHalo;
 
 int nGrid;
 int nChunks;
-int nCat;
+int nSnaps;

@@ -19,6 +19,8 @@ public:
 	vector<float> aFactors;
 	vector<int> numSnaps;
 
+	int runMode;
+
 	// These strings contain all the paths to all the halo files to be read
 	// They are vector of vectors as in principle a task may read from different files
 	vector <vector<string>> haloFiles;
@@ -35,6 +37,7 @@ public:
 	string pathMetroCpp;	// Where the program is installed
 	string pathInput;	// Folder containing all the halo/particle catalogs	//TODO allow for different folders
 	string pathOutput;	// Where to dump all the output data
+	string pathTree;
 
 	string inputFormat;	// AHF, FoF, or anything else	
 
