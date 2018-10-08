@@ -70,6 +70,7 @@ float boxSize;
 int minPartCmp;
 int minPartHalo;
 
+int runMode;
 int nGrid;
 int nChunks;
 int nSnaps;

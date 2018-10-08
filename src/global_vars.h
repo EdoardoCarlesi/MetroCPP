@@ -96,6 +96,8 @@ extern float totVmax;
 extern float locVmax;
 extern float maxBufferThick;
 
+/* These int values are being read from the configuration file */
+extern int runMode;
 extern int nSnaps;
 extern int nChunks;	// Each halo catalog / particle file is split into this number of files
 #endif 
