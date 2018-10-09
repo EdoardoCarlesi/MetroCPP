@@ -53,6 +53,7 @@ public:
 	void ReadLineAHF(const char *, Halo *);
 	void ReadParticles();
 	void ReadHalos();
+	void ReadTrees();
 	void WriteTrees();
 
 private:

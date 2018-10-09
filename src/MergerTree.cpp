@@ -469,7 +469,6 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 
 			// Resize the array and free some memory
 			thisCommon.resize(iter - thisCommon.begin());
-			//thisCommon.shrink_to_fit();		
 
 			// Now compute how many particles in common are there
 			nCommon[iT] = thisCommon.size();
@@ -488,6 +487,7 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 
 void InitTrees(int nUseCat)
 {
+	/* The trees already contain all the Halo information */
 	locCleanTrees.resize(nUseCat-1);
 	//allHalos.resize(nUseCat);
 	//copy(locHalos[0].begin(), locHalos[0].end(), back_inserter(allHalos[iNumCat]));

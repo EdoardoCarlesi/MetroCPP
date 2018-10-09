@@ -153,6 +153,7 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "pathOutput")	pathOutput = arg[1];
 	else if (arg[0] == "runMode")		runMode = stoi(arg[1]);
+	else if (arg[0] == "nTreeChunks")	nTreeChunks = stoi(arg[1]);
 	else if (arg[0] == "pathTree") {
 		pathTree = arg[1];	
 			if (pathTree == "pathOutput")
@@ -167,9 +168,7 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 					pathTree = pathOutput;
 				}
 			}
-	}		
-
-	else {
+	} else {
 		cout << "Arg= " << arg[0] << " does not exist." << endl;
 	}
 
@@ -696,6 +695,14 @@ void IOSettings::ReadHalos()
 	//cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
 //#endif
 };
+
+
+
+void IOSettings::ReadTrees()
+{
+	/**/
+};
+
 
 
 void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)

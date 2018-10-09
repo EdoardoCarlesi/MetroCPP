@@ -72,5 +72,6 @@ int minPartHalo;
 
 int runMode;
 int nGrid;
+int nTreeChunks;
 int nChunks;
 int nSnaps;

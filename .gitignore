@@ -8,7 +8,8 @@ MetroCPP
 bin/MetroCPP
 bin/test
 test
-old_code/*
+old_code/*.cpp
+old_code/*.h
 output/*.dat
 mpirun
 *.tmp

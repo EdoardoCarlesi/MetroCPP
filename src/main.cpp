@@ -68,8 +68,10 @@ int main(int argv, char **argc)
 	/* If running in MTree only or MTree + Postprocessing */
 	if (runMode == 0 || runMode == 2)
 	{
+		/* Overrides the config file settings */
+		nTreeChunks = totTask;
 	
-		// We are assuming that each task reads more than one file. TODO load balancing
+		/* We are assuming that each task reads more than one file. TODO load balancing */
 		SettingsIO.DistributeFilesAmongTasks();
 
 		/* This is a global variable */
@@ -105,7 +107,6 @@ int main(int argv, char **argc)
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnaps; iNumCat++)
 		{
-
 			clock_t iniTime = clock();
 		
 			iUseCat = 1;
@@ -170,6 +171,23 @@ int main(int argv, char **argc)
 
 	}	/* If running the tree and / or post processing mode only */
 	
+	/* Load in trees & halo catalogs */
+	if (runMode == 1)
+	{
+		iNumCat = 0;
+		iUseCat = 0;
+		SettingsIO.ReadHalos();
+
+		for (iNumCat = 1; iNumCat < nSnaps; iNumCat++)
+		{
+			SettingsIO.ReadHalos();
+			SettingsIO.ReadTrees();
+
+			// Do something to add orphan trees to the next step
+		}
+	}
+
+	/* Proceed with smoothing & interpolating the MAH of single halos */
 	if (runMode == 1 || runMode == 2)
 	{
 		/* 
