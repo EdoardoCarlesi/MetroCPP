@@ -571,6 +571,14 @@ void CleanTrees(int iStep)
 };
 
 
+/* This function is used in mode = 1, when the MTrees are being read in from the .mtree files */
+void BuildTrees()
+{
+	// TODO once the merger trees & halo catalogs have been read-in once again, 
+	// rebuild the trees with the Halo and Subhalos added to the mergertree structures
+};
+
+
 
 void DebugTrees()
 {

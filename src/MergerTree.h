@@ -60,6 +60,7 @@ public:
 void InitTrees(int);
 void CleanTrees(int);
 void DebugTrees(void);
+void BuildTrees(void);
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);

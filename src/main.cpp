@@ -120,7 +120,8 @@ int main(int argv, char **argc)
 			 * The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 #endif
-			/* Now exchange the halos in the requested buffer zones among the different tasks */
+			/* Now exchange the halos in the requested buffer zones among the different tasks.
+			 * In zoom mode we send ALL halos to ALL tasks */
 			CommTasks.BufferSendRecv();
 
 			if (locTask == 0)
@@ -157,7 +158,7 @@ int main(int argv, char **argc)
 			ShiftHalosPartsGrids();
 
 			CleanMemory(1);
-		}	/* The trees have now been built */
+		}	/* Finish: the trees have now been built for this step */
 
 		//DebugTrees();
 
@@ -174,16 +175,22 @@ int main(int argv, char **argc)
 	/* Load in trees & halo catalogs */
 	if (runMode == 1)
 	{
-		iNumCat = 0;
-		iUseCat = 0;
+		iNumCat = 0;	iUseCat = 0;
+
 		SettingsIO.ReadHalos();
+		CommTasks.BufferSendRecv();
 
 		for (iNumCat = 1; iNumCat < nSnaps; iNumCat++)
 		{
 			SettingsIO.ReadHalos();
 			SettingsIO.ReadTrees();
+			CommTasks.BufferSendRecv();
 
-			// Do something to add orphan trees to the next step
+			/* Once the files are read in, assign halos to Halos/Subhalos in tree structures */
+			BuildTrees();
+		
+			/* Get rid of the locHalos[0] */
+			CleanMemory(0);
 		}
 	}
 

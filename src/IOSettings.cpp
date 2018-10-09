@@ -808,3 +808,8 @@ void IOSettings::WriteTrees()
 		fileOut.close();
         }
 };
+
+
+
+void IOSettings::WriteSmoothTrees()
+{};

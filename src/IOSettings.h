@@ -37,31 +37,36 @@ public:
 	string pathOutput;	// Where to dump all the output data
 	string pathTree;
 
-	string inputFormat;	// AHF, FoF, or anything else	
+	string inputFormat;	// AHF, FoF, or anything else	// TODO only working with AHF for the moment
 
 	void Init(void);
 	void DistributeFilesAmongTasks(void);
 	void CheckStatus(void);
 
-	// These function rely on bash scripts to determine the halo catalogs properties
+	/* These function rely on bash scripts to determine the halo catalogs properties */
 	void FindCatN();
 	void FindCatZ();
 	void FindCatID();
 
+	/* Read and parse the configuration file */
 	void ReadConfigFile(string);
-
+	
+	/* Read input */
 	void ReadLineAHF(const char *, Halo *);
 	void ReadParticles();
 	void ReadHalos();
 	void ReadTrees();
+
+	/* Write output */
 	void WriteTrees();
+	void WriteSmoothTrees();
 
 private:
 	void InitFromCfgFile(vector<string>);
 
-	// These scripts are used by the program to find:
-	string findNsh  = "/scripts/find_n.sh";	// Number of catalogs
-	string findZsh  = "/scripts/find_z.sh";	// Redshift of snapshots
+	/* These scripts are used by the program to determine input file properties */
+	string findNsh  = "/scripts/find_n.sh";		// Number of catalogs
+	string findZsh  = "/scripts/find_z.sh";		// Redshift of snapshots
 	string findIDsh = "/scripts/find_id.sh";	// ID number of catalogs
 	string tmpIdOut = "/tmp/output_id.tmp";
 	string tmpZOut  = "/tmp/output_z.tmp";
