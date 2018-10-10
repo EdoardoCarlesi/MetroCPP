@@ -44,7 +44,7 @@ int main(int argv, char **argc)
 
 	SettingsIO.Init();
 
-	InitTrees(nSnaps);
+	InitTrees(nSnapsUse);
 
 	string strRunMode;
 
@@ -102,10 +102,10 @@ int main(int argv, char **argc)
 #endif
 
 		if (locTask == 0)
-			cout << "Starting to loop on " << nSnaps << " halo and particle files." << endl;
+			cout << "Starting to loop on " << nSnapsUse << " halo and particle files." << endl;
 
 		/* Loop on halo and particle catalogs */
-		for (iNumCat = 1; iNumCat < nSnaps; iNumCat++)
+		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
 			clock_t iniTime = clock();
 		
@@ -166,7 +166,7 @@ int main(int argv, char **argc)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
 
 		MPI_Barrier(MPI_COMM_WORLD);
-			SettingsIO.WriteTrees();
+		SettingsIO.WriteTrees();
 	
 		CleanMemory(0);
 
@@ -180,18 +180,21 @@ int main(int argv, char **argc)
 		SettingsIO.ReadHalos();
 		CommTasks.BufferSendRecv();
 
-		for (iNumCat = 1; iNumCat < nSnaps; iNumCat++)
+		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
 			SettingsIO.ReadHalos();
 			SettingsIO.ReadTrees();
-		//	CommTasks.BufferSendRecv();
+			CommTasks.BufferSendRecv();
 
 			/* Once the files are read in, assign halos to Halos/Subhalos in tree structures */
 			BuildTrees();
 		
 			/* Get rid of the locHalos[0] */
-		//	CleanMemory(0);
+			CleanMemory(0);
 		}
+
+		// FIXME this is to test only
+		//SettingsIO.WriteTrees();
 	}
 
 	/* Proceed with smoothing & interpolating the MAH of single halos */

@@ -74,4 +74,5 @@ int runMode;
 int nGrid;
 int nTreeChunks;
 int nChunks;
+int nSnapsUse;
 int nSnaps;

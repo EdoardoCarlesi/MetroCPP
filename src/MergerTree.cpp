@@ -51,9 +51,16 @@ void MergerTree::Info()
 
 void MergerTree::Clean()
 {
+	for (int iC = 0; iC < nCommon.size(); iC++)
+	{
+		nCommon[iC].clear();
+	}
+
 	nCommon.clear();
+
 	idProgenitor.clear();
 	indexProgenitor.clear();
+	subHalos.clear();
 };
 
 

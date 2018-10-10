@@ -80,6 +80,9 @@ void CleanMemory(int iCat)
 	locHalos[iCat].clear();
 	locHalos[iCat].shrink_to_fit();
 
+	/* Clean the particles if not running in post processing mode only */
+	if (runMode == 0 || runMode == 2)
+	{
 		for (int iH = 0; iH < nLocHalos[iCat]; iH++)
 		{
 			for (int iT = 0; iT < nPTypes; iT++)
@@ -94,6 +97,8 @@ void CleanMemory(int iCat)
 
 		locParts[iCat].clear();
 		locParts[iCat].shrink_to_fit();
+	}
+
 #ifndef ZOOM		
 		GlobalGrid[iCat].Clean();
 #endif
