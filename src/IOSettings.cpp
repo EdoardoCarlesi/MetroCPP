@@ -698,9 +698,65 @@ void IOSettings::ReadHalos()
 
 
 
+/* Read a set of previously computed merger trees, these will be post processed and smoothed */
 void IOSettings::ReadTrees()
 {
-	/**/
+	char charChunk[2], charSnap[4];
+	const char *lineHead;
+	int iLine = 0, thisNumCat;
+	string urlTree, lineIn;
+	lineHead = "#";
+
+	thisNumCat = nSnaps - iNumCat - 1;
+	sprintf(charSnap, "%03d", thisNumCat);	
+	sprintf(charChunk, "%d", locTask);	
+
+	if (nTreeChunks != totTask)
+	{
+		if (locTask == 0) 
+			cout << "ERROR: nTreeChunks in the .cfg file needs to be equal to the number of MPI Tasks in use. " << endl;
+			exit(0);
+	} else {
+		
+		urlTree = pathTree + outPrefix + charSnap + "." + charChunk + ".mtree";
+		ifstream fileIn(urlTree);
+
+		if (!fileIn.good())
+		{
+			cout << "File: " << urlTree << " not found on task=" << locTask << endl;
+		} else {
+			if (locTask == 0)
+	       			cout << "Reading tree file: " << urlTree << endl;
+		}	
+
+	/*
+		while (getline(fileIn, lineIn))
+		{
+			const char *lineRead = lineIn.c_str();
+			
+			//sscanf(lineRead, "%llu %llu %d %f %d ");
+			if (lineRead[0] != lineHead[0])
+	
+			{
+			sscanf(lineRead, "%s", &nFileHalos);
+			} else if (iLine == 1) {
+
+				if (inputFormat == "AHF")
+		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
+					//cout << locTask << " " << nPartHalo << " " << iLine << " " << locHaloID << endl;
+				locParts[iUseCat][iLocHalos].resize(nPTypes);
+
+				iLine++;
+			} else {
+
+				if (inputFormat == "AHF")
+		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
+
+			
+
+		}
+	*/
+	}
 };
 
 

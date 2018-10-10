@@ -48,6 +48,9 @@ int main(int argv, char **argc)
 
 	string strRunMode;
 
+	/* We are assuming that each task reads more than one file. TODO load balancing */
+	SettingsIO.DistributeFilesAmongTasks();
+
 	if (runMode == 0)
 		strRunMode = " ---> Merger tree computation only.\n";
 	else if (runMode == 1)	
@@ -71,9 +74,6 @@ int main(int argv, char **argc)
 		/* Overrides the config file settings */
 		nTreeChunks = totTask;
 	
-		/* We are assuming that each task reads more than one file. TODO load balancing */
-		SettingsIO.DistributeFilesAmongTasks();
-
 		/* This is a global variable */
 		iUseCat = 0;
 
@@ -184,13 +184,13 @@ int main(int argv, char **argc)
 		{
 			SettingsIO.ReadHalos();
 			SettingsIO.ReadTrees();
-			CommTasks.BufferSendRecv();
+		//	CommTasks.BufferSendRecv();
 
 			/* Once the files are read in, assign halos to Halos/Subhalos in tree structures */
 			BuildTrees();
 		
 			/* Get rid of the locHalos[0] */
-			CleanMemory(0);
+		//	CleanMemory(0);
 		}
 	}
 

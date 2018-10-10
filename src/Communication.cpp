@@ -237,10 +237,12 @@ void Communication::BufferSendRecv(void)
 		cout << "Done." << endl;
 
 	
-		/*
-		 * 		COMMUNICATE PARTICLE BUFFERS
-		 */
-
+	/*
+	 * 		COMMUNICATE PARTICLE BUFFERS: Only in full operational mode.
+	 * 		When resuming the MTrees we do not need to read/distribute the particles files.
+	 */
+	if (runMode == 0 || runMode == 2)
+	{
 #ifdef VERBOSE
 		if (locTask == 0)
 			cout << "MPI_Packing particle packet to be broadcasted... " << endl;
@@ -315,6 +317,8 @@ void Communication::BufferSendRecv(void)
 
 	if (locTask == 0)
 		cout << "Freed buffer, halo and particle have been broadcasted to all tasks. " << endl;
+
+	} // if runMode == 0 or == 2
 };
 
 
