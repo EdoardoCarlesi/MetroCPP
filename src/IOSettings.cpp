@@ -775,15 +775,15 @@ void IOSettings::ReadTrees()
 				{
 		        		sscanf(lineRead, "%d  %llu  %d", &commPart, &progHaloID, &progPart);
 
-					//if (locTask == 0 && nProgHalo > 1) 
+					//if (locTask == 0 && nProgHalo > 0) 
 					//	cout << iLine << " " << nProgHalo << " " << commPart << " " 
-					//		<< progHaloID << " " << progPart << " " << tokenHalo << endl;
+					//		<< progHaloID << " " << progPart << endl;
 
 					mergerTree.idProgenitor[iLine-1] = progHaloID;
 					mergerTree.nCommon[1][iLine-1] = commPart;
 					mergerTree.subHalos[iLine-1].ID = progHaloID;
 					mergerTree.subHalos[iLine-1].nPart[1] = progPart;
-										iLine++;
+					iLine++;
 				}
 
 				/* Finished reading in progenitor halos */

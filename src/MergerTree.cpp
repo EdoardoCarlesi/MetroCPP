@@ -618,6 +618,40 @@ void AssignDescendant()
 
 void AssignProgenitor()
 {
+	unsigned long long int subID = 0;
+	int subIndex = 0;
+
+	orphanHaloIndex.clear();
+	orphanHaloIndex.shrink_to_fit();
+
+	//cout << "AssignDescendant(): " << locCleanTrees[iNumCat-1].size() << endl;
+
+	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
+	{
+		cout << iC << " " << locCleanTrees[iNumCat-1][iC].subHalos.size() << endl;
+
+		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].subHalos.size(); iS++ )
+		{
+			subID = locCleanTrees[iNumCat-1][iC].subHalos[iC].ID;
+			subIndex = id2Index[subID];
+			locCleanTrees[iNumCat-1][iC].subHalos[iS] = locHalos[iUseCat][subIndex];
+
+			if (subIndex == 0)
+				cout << iS << ", SubIndex: " << subID << " " << subIndex << " " << endl;
+
+			/*
+			if (locCleanTrees[iNumCat-1][iC].isOrphan)
+			{
+				orphanHaloIndex.push_back(mainIndex);
+			} else {
+				locCleanTrees[iNumCat-1][iC].mainHalo = locHalos[iUseCat][mainIndex];
+			}
+			*/
+		}
+	}
+
+	/* Halos have been assigned, so we can clear the map */
+	//id2Index.clear();	
 
 };
 

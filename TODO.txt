@@ -1,6 +1,7 @@
 TO DO NEXT:
 
-Fix the cleaning of the *tmp files with halo & particle files lists
+
+FIX the AssignProgenitor function, subhalo ids seem not to be correctly initialized
 
 
 Expand: 

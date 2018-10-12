@@ -197,9 +197,7 @@ int main(int argv, char **argc)
 			CommTasks.BufferSendRecv();
 			CommTasks.SyncOrphanHalos();
 
-			//AssignProgenitor();
-		
-			//MPI_Barrier(MPI_COMM_WORLD);
+			AssignProgenitor();
 			ShiftHalosPartsGrids();
 		}
 
