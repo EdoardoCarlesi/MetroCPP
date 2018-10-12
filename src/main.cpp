@@ -157,7 +157,6 @@ int main(int argv, char **argc)
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 			ShiftHalosPartsGrids();
 
-			CleanMemory(1);
 		}	/* Finish: the trees have now been built for this step */
 
 		//DebugTrees();
@@ -182,15 +181,26 @@ int main(int argv, char **argc)
 
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
-			SettingsIO.ReadHalos();
-			SettingsIO.ReadTrees();
-			CommTasks.BufferSendRecv();
+			//for (int iH = 0; iH < 5; iH++)
+ 	       		  //      if (locTask == 0)
+        	        //	        cout << iNumCat << "====>" << locHalos[iUseCat][iH].ID 
+			//			<< " " << id2Index[locHalos[iUseCat][iH].ID] << " " << locHalos[0].size() << endl;
 
-			/* Once the files are read in, assign halos to Halos/Subhalos in tree structures */
-			BuildTrees();
+
+			iUseCat = 0;			// Descendant halos are in the locHalo[0] vector
+			SettingsIO.ReadTrees();
+			AssignDescendant();
+	
+			iUseCat = 1;
+			SettingsIO.ReadHalos();
+
+			CommTasks.BufferSendRecv();
+			CommTasks.SyncOrphanHalos();
+
+			//AssignProgenitor();
 		
-			/* Get rid of the locHalos[0] */
-			CleanMemory(0);
+			//MPI_Barrier(MPI_COMM_WORLD);
+			ShiftHalosPartsGrids();
 		}
 
 		// FIXME this is to test only

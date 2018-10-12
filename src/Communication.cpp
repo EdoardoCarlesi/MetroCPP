@@ -233,9 +233,16 @@ void Communication::BufferSendRecv(void)
 	}
 #endif
 
+	/* Initialize the id2Index map on each task, we are in zoom mode here */
+	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
+	{
+		id2Index[locHalos[iUseCat][iH].ID] = iH;
+		//if (iH < 5 && locTask == 0)
+		//	cout << "====>" << locHalos[iUseCat][iH].ID << " " << id2Index[locHalos[iUseCat][iH].ID] << endl;
+	}	
+
 	if (locTask == 0)
 		cout << "Done." << endl;
-
 	
 	/*
 	 * 		COMMUNICATE PARTICLE BUFFERS: Only in full operational mode.
@@ -585,31 +592,42 @@ void Communication::SyncOrphanHalos()
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	//for (int iL = 0; iL < locOrphans; iL++)
-		//cout << "### Task= " << locTask << ", " << iL << ", " << indexOrphans[iL] << endl;
+	//	cout << "### Task= " << locTask << ", " << iL << ", " << indexOrphans[iL] << endl;
 	//for (int iL = 0; iL < totOrphans; iL++)
 	//	cout << "### Task= " << locTask << ", " << iL << ", " << indexOrphans[iL] << endl;
-
 
 	/* Now each task updates the "1" locHalo vector with orphan halos to keep track of them at the next step */
 	for (int iL = 0; iL < totOrphans; iL++)
 	{
 		int thisIndex = indexOrphans[iL];
 
-		locMTrees[0][thisIndex].tokenProgenitor = true;
-		//locMTrees[0][thisIndex].idProgenitor.push_back(locMTrees[0][thisIndex].idDescendant);
-		locMTrees[0][thisIndex].idProgenitor.push_back(locMTrees[0][thisIndex].mainHalo.ID);
-		locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
-	
-		//cout << "Updating orphans on task = " << locTask << ", " << locMTrees[0][thisIndex].idDescendant << " " 
-		//	<< nLocHalos[1] << " " << iL << "/" << totOrphans << endl;
+		//cout << locTask << ") " << thisIndex << " " << locMTrees[0][thisIndex].mainHalo.ID << " " << endl;
+		//cout << locTask << ") " << thisIndex << " " << endl; //locMTrees[0][thisIndex].mainHalo.ID << " " << endl;
+		//unsigned long long int thisID = locMTrees[0][thisIndex].mainHalo.ID;
+		unsigned long long int thisID = locHalos[0][thisIndex].ID;
+
+		/* When reading the tree files, we do not use particles and locMTrees */
+		if (runMode == 0 || runMode == 2)
+		{
+			locMTrees[0][thisIndex].isOrphan = true;
+			locMTrees[0][thisIndex].idProgenitor.push_back(thisID);
+			locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
+
+			locParts[1].push_back(locParts[0][thisIndex]);
+
+			/* Remember to loop also over this halo at the next step 
+			 * locTreeIndex keeps track of all the halos to be used on each task in the backward comparison */
+			locTreeIndex.push_back(nLocHalos[1]);
+		}
 
 		/* The orphan (token) halo is stored in memory for the next step */
 		locHalos[1].push_back(locHalos[0][thisIndex]);
 		locHalos[1][nLocHalos[1]].isToken = true;
-		locParts[1].push_back(locParts[0][thisIndex]);
 
-		/* Remember to loop also over this halo at the next step */
-		locTreeIndex.push_back(nLocHalos[1]);
+		if (runMode == 1)
+			id2Index[thisID] = nLocHalos[1];
+#ifdef TEST
+#endif
 		nLocHalos[1]++;
 	}
 #endif

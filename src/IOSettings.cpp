@@ -596,13 +596,10 @@ void IOSettings::ReadParticles(void)
 /* Using AHF by default */
 void IOSettings::ReadHalos()
 {
-	unsigned int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nTmpHalos = 0, iChunk = 0; 
+	unsigned int nPartHalo = 0, nPTypes = 0, iTmpHalos = 0, nTmpHalos = 0, iChunk = 0, iLocHalos = 0; 
 	const char *tmpUrlHalo, *lineHead = "#";
 	string tmpStrUrlHalo, lineIn;
 	vector<Halo> tmpHalos;
-
-	// Initialize outside of the files loop
-	int iLocHalos = 0; 
 
 #ifdef ZOOM	/* Only read on one task */
 	if (locTask == 0)
@@ -634,14 +631,14 @@ void IOSettings::ReadHalos()
 			{
 				ReadLineAHF(lineRead, &tmpHalos[iTmpHalos]);
 				nPartHalo = tmpHalos[iTmpHalos].nPart[nPTypes];	// All particle types!
-
 #ifndef ZOOM
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
-				locId2Index.insert(pair <unsigned long long int, int> (tmpHalos[iTmpHalos].ID, iLocHalos));
-#else
-				id2Index.insert(pair <unsigned long long int, int> (tmpHalos[iTmpHalos].ID, iLocHalos));
+
+				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
+				 * will be initialized on each task when communicating the full halo list */
+				locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;
 #endif
 				iLocHalos++;
 				iTmpHalos++;
@@ -703,7 +700,7 @@ void IOSettings::ReadHalos()
 void IOSettings::ReadTrees()
 {
 	unsigned long long int hostHaloID = 0, progHaloID = 0;
-	int hostPart = 0, progPart = 0, tokenHalo = 0, commDummy = 0;
+	int hostPart = 0, progPart = 0, orphanHalo = 0, commDummy = 0;
 	int iLine = 0, iHalo = 0, thisNumCat = 0, nProgHalo = 0;
 	int commPart = 0;
 
@@ -711,11 +708,11 @@ void IOSettings::ReadTrees()
 	const char *lineHead;
 	string urlTree, lineIn;
 
-	lineHead = "#";
-
 	thisNumCat = iNumCat-1; 
 	sprintf(charSnap, "%03d", thisNumCat);	
 	sprintf(charChunk, "%d", locTask);	
+
+	lineHead = "#";
 
 
 	if (nTreeChunks != totTask)
@@ -736,6 +733,7 @@ void IOSettings::ReadTrees()
 		}	
 
 		MergerTree mergerTree;
+
 		while (getline(fileIn, lineIn))
 		{
 			const char *lineRead = lineIn.c_str();
@@ -744,7 +742,7 @@ void IOSettings::ReadTrees()
 			{
 				if (iLine == 0)
 				{
-		        		sscanf(lineRead, "%llu  %d  %d", &hostHaloID, &hostPart, &nProgHalo);
+		        		sscanf(lineRead, "%llu  %d  %d  %d", &hostHaloID, &hostPart, &nProgHalo, &orphanHalo);
 
 					mergerTree.mainHalo.ID = hostHaloID;
 					mergerTree.mainHalo.nPart[1] = hostPart;	//TODO this assumes n tot particles = n DM
@@ -757,6 +755,16 @@ void IOSettings::ReadTrees()
 					mergerTree.subHalos.resize(nProgHalo);
 					mergerTree.idProgenitor.resize(nProgHalo);
 					mergerTree.indexProgenitor.resize(nProgHalo);
+
+					if (orphanHalo == 1)
+					{
+						mergerTree.isOrphan = true;
+						mergerTree.subHalos[0].isToken = true;
+					} else {
+						mergerTree.isOrphan = false;
+						mergerTree.subHalos[0].isToken = false;
+					}
+
 					iLine++;
 
 					//if (locTask == 0 && nProgHalo > 1) 
@@ -765,7 +773,7 @@ void IOSettings::ReadTrees()
 				} 
 				else if (iLine > 0 && iLine < nProgHalo+1)	/* Read-in properties of progenitors */
 				{
-		        		sscanf(lineRead, "%d  %llu  %d  %d", &commPart, &progHaloID, &progPart, &tokenHalo);
+		        		sscanf(lineRead, "%d  %llu  %d", &commPart, &progHaloID, &progPart);
 
 					//if (locTask == 0 && nProgHalo > 1) 
 					//	cout << iLine << " " << nProgHalo << " " << commPart << " " 
@@ -775,17 +783,7 @@ void IOSettings::ReadTrees()
 					mergerTree.nCommon[1][iLine-1] = commPart;
 					mergerTree.subHalos[iLine-1].ID = progHaloID;
 					mergerTree.subHalos[iLine-1].nPart[1] = progPart;
-					
-					if (tokenHalo == 1)
-					{
-						mergerTree.tokenProgenitor = true;
-						mergerTree.subHalos[iLine-1].isToken = true;
-					} else {
-						mergerTree.tokenProgenitor = false;
-						mergerTree.subHalos[iLine-1].isToken = false;
-					}
-
-					iLine++;
+										iLine++;
 				}
 
 				/* Finished reading in progenitor halos */
@@ -880,21 +878,23 @@ void IOSettings::WriteTrees()
 
 		if (locTask == 0)
 		{
-			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)" << endl;
-			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)   Orphan[0=no, 1=yes](4)" << endl;
+			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)" << endl;
+			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)" << endl;
 		} 
 
                 for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
                 {
 			MergerTree thisTree = locCleanTrees[iC][iT];
-			fileOut << thisTree.mainHalo.ID << " " 
-				<< thisTree.mainHalo.nPart[1] << " " 
-				<< thisTree.idProgenitor.size() << endl;
 
-			if (thisTree.tokenProgenitor)
+			if (thisTree.isOrphan)
 				orphan = 1;	
 			else
 				orphan = 0;
+
+			fileOut << thisTree.mainHalo.ID << " " 
+				<< thisTree.mainHalo.nPart[1] << " " 
+				<< thisTree.idProgenitor.size() << " "
+				<< orphan << endl;
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
@@ -902,8 +902,7 @@ void IOSettings::WriteTrees()
 
 				fileOut	<< thisTree.nCommon[1][iP]		<< " " 
                                 	<< thisTree.idProgenitor[iP] 		<< " "
-					<< subHalo.nPart[1]			<< " "
-					<< orphan << endl;
+					<< subHalo.nPart[1] << endl;
 			}
                 }
 		

@@ -69,16 +69,16 @@ unsigned int NumLines(const char * fileName)
 };
 
 
+
 void CleanMemory(int iCat)
 {
 
 	if (locTask ==0)
-		cout << "Cleaning memory for catalog " << iCat << endl;		
-
-	//copy(locHalos[1].begin(), locHalos[1].end(), back_inserter(allHalos[iNumCat]));
+		cout << "Cleaning memory for catalog " << iCat << endl;	
 
 	locHalos[iCat].clear();
 	locHalos[iCat].shrink_to_fit();
+	nLocHalos[iCat] = 0;
 
 	/* Clean the particles if not running in post processing mode only */
 	if (runMode == 0 || runMode == 2)
@@ -100,9 +100,10 @@ void CleanMemory(int iCat)
 	}
 
 #ifndef ZOOM		
-		GlobalGrid[iCat].Clean();
+	GlobalGrid[iCat].Clean();
 #endif
 };
+
 
 
 vector<string> SplitString (string strIn, string delim)
@@ -136,6 +137,8 @@ vector<string> SplitString (string strIn, string delim)
     return cleanResults;
 }
 
+
+
 void ShiftHalosPartsGrids()
 {
 	CleanMemory(0);
@@ -144,19 +147,22 @@ void ShiftHalosPartsGrids()
 		cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
 
 	nLocHalos[0] = nLocHalos[1];
-	nLocParts[0] = nLocParts[1];
-
 	locHalos[0] = locHalos[1];
-	locParts[0].resize(nLocHalos[0]);
 
-	for (int iH = 0; iH < nLocHalos[0]; iH++)
-	{
-		locParts[0][iH].resize(nPTypes);
+	if (runMode == 0 || runMode == 2)
+	{ 
+		locParts[0].resize(nLocHalos[0]);
+		nLocParts[0] = nLocParts[1];
 
-		for (int iT = 0; iT < nPTypes; iT++)
-			locParts[0][iH][iT] = locParts[1][iH][iT];
-	}
-	
+		for (int iH = 0; iH < nLocHalos[0]; iH++)
+		{
+			locParts[0][iH].resize(nPTypes);
+
+			for (int iT = 0; iT < nPTypes; iT++)
+				locParts[0][iH][iT] = locParts[1][iH][iT];
+		}
+	}	
+
 #ifndef ZOOM
 	GlobalGrid[0].globalTaskOnGridNode = GlobalGrid[1].globalTaskOnGridNode;
 	GlobalGrid[0].taskOnGridNode = GlobalGrid[1].taskOnGridNode;
@@ -165,6 +171,10 @@ void ShiftHalosPartsGrids()
 	GlobalGrid[0].haloOnGridNode = GlobalGrid[1].haloOnGridNode;
 	GlobalGrid[0].buffOnGridNode = GlobalGrid[1].buffOnGridNode;
 #endif
+	
+	/* Data from sim 1 has been copied into 0, so free 1 */
+	CleanMemory(1);
+
 };
 
 

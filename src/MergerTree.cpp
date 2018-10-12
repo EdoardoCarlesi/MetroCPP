@@ -38,7 +38,7 @@ void MergerTree::Info()
 {
 	cout << "Task=" << locTask << " " << mainHalo.ID << " " << idProgenitor.size() << endl;
 
-	if (tokenProgenitor)
+	if (isOrphan)
 		for (int iP = 0; iP < idProgenitor.size(); iP++)
 			cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << endl;
 		else
@@ -67,7 +67,7 @@ void MergerTree::Clean()
 
 MergerTree::MergerTree()
 {
-	//tokenProgenitor = false;
+	//isOrphan = false;
 };
 
 
@@ -298,7 +298,7 @@ void FindProgenitors(int iOne, int iTwo)
 						/* If the two halos have the same ID, we are dealing with a token halo
 						 * placed to trace the progenitor of an orphan halo */
 						if (locMTrees[iOne][thisIndex].mainHalo.ID == locHalos[iTwo][j].ID)
-							locMTrees[iOne][thisIndex].tokenProgenitor == true;
+							locMTrees[iOne][thisIndex].isOrphan == true;
 
 						/* We keep track of the halos on iTwo that have been matched on iOne on the 
 						 * local task, so that we can avoid looping on all iTwo halos afterwards */
@@ -326,9 +326,9 @@ void FindProgenitors(int iOne, int iTwo)
 						locMTrees[iOne][thisIndex].nCommon[iT].push_back(locHalos[iOne][thisIndex].nPart[iT]);
 
 					orphanHaloIndex.push_back(thisIndex);
-					locMTrees[iOne][thisIndex].tokenProgenitor = true;
+					locMTrees[iOne][thisIndex].isOrphan = true;
 				} else {
-					locMTrees[iOne][thisIndex].tokenProgenitor = false;
+					locMTrees[iOne][thisIndex].isOrphan = false;
 				}
 
 #ifdef DEBUG		// Sanity check
@@ -501,7 +501,9 @@ void InitTrees(int nUseCat)
 };
 
 
-
+/* This function compares the forward/backward connections to determine the unique descendant of each halo
+ * TODO in full box mode, add the possibility to check the halos in the buffer and remove overlapping objects 
+ * TODO Need to establish a criterion to determine to which task the halo should belong to */
 void CleanTrees(int iStep)
 {
 	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
@@ -523,7 +525,7 @@ void CleanTrees(int iStep)
 		MergerTree mergerTree;
 		mergerTree.nCommon.resize(nPTypes);
 		mergerTree.mainHalo = locHalos[0][iTree];
-		mergerTree.tokenProgenitor = locMTrees[0][iTree].tokenProgenitor;
+		mergerTree.isOrphan = locMTrees[0][iTree].isOrphan;
 	
 		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
 		 * reconstruction of the full merger history. This will be done later. */
@@ -547,7 +549,7 @@ void CleanTrees(int iStep)
 #endif
 			if (mainID == descID)
 			{
-				if (locMTrees[0][iTree].tokenProgenitor)
+				if (locMTrees[0][iTree].isOrphan)
 				{
 					mergerTree.idProgenitor.push_back(locMTrees[0][iTree].mainHalo.ID);
 					mergerTree.indexProgenitor.push_back(jTree);
@@ -578,11 +580,45 @@ void CleanTrees(int iStep)
 };
 
 
-/* This function is used in mode = 1, when the MTrees are being read in from the .mtree files */
-void BuildTrees()
+
+/* These two functions are used in mode = 1, when the MTrees are being read in from the .mtree files */
+void AssignDescendant()
 {
-	// TODO once the merger trees & halo catalogs have been read-in once again, 
-	// rebuild the trees with the Halo and Subhalos added to the mergertree structures
+	unsigned long long int mainID = 0;
+	int mainIndex = 0;
+
+	orphanHaloIndex.clear();
+	orphanHaloIndex.shrink_to_fit();
+
+	//cout << "AssignDescendant(): " << locCleanTrees[iNumCat-1].size() << endl;
+
+	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
+	{
+		mainID = locCleanTrees[iNumCat-1][iC].mainHalo.ID;
+		mainIndex = id2Index[mainID];
+
+		if (locCleanTrees[iNumCat-1][iC].isOrphan)
+		{
+			//cout << iC << " " << locCleanTrees[iNumCat-1][iC].mainHalo.ID 
+				//<< " has a token progenitor: " << mainIndex << endl;
+			orphanHaloIndex.push_back(mainIndex);
+		} else {
+			//if (locTask == 0 && iNumCat > 1 && mainIndex == 0)
+			//if (iNumCat > 1 && mainIndex == 0)
+			//	cout << "->" << mainID << " " << iC << " " << mainIndex << " " << locHalos[iUseCat][mainIndex].ID << endl;
+
+			locCleanTrees[iNumCat-1][iC].mainHalo = locHalos[iUseCat][mainIndex];
+		}
+	}
+
+	/* Halos have been assigned, so we can clear the map */
+	id2Index.clear();	
+};
+
+
+void AssignProgenitor()
+{
+
 };
 
 

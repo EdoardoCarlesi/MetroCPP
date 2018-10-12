@@ -18,8 +18,8 @@ public:
 	vector<Halo> subHalos;				// SubHalos of the main tree
 	Halo mainHalo;					// Main halo of the MTree, to be stored in the cleantree only
 
-	bool tokenProgenitor;				// If no progenitor is found, then create a token halo
-							// with the same particle content to keep tracking it at subsequent steps
+	bool isOrphan;					// If no progenitor is found, the halo is orphan and a token placeholder halo is 
+							// created with the same particle content to keep tracking it at subsequent steps
 	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
 	vector<int> indexProgenitor;			// local array index of progenitors
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
@@ -60,7 +60,10 @@ public:
 void InitTrees(int);
 void CleanTrees(int);
 void DebugTrees(void);
-void BuildTrees(void);
+
+void AssignDescendant(void);
+void AssignProgenitor(void);
+
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);
