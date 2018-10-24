@@ -11,10 +11,13 @@ RunNum[0]="00_06"
 RunNum[1]="45_17"
 RunNum[2]="55_02"
 
+iniRun=1
 totRun=3
+
+iniSub=0
 totSub=10
 
-for (( iRun=0; iRun<$totRun; iRun++ ))
+for (( iRun=$iniRun; iRun<$totRun; iRun++ ))
 do
 	
 	Run=${RunNum[${iRun}]}
@@ -22,7 +25,7 @@ do
 	
 	mkdir $MetroOut'/'$Run
 
-	for (( iSub=0; iSub<$totSub; iSub++ ))
+	for (( iSub=$iniSub; iSub<$totSub; iSub++ ))
 	do
 		echo rm $MetroTmp'/'*'.tmp'
 		rm $MetroTmp'/'*'.tmp'

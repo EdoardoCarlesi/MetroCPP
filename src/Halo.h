@@ -27,7 +27,7 @@ public:
 	bool isToken;
 	
 	// Number of time steps during which the halo has been "orphan" of a progenitor
-	int nOrphan;
+	int nOrphanSteps;
 	
 	// Number of subhalos
 	int nSub;

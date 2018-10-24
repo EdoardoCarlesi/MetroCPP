@@ -67,7 +67,6 @@ void MergerTree::Clean()
 
 MergerTree::MergerTree()
 {
-	//isOrphan = false;
 };
 
 
@@ -639,14 +638,6 @@ void AssignProgenitor()
 			if (subIndex == 0)
 				cout << iS << ", SubIndex: " << subID << " " << subIndex << " " << endl;
 
-			/*
-			if (locCleanTrees[iNumCat-1][iC].isOrphan)
-			{
-				orphanHaloIndex.push_back(mainIndex);
-			} else {
-				locCleanTrees[iNumCat-1][iC].mainHalo = locHalos[iUseCat][mainIndex];
-			}
-			*/
 		}
 	}
 

@@ -72,6 +72,7 @@ int minPartHalo;
 
 int runMode;
 int nGrid;
+int maxOrphanSteps;
 int nTreeChunks;
 int nChunks;
 int nSnapsUse;
