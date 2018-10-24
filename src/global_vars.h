@@ -96,9 +96,11 @@ extern float totVmax;
 extern float locVmax;
 extern float maxBufferThick;
 
+extern string cosmologicalModel;
+
 /* These int values are being read from the configuration file */
 extern int runMode;
-extern int maxOrphanSteps;	// Track orphan halos to a maximum of these steps
+extern int facOrphanSteps;	// Track orphan halos to a maximum of these steps
 extern int nSnapsUse;
 extern int nSnaps;
 extern int nTreeChunks;	// Number of MPI tasks used when writing the tree

@@ -627,7 +627,7 @@ void AssignProgenitor()
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
-		cout << iC << " " << locCleanTrees[iNumCat-1][iC].subHalos.size() << endl;
+		//cout << iC << " " << locCleanTrees[iNumCat-1][iC].subHalos.size() << endl;
 
 		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].subHalos.size(); iS++ )
 		{
@@ -635,8 +635,8 @@ void AssignProgenitor()
 			subIndex = id2Index[subID];
 			locCleanTrees[iNumCat-1][iC].subHalos[iS] = locHalos[iUseCat][subIndex];
 
-			if (subIndex == 0)
-				cout << iS << ", SubIndex: " << subID << " " << subIndex << " " << endl;
+			//if (subIndex == 0)
+			//	cout << iS << ", SubIndex: " << subID << " " << subIndex << " " << endl;
 
 		}
 	}

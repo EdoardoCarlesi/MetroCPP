@@ -30,6 +30,30 @@ IOSettings::~IOSettings()
 };
 
 
+void IOSettings::SetCosmology()
+{
+	if (cosmologicalModel == "WMAP7")
+	{
+		if (locTask == 0)
+			cout << "Using WMAP7 cosmology." << endl;
+
+	} else if (cosmologicalModel == "Planck") {
+
+		if (locTask == 0)
+			cout << "Using Planck cosmology." << endl;
+
+	} else {
+		if (locTask == 0)
+		{
+			cout << "Error. Cosmological model << " << cosmologicalModel << ">> is not implemented. " << endl; 
+			cout << "Try setting << WMAP7 >> or << Planck >> instead." << endl;
+			cout << "Exiting..." << endl;
+			exit(0);
+		}
+	}
+};
+
+
 void IOSettings::FindCatID()
 {	
 	string outputSh;
@@ -149,12 +173,13 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
 	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
-	else if (arg[0] == "maxOrphanSteps")	maxOrphanSteps = stoi(arg[1]);
+	else if (arg[0] == "facOrphanSteps")	facOrphanSteps = stoi(arg[1]);
 	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
 	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "pathOutput")	pathOutput = arg[1];
 	else if (arg[0] == "runMode")		runMode = stoi(arg[1]);
 	else if (arg[0] == "nTreeChunks")	nTreeChunks = stoi(arg[1]);
+	else if (arg[0] == "cosmologicalModel")	cosmologicalModel = arg[1];
 	else if (arg[0] == "pathTree") {
 		pathTree = arg[1];	
 			if (pathTree == "pathOutput")
@@ -912,6 +937,14 @@ void IOSettings::WriteTrees()
         }
 };
 
+
+
+void IOSettings::ReadPk()
+{};
+
+
+void IOSettings::ReadA()
+{};
 
 
 void IOSettings::WriteSmoothTrees()

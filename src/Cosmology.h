@@ -3,7 +3,8 @@
 
 #include <iostream>
 #include "Halo.h"
-//#include "global_vars.h"
+#include "spline.h"
+#include "global_vars.h"
 
 
 class Cosmology {
@@ -15,7 +16,6 @@ public:
 	void SetPlanck();
 	void SetWMAP7();
 	void SetArbitrary();	// TODO	
-
 	
 	float A2Sec(float, float);
 	float Rho0(float, int);

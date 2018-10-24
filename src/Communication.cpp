@@ -599,11 +599,14 @@ void Communication::SyncOrphanHalos()
 	/* Now each task updates the "1" locHalo vector with orphan halos to keep track of them at the next step */
 	for (int iL = 0; iL < totOrphans; iL++)
 	{
+		int nOrphanSteps = 0;
 		int thisIndex = indexOrphans[iL];
 		unsigned long long int thisID = locHalos[0][thisIndex].ID;
 	
+		nOrphanSteps = int (locHalos[0][thisIndex].nPart[nPTypes] / facOrphanSteps) + 1;	
+
 		/* Only keep track of the orphans for a number of steps smaller than maxOrphanSteps */
-		if (locHalos[0][thisIndex].nOrphanSteps < maxOrphanSteps)
+		if (locHalos[0][thisIndex].nOrphanSteps < nOrphanSteps)
 		{
 
 			/* When reading the tree files, we do not use particles and locMTrees */
@@ -624,11 +627,12 @@ void Communication::SyncOrphanHalos()
 			locHalos[1].push_back(locHalos[0][thisIndex]);
 			locHalos[1][nLocHalos[1]].nOrphanSteps += 1;
 			locHalos[1][nLocHalos[1]].isToken = true;
-
-			/*if (locTask == 0)
-				if (locHalos[1][nLocHalos[1]].nOrphanSteps > 1)
-				cout << "Orph=" << locTask << " " << nLocHalos[1] << " " << locHalos[1][nLocHalos[1]].nOrphanSteps 
-				<< " " << locHalos[1][nLocHalos[1]].ID << " " << locHalos[1][nLocHalos[1]].nPart[1] << endl; */
+	
+			//if (locTask == 0)
+			//	if (locHalos[1][nLocHalos[1]].nOrphanSteps > 1 && nOrphanSteps > 4)
+			//	cout << "Orph=" << locTask << " " << nLocHalos[1] << " " << locHalos[1][nLocHalos[1]].nOrphanSteps 
+			//	<< "/" << nOrphanSteps << " " << locHalos[1][nLocHalos[1]].ID 
+			//	<< " " << locHalos[1][nLocHalos[1]].nPart[1] << endl; 
 
 			if (runMode == 1)
 				id2Index[thisID] = nLocHalos[1];

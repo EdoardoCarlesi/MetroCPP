@@ -176,6 +176,7 @@ int main(int argv, char **argc)
 	{
 		iNumCat = 0;	iUseCat = 0;
 
+		SettingsIO.SetCosmology();
 		SettingsIO.ReadHalos();
 		CommTasks.BufferSendRecv();
 
@@ -208,6 +209,8 @@ int main(int argv, char **argc)
 	/* Proceed with smoothing & interpolating the MAH of single halos */
 	if (runMode == 1 || runMode == 2)
 	{
+		/* We don't need to set cosmology when building the raw trees */
+		SettingsIO.SetCosmology();
 		/* 
 			POST PROCESSING STUFF:
 				- interpolate lost halo masses 

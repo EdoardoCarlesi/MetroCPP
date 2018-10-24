@@ -67,12 +67,14 @@ float locVmax;
 float maxBufferThick;
 float boxSize;
 
+string cosmologicalModel;
+
 int minPartCmp;
 int minPartHalo;
 
 int runMode;
 int nGrid;
-int maxOrphanSteps;
+int facOrphanSteps;
 int nTreeChunks;
 int nChunks;
 int nSnapsUse;
