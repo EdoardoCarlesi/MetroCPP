@@ -3,7 +3,9 @@
 
 #include <vector>
 #include <string>
+#include "spline.h"
 #include "Halo.h"
+#include "Cosmology.h"
 
 using namespace std;
 
@@ -52,11 +54,9 @@ public:
 	void ReadConfigFile(string);
 	
 	/* Cosmology functions */
-	void SetCosmology();
+	void SetCosmology(Cosmology*);
 
 	/* Read input */
-	void ReadPk();
-	void ReadA();
 	void ReadLineAHF(const char *, Halo *);
 	void ReadParticles();
 	void ReadHalos();
@@ -68,6 +68,10 @@ public:
 
 private:
 	void InitFromCfgFile(vector<string>);
+
+	/* These functions read and interpolate from the right cosmological functions */
+	tk::spline ReadPk();
+	tk::spline ReadA();
 
 	/* These variables will be set internally */
 	string pathPk;

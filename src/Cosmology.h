@@ -6,6 +6,8 @@
 #include "spline.h"
 #include "global_vars.h"
 
+//using namespace tk;
+
 
 class Cosmology {
 
@@ -23,6 +25,10 @@ public:
 		
 	/* This function computes the gravitational acceleration due to the neighbouring halos for a token halo */
 	void GravAcc(Halo, float, float);
+
+	/* Splines used for interpolation */
+	tk::spline pk;
+	tk::spline a;
 
 	/* Cosmological parameters */
 	float omegaL;

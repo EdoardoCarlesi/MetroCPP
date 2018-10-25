@@ -19,6 +19,7 @@
 #include "IOSettings.h"
 #include "Halo.h"
 #include "MergerTree.h"
+#include "Cosmology.h"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ int main(int argv, char **argc)
 {
 	IOSettings SettingsIO;
 	Communication CommTasks;
+	Cosmology Cosmo;
 
 	string configFile = argc[1];
 
@@ -176,7 +178,7 @@ int main(int argv, char **argc)
 	{
 		iNumCat = 0;	iUseCat = 0;
 
-		SettingsIO.SetCosmology();
+		SettingsIO.SetCosmology(&Cosmo);
 		SettingsIO.ReadHalos();
 		CommTasks.BufferSendRecv();
 
@@ -210,7 +212,8 @@ int main(int argv, char **argc)
 	if (runMode == 1 || runMode == 2)
 	{
 		/* We don't need to set cosmology when building the raw trees */
-		SettingsIO.SetCosmology();
+		SettingsIO.SetCosmology(&Cosmo);
+
 		/* 
 			POST PROCESSING STUFF:
 				- interpolate lost halo masses 

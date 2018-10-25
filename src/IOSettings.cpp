@@ -11,8 +11,10 @@
 #include <memory>
 #include <stdexcept>
 
+#include "Cosmology.h"
 #include "IOSettings.h"
 #include "utils.h"
+#include "spline.h"
 #include "global_vars.h"
 
 #define FMHIRESFAC 0.90
@@ -30,17 +32,25 @@ IOSettings::~IOSettings()
 };
 
 
-void IOSettings::SetCosmology()
+void IOSettings::SetCosmology(Cosmology *Cosmo)
 {
 	if (cosmologicalModel == "WMAP7")
 	{
 		if (locTask == 0)
 			cout << "Using WMAP7 cosmology." << endl;
+			
+		pathA  = pathMetroCpp + dataAWMAP7;
+		pathPk = pathMetroCpp + dataPkWMAP7;
+		Cosmo->SetWMAP7();
 
 	} else if (cosmologicalModel == "Planck") {
 
 		if (locTask == 0)
 			cout << "Using Planck cosmology." << endl;
+			
+		pathA  = pathMetroCpp + dataAPlanck;
+		pathPk = pathMetroCpp + dataPkPlanck;
+		Cosmo->SetPlanck();
 
 	} else {
 		if (locTask == 0)
@@ -51,6 +61,9 @@ void IOSettings::SetCosmology()
 			exit(0);
 		}
 	}
+
+	Cosmo->a  = ReadA();
+	Cosmo->pk = ReadPk();
 };
 
 
@@ -740,7 +753,6 @@ void IOSettings::ReadTrees()
 
 	lineHead = "#";
 
-
 	if (nTreeChunks != totTask)
 	{
 		if (locTask == 0) 
@@ -939,12 +951,81 @@ void IOSettings::WriteTrees()
 
 
 
-void IOSettings::ReadPk()
-{};
+tk::spline IOSettings::ReadA()
+{
+	double a = 0.0, t = 0.0, GYr = 0.005;
+	vector <double> as, ts;
+	int aStep = 0;
+	string lineIn;
+	
+	tk::spline a2t; 
+
+	ifstream fileIn(pathA);
+
+	if (!fileIn.good())
+	{
+		cout << "File: " << pathA << " not found on task=" << locTask << endl;
+	} else {
+		if (locTask == 0)
+       			cout << "Reading tree file: " << pathA << endl;
+	}	
+
+	while (getline(fileIn, lineIn))
+	{
+		const char *lineRead = lineIn.c_str();
+		sscanf(lineRead, "%lf", &a);
+		aStep++;
+
+		t = aStep * GYr;
+	
+		ts.push_back(t);
+		as.push_back(a);
+	}
+
+	a2t.set_points(as, ts);
+
+	if (locTask == 0)
+		cout << "Read file: " << pathA << " with " << as.size() << " lines." << endl;
+
+	return a2t;
+};
 
 
-void IOSettings::ReadA()
-{};
+tk::spline IOSettings::ReadPk()
+{
+	double k = 0.0, pk = 0.0;
+	vector <double> ks, pks;
+	string lineIn;
+	
+	tk::spline kPk; 
+
+	ifstream fileIn(pathPk);
+
+	if (!fileIn.good())
+	{
+		cout << "File: " << pathPk << " not found on task=" << locTask << endl;
+	} else {
+		if (locTask == 0)
+       			cout << "Reading tree file: " << pathPk << endl;
+	}	
+
+	while (getline(fileIn, lineIn))
+	{
+		const char *lineRead = lineIn.c_str();
+		sscanf(lineRead, "%lf  %lf", &k, &pk);
+
+		ks.push_back(k);
+		pks.push_back(pk);
+	}
+
+	kPk.set_points(ks, pks);
+
+	if (locTask == 0)
+		cout << "Read file: " << pathPk << " with " << ks.size() << " lines." << endl;
+
+	return kPk;
+
+};
 
 
 void IOSettings::WriteSmoothTrees()
