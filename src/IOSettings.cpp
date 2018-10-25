@@ -984,6 +984,9 @@ tk::spline IOSettings::ReadA()
 
 	a2t.set_points(as, ts);
 
+	//cout << locTask << ") a2t test = " << a2t(0.9999) << endl;
+	//cout << locTask << ") a2t test = " << a2t(0.5) << endl;
+
 	if (locTask == 0)
 		cout << "Read file: " << pathA << " with " << as.size() << " lines." << endl;
 
@@ -1022,6 +1025,9 @@ tk::spline IOSettings::ReadPk()
 
 	if (locTask == 0)
 		cout << "Read file: " << pathPk << " with " << ks.size() << " lines." << endl;
+
+
+	//cout << locTask << ") Pk test = " << kPk(0.1) << endl;
 
 	return kPk;
 
