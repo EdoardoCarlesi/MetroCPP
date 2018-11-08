@@ -10,9 +10,10 @@ MetroTmp=$MetroDir'tmp/'
 RunNum[0]="00_06"
 RunNum[1]="45_17"
 RunNum[2]="55_02"
+RunNum[3]="34_13"
 
-iniRun=1
-totRun=3
+iniRun=3
+totRun=4
 
 iniSub=0
 totSub=10

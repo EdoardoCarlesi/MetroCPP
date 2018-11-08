@@ -603,6 +603,14 @@ void Communication::SyncOrphanHalos()
 		int thisIndex = indexOrphans[iL];
 		unsigned long long int thisID = locHalos[0][thisIndex].ID;
 	
+		if (facOrphanSteps < 1)
+		{
+			if (locTask == 0)
+				cout << "ERROR. facOrphanSteps not set or set to zero. Check the .cfg file." << endl;  
+
+			exit(0);
+		}
+
 		nOrphanSteps = int (locHalos[0][thisIndex].nPart[nPTypes] / facOrphanSteps) + 1;	
 
 		/* Only keep track of the orphans for a number of steps smaller than maxOrphanSteps */
@@ -628,11 +636,11 @@ void Communication::SyncOrphanHalos()
 			locHalos[1][nLocHalos[1]].nOrphanSteps += 1;
 			locHalos[1][nLocHalos[1]].isToken = true;
 	
-			//if (locTask == 0)
-			//	if (locHalos[1][nLocHalos[1]].nOrphanSteps > 1 && nOrphanSteps > 4)
-			//	cout << "Orph=" << locTask << " " << nLocHalos[1] << " " << locHalos[1][nLocHalos[1]].nOrphanSteps 
-			//	<< "/" << nOrphanSteps << " " << locHalos[1][nLocHalos[1]].ID 
-			//	<< " " << locHalos[1][nLocHalos[1]].nPart[1] << endl; 
+			if (locTask == 0)
+				if (locHalos[1][nLocHalos[1]].nOrphanSteps > 1 && nOrphanSteps > 4)
+				cout << "Orph=" << locTask << " " << nLocHalos[1] << " " << locHalos[1][nLocHalos[1]].nOrphanSteps 
+				<< "/" << nOrphanSteps << " " << locHalos[1][nLocHalos[1]].ID 
+				<< " " << locHalos[1][nLocHalos[1]].nPart[1] << endl; 
 
 			if (runMode == 1)
 				id2Index[thisID] = nLocHalos[1];
