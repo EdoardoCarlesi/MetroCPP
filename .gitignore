@@ -1,6 +1,5 @@
 *.swp
 *.bkp
-*.dat
 *.o
 *.tmp.*
 *.mtree

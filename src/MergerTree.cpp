@@ -361,6 +361,10 @@ void FindProgenitors(int iOne, int iTwo)
 			/* We only loop on a subset of halos */
 			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
 
+		// TODO: this does not take into account (yet) the orphan halos in FULLBOX simulations
+		// Now, in FullBox mode, Orphan Halos do not need to be communicated through all the tasks,
+		// Which makes things easier to synchronize
+	
 			/* The vector "indexes" contains the list of haloes (in the local memory & buffer) to be compared */
 			for (int j = 0; j < indexes.size(); j++)
 			{
