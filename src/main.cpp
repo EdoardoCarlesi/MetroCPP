@@ -54,6 +54,17 @@ int main(int argv, char **argc)
 	/* We are assuming that each task reads more than one file. TODO load balancing */
 	SettingsIO.DistributeFilesAmongTasks();
 
+	if (locTask == 0)
+	{
+		cout << "=========================================" << endl;
+#ifdef ZOOM
+		cout << "=========== ZOOM OPERATION MODE =========" << endl;
+#else
+		cout << "========= FULL BOX OPERATION MODE =======" << endl;
+#endif
+		cout << "=========================================" << endl;
+	}
+
 	if (runMode == 0)
 		strRunMode = " ---> Merger tree computation only.\n";
 	else if (runMode == 1)	

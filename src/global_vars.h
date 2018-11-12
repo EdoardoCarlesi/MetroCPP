@@ -39,8 +39,8 @@ extern vector<vector<MergerTree>> locMTrees;
 #ifdef ZOOM
 /* This variable keeps track of the halos that should be used on each task for the backward comparison, 
  * to avoid looping on all the halos */
-extern vector<int> locTreeIndex;	
 #endif
+extern vector<int> locTreeIndex;	
 
 /* This variables stores the number of (clean) connections between halos in catalog 0 and catalog 1, two steps at the time */
 extern vector<vector<MergerTree>> locCleanTrees;
