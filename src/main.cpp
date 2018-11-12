@@ -56,13 +56,15 @@ int main(int argv, char **argc)
 
 	if (locTask == 0)
 	{
-		cout << "=========================================" << endl;
+		cout << endl;
+		cout << "\t\t=========================================" << endl;
 #ifdef ZOOM
-		cout << "=========== ZOOM OPERATION MODE =========" << endl;
+		cout << "\t\t=========== ZOOM OPERATION MODE =========" << endl;
 #else
-		cout << "========= FULL BOX OPERATION MODE =======" << endl;
+		cout << "\t\t========= FULL BOX OPERATION MODE =======" << endl;
 #endif
-		cout << "=========================================" << endl;
+		cout << "\t=========================================" << endl;
+		cout << endl;
 	}
 
 	if (runMode == 0)
