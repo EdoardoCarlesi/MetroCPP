@@ -22,15 +22,20 @@ Grid BufferGrid;
 vector<vector<MergerTree>> locMTrees;
 vector<vector<MergerTree>> locCleanTrees;
 
-#ifdef ZOOM
-vector<int> locTreeIndex;
-#endif
+/* We keep track of the orphan halos to synchronize them afterwards */
+vector<int> orphanHaloIndex;	// Global index
 
 vector<vector<Halo>> allHalos;
 vector<vector<Halo>> locHalos;
+vector<vector<vector<vector<unsigned long long int>>>> locParts;
+
 #ifndef ZOOM
 vector<Halo> locBuffHalos;
+vector<vector<vector<unsigned long long int>>> locBuffParts;
+#else
+vector<int> locTreeIndex;
 #endif
+
 size_t locHalosSize[2];
 
 int iNumCat; // Halo catalog number in use, from 0 to N
@@ -38,14 +43,6 @@ int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
 int nTypePart = NPTYPES;
 int nTotHalos[2];
 int nLocHalos[2];
-
-// We keep track of the orphan halos to synchronize them afterwards
-vector<int> orphanHaloIndex;
-
-vector<vector<vector<vector<unsigned long long int>>>> locParts;
-#ifndef ZOOM
-vector<vector<vector<unsigned long long int>>> locBuffParts;
-#endif
 
 size_t locPartsSize[2];
 size_t sizeHalo;
@@ -67,11 +64,14 @@ float locVmax;
 float maxBufferThick;
 float boxSize;
 
+string cosmologicalModel;
+
 int minPartCmp;
 int minPartHalo;
 
 int runMode;
 int nGrid;
+int facOrphanSteps;
 int nTreeChunks;
 int nChunks;
 int nSnapsUse;

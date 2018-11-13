@@ -3,6 +3,7 @@
 
 #include "Halo.h"
 #include "utils.h"
+#include "spline.h"
 #include "global_vars.h"
 #include "Cosmology.h"
 

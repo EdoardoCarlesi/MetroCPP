@@ -11,8 +11,10 @@
 #include <memory>
 #include <stdexcept>
 
+#include "Cosmology.h"
 #include "IOSettings.h"
 #include "utils.h"
+#include "spline.h"
 #include "global_vars.h"
 
 #define FMHIRESFAC 0.90
@@ -27,6 +29,41 @@ IOSettings::IOSettings()
 
 IOSettings::~IOSettings() 
 {
+};
+
+
+void IOSettings::SetCosmology(Cosmology *Cosmo)
+{
+	if (cosmologicalModel == "WMAP7")
+	{
+		if (locTask == 0)
+			cout << "Using WMAP7 cosmology." << endl;
+			
+		pathA  = pathMetroCpp + dataAWMAP7;
+		pathPk = pathMetroCpp + dataPkWMAP7;
+		Cosmo->SetWMAP7();
+
+	} else if (cosmologicalModel == "Planck") {
+
+		if (locTask == 0)
+			cout << "Using Planck cosmology." << endl;
+			
+		pathA  = pathMetroCpp + dataAPlanck;
+		pathPk = pathMetroCpp + dataPkPlanck;
+		Cosmo->SetPlanck();
+
+	} else {
+		if (locTask == 0)
+		{
+			cout << "Error. Cosmological model << " << cosmologicalModel << ">> is not implemented. " << endl; 
+			cout << "Try setting << WMAP7 >> or << Planck >> instead." << endl;
+			cout << "Exiting..." << endl;
+			exit(0);
+		}
+	}
+
+	Cosmo->a  = ReadA();
+	Cosmo->pk = ReadPk();
 };
 
 
@@ -149,11 +186,13 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
 	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
+	else if (arg[0] == "facOrphanSteps")	facOrphanSteps = stoi(arg[1]);
 	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
 	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "pathOutput")	pathOutput = arg[1];
 	else if (arg[0] == "runMode")		runMode = stoi(arg[1]);
 	else if (arg[0] == "nTreeChunks")	nTreeChunks = stoi(arg[1]);
+	else if (arg[0] == "cosmologicalModel")	cosmologicalModel = arg[1];
 	else if (arg[0] == "pathTree") {
 		pathTree = arg[1];	
 			if (pathTree == "pathOutput")
@@ -714,7 +753,6 @@ void IOSettings::ReadTrees()
 
 	lineHead = "#";
 
-
 	if (nTreeChunks != totTask)
 	{
 		if (locTask == 0) 
@@ -911,6 +949,89 @@ void IOSettings::WriteTrees()
         }
 };
 
+
+
+tk::spline IOSettings::ReadA()
+{
+	double a = 0.0, t = 0.0, GYr = 0.005;
+	vector <double> as, ts;
+	int aStep = 0;
+	string lineIn;
+	
+	tk::spline a2t; 
+
+	ifstream fileIn(pathA);
+
+	if (!fileIn.good())
+	{
+		cout << "File: " << pathA << " not found on task=" << locTask << endl;
+	} else {
+		if (locTask == 0)
+       			cout << "Reading tree file: " << pathA << endl;
+	}	
+
+	while (getline(fileIn, lineIn))
+	{
+		const char *lineRead = lineIn.c_str();
+		sscanf(lineRead, "%lf", &a);
+		aStep++;
+
+		t = aStep * GYr;
+	
+		ts.push_back(t);
+		as.push_back(a);
+	}
+
+	a2t.set_points(as, ts);
+
+	//cout << locTask << ") a2t test = " << a2t(0.9999) << endl;
+	//cout << locTask << ") a2t test = " << a2t(0.5) << endl;
+
+	if (locTask == 0)
+		cout << "Read file: " << pathA << " with " << as.size() << " lines." << endl;
+
+	return a2t;
+};
+
+
+tk::spline IOSettings::ReadPk()
+{
+	double k = 0.0, pk = 0.0;
+	vector <double> ks, pks;
+	string lineIn;
+	
+	tk::spline kPk; 
+
+	ifstream fileIn(pathPk);
+
+	if (!fileIn.good())
+	{
+		cout << "File: " << pathPk << " not found on task=" << locTask << endl;
+	} else {
+		if (locTask == 0)
+       			cout << "Reading tree file: " << pathPk << endl;
+	}	
+
+	while (getline(fileIn, lineIn))
+	{
+		const char *lineRead = lineIn.c_str();
+		sscanf(lineRead, "%lf  %lf", &k, &pk);
+
+		ks.push_back(k);
+		pks.push_back(pk);
+	}
+
+	kPk.set_points(ks, pks);
+
+	if (locTask == 0)
+		cout << "Read file: " << pathPk << " with " << ks.size() << " lines." << endl;
+
+
+	//cout << locTask << ") Pk test = " << kPk(0.1) << endl;
+
+	return kPk;
+
+};
 
 
 void IOSettings::WriteSmoothTrees()

@@ -599,37 +599,55 @@ void Communication::SyncOrphanHalos()
 	/* Now each task updates the "1" locHalo vector with orphan halos to keep track of them at the next step */
 	for (int iL = 0; iL < totOrphans; iL++)
 	{
+		int nOrphanSteps = 0;
 		int thisIndex = indexOrphans[iL];
-
-		//cout << locTask << ") " << thisIndex << " " << locMTrees[0][thisIndex].mainHalo.ID << " " << endl;
-		//cout << locTask << ") " << thisIndex << " " << endl; //locMTrees[0][thisIndex].mainHalo.ID << " " << endl;
-		//unsigned long long int thisID = locMTrees[0][thisIndex].mainHalo.ID;
 		unsigned long long int thisID = locHalos[0][thisIndex].ID;
-
-		/* When reading the tree files, we do not use particles and locMTrees */
-		if (runMode == 0 || runMode == 2)
+	
+		if (facOrphanSteps < 1)
 		{
-			locMTrees[0][thisIndex].isOrphan = true;
-			locMTrees[0][thisIndex].idProgenitor.push_back(thisID);
-			locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
+			if (locTask == 0)
+				cout << "ERROR. facOrphanSteps not set or set to zero. Check the .cfg file." << endl;  
 
-			locParts[1].push_back(locParts[0][thisIndex]);
-
-			/* Remember to loop also over this halo at the next step 
-			 * locTreeIndex keeps track of all the halos to be used on each task in the backward comparison */
-			locTreeIndex.push_back(nLocHalos[1]);
+			exit(0);
 		}
 
-		/* The orphan (token) halo is stored in memory for the next step */
-		locHalos[1].push_back(locHalos[0][thisIndex]);
-		locHalos[1][nLocHalos[1]].isToken = true;
+		nOrphanSteps = int (locHalos[0][thisIndex].nPart[nPTypes] / facOrphanSteps) + 1;	
 
-		if (runMode == 1)
-			id2Index[thisID] = nLocHalos[1];
-#ifdef TEST
-#endif
-		nLocHalos[1]++;
-	}
+		/* Only keep track of the orphans for a number of steps smaller than maxOrphanSteps */
+		if (locHalos[0][thisIndex].nOrphanSteps < nOrphanSteps)
+		{
+
+			/* When reading the tree files, we do not use particles and locMTrees */
+			if (runMode == 0 || runMode == 2)
+			{
+				locMTrees[0][thisIndex].isOrphan = true;
+				locMTrees[0][thisIndex].idProgenitor.push_back(thisID);
+				locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
+
+				locParts[1].push_back(locParts[0][thisIndex]);
+
+				/* Remember to loop also over this halo at the next step 
+				 * locTreeIndex keeps track of all the halos to be used on each task in the backward comparison */
+				locTreeIndex.push_back(nLocHalos[1]);
+			}
+
+			/* The orphan (token) halo is stored in memory for the next step */
+			locHalos[1].push_back(locHalos[0][thisIndex]);
+			locHalos[1][nLocHalos[1]].nOrphanSteps += 1;
+			locHalos[1][nLocHalos[1]].isToken = true;
+	
+			if (locTask == 0)
+				if (locHalos[1][nLocHalos[1]].nOrphanSteps > 1 && nOrphanSteps > 4)
+				cout << "Orph=" << locTask << " " << nLocHalos[1] << " " << locHalos[1][nLocHalos[1]].nOrphanSteps 
+				<< "/" << nOrphanSteps << " " << locHalos[1][nLocHalos[1]].ID 
+				<< " " << locHalos[1][nLocHalos[1]].nPart[1] << endl; 
+
+			if (runMode == 1)
+				id2Index[thisID] = nLocHalos[1];
+
+			nLocHalos[1]++;
+		}
+	}	// if < nOrphanSteps
 #endif
 
 	// SANITY CHECK

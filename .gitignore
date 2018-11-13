@@ -1,6 +1,5 @@
 *.swp
 *.bkp
-*.dat
 *.o
 *.tmp.*
 *.mtree
@@ -14,3 +13,4 @@ output/*.dat
 mpirun
 *.tmp
 *.swo
+*.out

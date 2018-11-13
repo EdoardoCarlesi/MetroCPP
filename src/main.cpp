@@ -19,6 +19,7 @@
 #include "IOSettings.h"
 #include "Halo.h"
 #include "MergerTree.h"
+#include "Cosmology.h"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ int main(int argv, char **argc)
 {
 	IOSettings SettingsIO;
 	Communication CommTasks;
+	Cosmology Cosmo;
 
 	string configFile = argc[1];
 
@@ -45,11 +47,25 @@ int main(int argv, char **argc)
 	SettingsIO.Init();
 
 	InitTrees(nSnapsUse);
+	SettingsIO.SetCosmology(&Cosmo);
 
 	string strRunMode;
 
 	/* We are assuming that each task reads more than one file. TODO load balancing */
 	SettingsIO.DistributeFilesAmongTasks();
+
+	if (locTask == 0)
+	{
+		cout << endl;
+		cout << "\t\t=========================================" << endl;
+#ifdef ZOOM
+		cout << "\t\t=========== ZOOM OPERATION MODE =========" << endl;
+#else
+		cout << "\t\t========= FULL BOX OPERATION MODE =======" << endl;
+#endif
+		cout << "\t\t=========================================" << endl;
+		cout << endl;
+	}
 
 	if (runMode == 0)
 		strRunMode = " ---> Merger tree computation only.\n";
@@ -136,8 +152,12 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 				cout << "\nDone in " << elapsed << "s. " << endl;
 		
+#ifdef ZOOM
+			/* Orphan halo candidates need to be communicated in zoom mode only. 
+			 * In fullbox mode they are taken care of in the FindProgenitors function */
 			MPI_Barrier(MPI_COMM_WORLD);
 			CommTasks.SyncOrphanHalos();
+#endif
 
 			if (locTask == 0)
 				cout << "\nFinding halo progentors, backwards..." << flush ;

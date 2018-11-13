@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include "Halo.h"
-//#include "global_vars.h"
+#include "spline.h"
+#include "global_vars.h"
+
+//using namespace tk;
 
 
 class Cosmology {
@@ -15,7 +18,6 @@ public:
 	void SetPlanck();
 	void SetWMAP7();
 	void SetArbitrary();	// TODO	
-
 	
 	float A2Sec(float, float);
 	float Rho0(float, int);
@@ -23,6 +25,10 @@ public:
 		
 	/* This function computes the gravitational acceleration due to the neighbouring halos for a token halo */
 	void GravAcc(Halo, float, float);
+
+	/* Splines used for interpolation */
+	tk::spline pk;
+	tk::spline a;
 
 	/* Cosmological parameters */
 	float omegaL;

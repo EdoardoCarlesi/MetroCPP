@@ -36,24 +36,30 @@ extern vector<vector<Halo>> allHalos;
 /* Here we store the pairwise connections between halos in catalog 0 and 1, before being sorted */
 extern vector<vector<MergerTree>> locMTrees;
 
-#ifdef ZOOM
-/* This variable keeps track of the halos that should be used on each task for the backward comparison, 
- * to avoid looping on all the halos */
-extern vector<int> locTreeIndex;	
-#endif
-
 /* This variables stores the number of (clean) connections between halos in catalog 0 and catalog 1, two steps at the time */
 extern vector<vector<MergerTree>> locCleanTrees;
 
-/* Maps that contain halo ids and a link to the locHalo index */
-#ifndef ZOOM
-extern map <unsigned long long int, int> locId2Index;
-#endif
 extern map <unsigned long long int, int> id2Index;
 
+/* Particles on task, also allocated by particle type within each halo */
+extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
+
 #ifndef ZOOM
+/* Map that contain halo ids and a link to the locHalo index */
+extern map <unsigned long long int, int> locId2Index;
+
 /* Extra halos coming from the buffer nodes communicated from other tasks */
 extern vector<Halo> locBuffHalos;
+
+/* Extra particles coming from the buffer areas located on other tasks */
+extern vector<vector<vector<unsigned long long int>>> locBuffParts;
+
+#else
+
+/* This variable keeps track of the halos that should be used on each task for the backward comparison, 
+ * to avoid looping on all the halos */
+extern vector<int> locTreeIndex;	
+
 #endif
 
 extern size_t locHalosSize[2];
@@ -74,14 +80,6 @@ extern int iNumCat;
 // Set to 0 or 1 according to the catalogs being read in (at each step we read two at the same time)
 extern int iUseCat;
 
-/* Particles on task, also allocated by particle type within each halo */
-extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
-
-#ifndef ZOOM
-/* Extra particles coming from the buffer areas located on other tasks */
-extern vector<vector<vector<unsigned long long int>>> locBuffParts;
-#endif
-
 extern size_t sizePart;
 extern size_t sizeHalo;
 
@@ -96,8 +94,11 @@ extern float totVmax;
 extern float locVmax;
 extern float maxBufferThick;
 
+extern string cosmologicalModel;
+
 /* These int values are being read from the configuration file */
 extern int runMode;
+extern int facOrphanSteps;	// Track orphan halos to a maximum of these steps
 extern int nSnapsUse;
 extern int nSnaps;
 extern int nTreeChunks;	// Number of MPI tasks used when writing the tree
