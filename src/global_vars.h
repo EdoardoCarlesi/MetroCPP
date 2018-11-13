@@ -103,4 +103,5 @@ extern int nSnapsUse;
 extern int nSnaps;
 extern int nTreeChunks;	// Number of MPI tasks used when writing the tree
 extern int nChunks;	// Each halo catalog / particle file is split into this number of files
+extern int nLocChunks;  // Each tast has a local number of chunks to read (it should be equal for all tasks for better load balancing, but in general it can vary)
 #endif 

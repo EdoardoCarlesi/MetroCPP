@@ -144,7 +144,7 @@ int main(int argv, char **argc)
 				cout << "Finding halo progentors, forwards..." << flush ;
 		
 			/* This function also allocates the MergerTrees */
-			FindProgenitors(0, 1);
+			//FindProgenitors(0, 1);
 
 			clock_t endTime = clock();
 			double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -165,7 +165,8 @@ int main(int argv, char **argc)
 			iniTime = clock();
 	
 			FindProgenitors(1, 0);
-
+			MPI_Barrier(MPI_COMM_WORLD);
+	
 			endTime = clock();
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 	
@@ -175,7 +176,7 @@ int main(int argv, char **argc)
 			CleanTrees(iNumCat);
 
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
-			ShiftHalosPartsGrids();
+			//ShiftHalosPartsGrids();
 
 		}	/* Finish: the trees have now been built for this step */
 

@@ -172,6 +172,7 @@ void IOSettings::ReadConfigFile(string configFile)
 };
 
 
+
 void IOSettings::InitFromCfgFile(vector<string> arg)
 {
 	if (arg[0] == "boxSize") 		boxSize = stof(arg[1]);
@@ -218,7 +219,29 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	if (arg[1] == "" && locTask == 0)
 		cout << "WARNING " << arg[0] << " has not been set correctly in the config file." << endl;
  
+#ifndef ZOOM
+
+	if (arg[0] == "nGrid" && locTask == 0)
+		if (nGrid < 1)
+		{
+			cout << "ERROR: " << endl; 
+			cout << "Cannot run with parameter 'nGrid = 0' in Full Box mode. Set nGrid to a positive int value in the configuration file." << endl;
+			cout << "Exiting program..." << endl;
+			exit(0);
+		}
+#endif
+
+	if (arg[0] == "nChunks" && locTask == 0)
+		if (nChunks < 1)
+		{
+			cout << "ERROR: " << endl; 
+			cout << "Cannot run with parameter 'nChunks = 0'. Set nChunks to a positive int value in the configuration file." << endl;
+			cout << "Exiting program..." << endl;
+			exit(0);
+		}
+
 }
+
 
 
 void IOSettings::CheckStatus()
@@ -232,6 +255,7 @@ void IOSettings::CheckStatus()
 	cout << "pathMetro   = " << pathMetroCpp << endl;
 	cout << "pathInput   = " << pathInput << endl;
 }
+
 
 
 void IOSettings::FindCatZ()
@@ -293,6 +317,7 @@ void IOSettings::FindCatZ()
 };
 
 
+
 void IOSettings::FindCatN()
 {	
 	int sysOut = 0;
@@ -339,6 +364,7 @@ void IOSettings::FindCatN()
 	sysOut = system(cleanTmp.c_str());
 #endif
 };
+
 
 
 void IOSettings::Init()
@@ -397,26 +423,33 @@ void IOSettings::Init()
 		// The snapshot format is _XXX so we assume 4 char. BEWARE! Other formats might not be compatible
 		char strBuff[4];
 
-		for (int i = 0; i < nSnaps; i++)
+		for (int iF = 0; iF < nSnaps; iF++)
 		{
-			sprintf(strBuff, "%03d", numSnaps[i]); 
-			strSnaps[i] = strBuff;
+			sprintf(strBuff, "%03d", numSnaps[iF]); 
+			strSnaps[iF] = strBuff;
 		}
 	}
 
 };
 
 
+
 void IOSettings::DistributeFilesAmongTasks(void)
 {
+	int nLocRemind = 0, locChunk = 0;
 	char charCpu[5], charZ[8];
-	int locChunk = 0;
 	string strZ;
 
+
 #ifdef ZOOM
+	nLocChunks = nChunks;
+
 	if (locTask == 0)
 		cout << "Reading halo/particle files on Task=0. Total number of tasks= " << totTask << endl; 
 #else
+	nLocChunks = int (nChunks / totTask);
+	nLocRemind = nChunks % totTask;
+
 	if (locTask == 0)
 		cout << "Each task is reading " << nChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
 #endif
@@ -424,58 +457,69 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	haloFiles.resize(nSnaps);
 	partFiles.resize(nSnaps);
 
-	for (int i = 0; i < nSnaps; i++)
+	for (int iF = 0; iF < nSnaps; iF++)
 	{
-		sprintf(charZ, "%.3f", redShift[i]);	
-		haloFiles[i].resize(nChunks);	/* in ZOOM mode there is only one chunk */
-		partFiles[i].resize(nChunks);
+		sprintf(charZ, "%.3f", redShift[iF]);	
 
-		for (int j = 0; j < nChunks; j++)
+#ifdef ZOOM
+		haloFiles[iF].resize(nLocChunks);	/* in ZOOM mode there is (usually) only one chunk */
+		partFiles[iF].resize(nLocChunks);
+#endif
+
+		for (int jF = 0; jF < nLocChunks + nLocRemind; jF++)
 		{
 #ifdef ZOOM
 			if (locTask == 0)
 			{	
-				haloFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".z" + charZ + "." + haloSuffix;
+				haloFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".z" + charZ + "." + haloSuffix;
 
-				ifstream haloExists(haloFiles[i][j]);
+				ifstream haloExists(haloFiles[iF][jF]);
 				if (haloExists.fail())
 				{
-					haloFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".0000.z" + charZ + "." + haloSuffix;
+					haloFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".0000.z" + charZ + "." + haloSuffix;
 
-					ifstream haloExists(haloFiles[i][j]);
+					ifstream haloExists(haloFiles[iF][jF]);
 						if (haloExists.fail())
-							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << haloFiles[i][j] << endl;
+							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << haloFiles[iF][jF] << endl;
 				}
 
-				partFiles[i][0] = pathInput + haloPrefix + strSnaps[i] + ".z" + charZ + "." + partSuffix;
+				partFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".z" + charZ + "." + partSuffix;
 
-				ifstream partExists(partFiles[i][j]);
+				ifstream partExists(partFiles[iF][jF]);
 				if (partExists.fail())
 				{
-					partFiles[i][0] = pathInput + partPrefix + strSnaps[i] + ".0000.z" + charZ + "." + partSuffix;
+					partFiles[iF][0] = pathInput + partPrefix + strSnaps[i] + ".0000.z" + charZ + "." + partSuffix;
 
-					ifstream partExists(partFiles[i][j]);
+					ifstream partExists(partFiles[iF][jF]);
 						if (partExists.fail())
-							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << partFiles[i][j] << endl;
+							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << partFiles[iF][jF] << endl;
 				}
 
 			}
 
 #else		/* No ZOOM, distribute the files as usually */
 
-			locChunk = j + locTask * nChunks;
-			sprintf(charCpu, "%04d", locChunk);	
-			haloFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
-			partFiles[i][j] = pathInput + haloPrefix + strSnaps[i] + "." + charCpu + ".z" + charZ + "." + partSuffix;
+			locChunk = jF + locTask * nLocChunks;
 
-			ifstream haloExists(haloFiles[i][j]);
-			if (haloExists.fail())
-				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
+			if (locChunk < nChunks) // Make sure we are not looking for catalog chunks beyond the boundaries
+			{
+				sprintf(charCpu, "%04d", locChunk);	
+				string locHaloFile = pathInput + haloPrefix + strSnaps[iF] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
+				string locPartFile = pathInput + haloPrefix + strSnaps[iF] + "." + charCpu + ".z" + charZ + "." + partSuffix;
 
-			ifstream partExists(partFiles[i][j]);
-			if (partExists.fail())
-				cout << "WARNING: on task =" << locTask << " " << haloFiles[i][j] << " not found." << endl;
+				//cout << "On Task= " << locTask << " Halo:" << locHaloFile << " Part:" << locPartFile << endl;
+	
+				haloFiles[iF].push_back(locHaloFile);
+				partFiles[iF].push_back(locPartFile);
 
+				ifstream haloExists(haloFiles[iF][jF]);
+				if (haloExists.fail())
+					cout << "WARNING: on task =" << locTask << " " << haloFiles[iF][jF] << " not found." << endl;
+
+				ifstream partExists(partFiles[iF][jF]);
+				if (partExists.fail())
+					cout << "WARNING: on task =" << locTask << " " << haloFiles[iF][jF] << " not found." << endl;
+			}
 
 #endif
 			//cout << locTask << ") " << haloFiles[i][j] << endl; 
@@ -498,6 +542,7 @@ void IOSettings::ReadParticles(void)
 
 	tmpParts.resize(nPTypes);
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
+	nLocChunks = haloFiles[iNumCat].size();
 
 #ifdef VERBOSE
 	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
@@ -508,7 +553,7 @@ void IOSettings::ReadParticles(void)
 	{
 #endif
 
-	for (int iChunk = 0; iChunk < nChunks; iChunk++)
+	for (int iChunk = 0; iChunk < nLocChunks; iChunk++)
 	{
 		tmpUrlPart = partFiles[iNumCat][iChunk].c_str();
 		ifstream fileIn(tmpUrlPart);
@@ -541,7 +586,6 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-					//cout << locTask << " " << nPartHalo << " " << iLine << " " << locHaloID << endl;
 #ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 #endif
@@ -553,7 +597,6 @@ void IOSettings::ReadParticles(void)
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
 
-				//cout << locTask << " " << iLine << " " << partID << endl;
 				tmpParts[partType].push_back(partID);
 				iTmpParts++;
 				iLocParts++;
@@ -645,7 +688,10 @@ void IOSettings::ReadHalos()
 	{
 #endif
 
-	for (int iChunk = 0; iChunk < nChunks; iChunk++)
+	nLocChunks = haloFiles[iNumCat].size();
+	//cout << locTask << ", " << iNumCat << ", " << nLocChunks << endl;
+
+	for (int iChunk = 0; iChunk < nLocChunks; iChunk++)
 	{
 		tmpUrlHalo = haloFiles[iNumCat][iChunk].c_str();
 		nTmpHalos = NumLines(tmpUrlHalo);	
@@ -677,7 +723,7 @@ void IOSettings::ReadHalos()
 
 				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
 				 * will be initialized on each task when communicating the full halo list */
-				locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;
+				locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
 #endif
 				iLocHalos++;
 				iTmpHalos++;

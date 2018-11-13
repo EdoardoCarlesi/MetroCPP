@@ -73,6 +73,7 @@ int runMode;
 int nGrid;
 int facOrphanSteps;
 int nTreeChunks;
+int nLocChunks;
 int nChunks;
 int nSnapsUse;
 int nSnaps;
