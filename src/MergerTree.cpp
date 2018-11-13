@@ -347,7 +347,6 @@ void FindProgenitors(int iOne, int iTwo)
 	locTreeIndex.erase(unique(locTreeIndex.begin(), locTreeIndex.end()), locTreeIndex.end());
 
 
-
 			/**************************************************
 			 *	Comparison for fullbox simulations        *
 			 **************************************************/
@@ -559,16 +558,27 @@ void CleanTrees(int iStep)
 		 * reconstruction of the full merger history. This will be done later. */
 		for (int iProg = 0; iProg < locMTrees[0][iTree].idProgenitor.size(); iProg++)
 		{
+			Halo subHalo;	
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
+			unsigned long long int descID;
 
 #ifndef ZOOM 		
-			//if (jTree < 0) 
-			//{
+			if (jTree < 0) 
+			{
+				//cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] - jTree << ", " << locMTrees[1].size() << endl;
+				descID = locMTrees[1][nLocHalos[1]-jTree].idProgenitor[0];	// The progenitor in the backwards tree
+				subHalo = locMTrees[1][jTree].mainHalo;
+			} else {
+				descID = locMTrees[1][jTree].idProgenitor[0];	
+				subHalo = locMTrees[1][jTree].mainHalo;
+			}
+#else
+			descID = locMTrees[1][jTree].idProgenitor[0];	
+			subHalo = locMTrees[1][jTree].mainHalo;
+#endif
 
-			unsigned long long int descID = locMTrees[1][jTree].idProgenitor[0];	// The progenitor in the backwards tree
-			Halo subHalo;	subHalo = locMTrees[1][jTree].mainHalo;
-			// Useful for debugging
+			/* Sanity check */
 			if (descID == 0)
 			{
 				cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
@@ -579,7 +589,7 @@ void CleanTrees(int iStep)
 			}
 
 			if (mainID == descID)
-			{
+			{		// FIXME there is some segfault around here...
 
 				if (locMTrees[0][iTree].isOrphan)
 				{
@@ -600,12 +610,14 @@ void CleanTrees(int iStep)
 						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 				}
 			}
+#ifdef TEST
 #endif
 		}	// kTree & iTree loop
 
-		//if (mergerTree.idProgenitor.size() > 0)
-		//	locCleanTrees[iStep-1].push_back(mergerTree);
-		//mergerTree.Clean();
+		if (mergerTree.idProgenitor.size() > 0)
+			locCleanTrees[iStep-1].push_back(mergerTree);
+
+		mergerTree.Clean();
 	}
 	
 #ifdef ZOOM
