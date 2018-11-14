@@ -198,8 +198,9 @@ int main(int argv, char **argc)
 		iNumCat = 0;	iUseCat = 0;
 
 		SettingsIO.ReadHalos();
+#ifdef ZOOM	// We need to scatter catalogs through the tasks only when in ZOOM mode
 		CommTasks.BufferSendRecv();
-
+#endif
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
 			//for (int iH = 0; iH < 5; iH++)
@@ -214,10 +215,10 @@ int main(int argv, char **argc)
 	
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
-
+#ifdef ZOOM
 			CommTasks.BufferSendRecv();
 			CommTasks.SyncOrphanHalos();
-
+#endif
 			AssignProgenitor();
 			ShiftHalosPartsGrids();
 		}

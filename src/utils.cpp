@@ -21,7 +21,6 @@ void InitLocVariables(void)
 	nLocParts[0] = 0; nLocParts[1] = 0;
 
 	minPartCmp = 10;
-	minPartHalo = 30;
 
 	nPTypes = NPTYPES;
 
@@ -64,7 +63,7 @@ unsigned int NumLines(const char * fileName)
 	else
 	{ 
 		cout << "File " <<  fileName << " not found on task: " << locTask << endl;
-		return -1;
+		exit(0);
 	}
 };
 

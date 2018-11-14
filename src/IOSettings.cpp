@@ -188,6 +188,7 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
 	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
 	else if (arg[0] == "facOrphanSteps")	facOrphanSteps = stoi(arg[1]);
+	else if (arg[0] == "minPartHalo")	minPartHalo = stoi(arg[1]);
 	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
 	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "pathOutput")	pathOutput = arg[1];
@@ -810,7 +811,8 @@ void IOSettings::ReadTrees()
 
 		if (!fileIn.good())
 		{
-			cout << "File: " << urlTree << " not found on task=" << locTask << endl;
+			cout << "ERROR: File " << urlTree << " not found on task=" << locTask << endl;
+			exit(0);
 		} else {
 			if (locTask == 0)
 	       			cout << "Reading tree file: " << urlTree << endl;
