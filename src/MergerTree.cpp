@@ -221,6 +221,7 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Loop also on the buffer halos, in the backward loop only! */
 	if (iOne > iTwo)
 		nLoopHalos = nLocHalos[iOne] + locBuffHalos.size();
+	//cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << endl;
 #endif
 
 	//cout << "Task=" << locTask << " " << nLoopHalos << ", " << locHalos[iOne].size() << endl;
@@ -230,6 +231,11 @@ void FindProgenitors(int iOne, int iTwo)
 	locMTrees[iOne].resize(nLoopHalos);
 
 #ifdef ZOOM
+
+			/**************************************************
+			 *	Comparison for zoom simulations           *
+			 **************************************************/
+
 	vector<int> locHaloPos;
 	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
 
@@ -350,6 +356,7 @@ void FindProgenitors(int iOne, int iTwo)
 			/**************************************************
 			 *	Comparison for fullbox simulations        *
 			 **************************************************/
+
 #else						
 
 		for (int iL = 0; iL < nLoopHalos; iL++)
@@ -380,6 +387,9 @@ void FindProgenitors(int iOne, int iTwo)
 			// FIXME this loop could be speeded up a little bit if we skip the comparisons of token halos 
 			// in the 1 --> 0 (backwards) loop, but maybe it's not even worth it...
 
+		//	if (indexes.size() < 1)
+		//	cout << "INDEXES < 1 " << endl;
+
 			/* The vector "indexes" contains the list of haloes (in the local memory & buffer) to be compared */
 			for (int jH = 0; jH < indexes.size(); jH++)
 			{
@@ -399,22 +409,43 @@ void FindProgenitors(int iOne, int iTwo)
 				if (compCondition)
 				{	
 					int totComm = 0;
-
+					//if (-kH > locBuffParts.size() && kH < 0)  
+					if (kH < 0 && iH < 0)  // FIXME these two indexes should NEVER be negative at the same time
+								// WTF is going on??
+						cout << "OnTask=" << locTask << " kH= " << kH 
+							<< " iH = " << iH << ", iL " << iL  
+							<< " max=" << locBuffParts.size() << endl;
+	
 					if (kH >= 0 && iH >= 0)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locParts[iTwo][kH]);
 					else if (kH < 0)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locBuffParts[-kH]);
-					else if (iH < 0)
-						thisNCommon = CommonParticles(locBuffParts[-iH], locParts[iTwo][kH]);
+				//	else if (iH < 0)
+				//		thisNCommon = CommonParticles(locBuffParts[-iH], locParts[iTwo][kH]);
 
 					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
 
-					/* This is very important: we keep track of the merging history ONLY if the number 
+			/*		// FIXME c'e' qualche problema con gli indici porca madonna
+					if (iH > locParts[iOne].size() && iH > 0)  
+						cout << "OnTask=" << locTask << " iH= " << iH 
+							<< " max=" << locParts[iOne].size() << endl;
+
+					if (kH > locParts[iTwo].size() && kH > 0)  
+						cout << "OnTask=" << locTask << " iH= " << kH 
+							<< " max=" << locParts[iTwo].size() << endl;
+
+					if (-iH > locBuffParts.size() && iH < 0)  
+						cout << "OnTask=" << locTask << " -iH= " << iH 
+							<< " max=" << locBuffParts.size() << endl;
+
+			*/
+				/* This is very important: we keep track of the merging history ONLY if the number 
 					 * of common particles is above a given threshold */
 					if (totComm > minPartCmp) 
 					{		
-						//cout << locTask << ", " << jH << ", " << kH << ", " << ", " <<  nLoopHalos << endl;
+	//					cout << locTask << ", " << jH << ", " << kH << ", " << iL << ", " <<  nLoopHalos << endl;
 
+	/*
 						for (int iT = 0; iT < nPTypes; iT++)
 							locMTrees[iOne][iL].nCommon[iT].push_back(thisNCommon[iT]);
 	
@@ -424,7 +455,7 @@ void FindProgenitors(int iOne, int iTwo)
 							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH].ID);
 						
 						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
-
+*/
 						totCmp++;
 					} else {
 						totSkip++;
@@ -450,16 +481,23 @@ void FindProgenitors(int iOne, int iTwo)
 					GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
 					locHalos[iTwo].push_back(locMTrees[iOne][iH].mainHalo);
 					locHalos[iTwo][addIndex].isToken = true;
-#endif
+
+					// TODO: Add also particles to the locPart[iTwo] vector!!!!!
+
 					/* Add to the local count of total halos and orphan halos */
 					nLocHalos[iTwo]++;
+#endif
 					nLocOrphans++;
 
 				} else {
-					locMTrees[iOne][iH].isOrphan = false;
+					/* Very important check! Do it only in the fwd loop */
+					if (iOne < iTwo )
+						locMTrees[iOne][iH].isOrphan = false;
 				}
 
 		} // for i halo, the main one
+
+		//cout << "DONE ON TASK " << locTask << endl;
 
 		MPI_Barrier(MPI_COMM_WORLD);
 
@@ -579,7 +617,8 @@ void CleanTrees(int iStep)
 #ifndef ZOOM 		
 			if (jTree < 0) 
 			{
-				//cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] - jTree << ", " << locMTrees[1].size() << endl;
+				if (nLocHalos[1]-jTree > locMTrees[1].size())
+				cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] << ", " << locMTrees[1].size() << endl;
 				descID = locMTrees[1][nLocHalos[1]-jTree].idProgenitor[0];	// The progenitor in the backwards tree
 				subHalo = locMTrees[1][jTree].mainHalo;
 			} else {
@@ -594,28 +633,26 @@ void CleanTrees(int iStep)
 			/* Sanity check */
 			if (descID == 0)
 			{
-				cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
-					<< " | " << iTree << " " << jTree << endl;
+				//cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
+				//	<< " | " << iTree << " " << jTree << endl;
 
-				locHalos[0][iTree].Info();
-				locHalos[1][jTree].Info();
+				//locHalos[0][iTree].Info();
+				//locHalos[1][jTree].Info();
 			}
 
+#ifdef TEST
 			if (mainID == descID)
 			{		// FIXME there is some segfault around here...
 
 				if (locMTrees[0][iTree].isOrphan)
 				{
-			/*
 					mergerTree.idProgenitor.push_back(locMTrees[0][iTree].mainHalo.ID);
 					mergerTree.indexProgenitor.push_back(jTree);
 					mergerTree.subHalos.push_back(locHalos[0][iTree]);
 
 					for(int iT = 0; iT < nPTypes; iT++)
 						mergerTree.nCommon[iT].push_back(locHalos[0][iTree].nPart[iT]);
-			*/
 				} else {
-			/*
 					mergerTree.idProgenitor.push_back(0);
 					mergerTree.idProgenitor.push_back(progID);
 					mergerTree.indexProgenitor.push_back(jTree);
@@ -623,15 +660,13 @@ void CleanTrees(int iStep)
 
 					for(int iT = 0; iT < nPTypes; iT++)
 						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
-			*/
 				}
 			}
-#ifdef TEST
 #endif
 		}	// kTree & iTree loop
 
-		if (mergerTree.idProgenitor.size() > 0)
-			locCleanTrees[iStep-1].push_back(mergerTree);
+		//if (mergerTree.idProgenitor.size() > 0)
+		//	locCleanTrees[iStep-1].push_back(mergerTree);
 
 		mergerTree.Clean();
 	}

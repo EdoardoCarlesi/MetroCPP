@@ -541,6 +541,10 @@ void IOSettings::ReadParticles(void)
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
 	int partType = 0;
 
+#ifdef VERBOSE
+	cout << "onTask=" << locTask << " part size: " << locParts[iUseCat].size() << endl;
+#endif
+
 	tmpParts.resize(nPTypes);
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
 	nLocChunks = haloFiles[iNumCat].size();
@@ -566,7 +570,8 @@ void IOSettings::ReadParticles(void)
 
 		if (!fileIn.good())
 		{
-			cout << "File: " << tmpUrlPart << " not found on task=" << locTask << endl;
+			cout << "ERROR: File " << tmpUrlPart << " not found on task=" << locTask << endl;
+			exit(0);
 		} else {
 			if (locTask == 0)
 	        		cout << "Reading particle file: " << tmpUrlPart << endl;
@@ -689,6 +694,10 @@ void IOSettings::ReadHalos()
 	{
 #endif
 
+#ifdef VERBOSE
+	cout << "onTask=" << locTask << " halo size: " << locHalos[iUseCat].size() << endl;
+#endif
+
 	nLocChunks = haloFiles[iNumCat].size();
 	//cout << locTask << ", " << iNumCat << ", " << nLocChunks << endl;
 
@@ -704,6 +713,7 @@ void IOSettings::ReadHalos()
 		if (!fileIn.good())
 		{
 			cout << "File: " << tmpUrlHalo << " not found on task=" << locTask << endl;
+			exit(0);
 		} else { 
 			if (locTask == 0)
 	       			cout << "Reading " << nTmpHalos << " halos from file: " << tmpUrlHalo << endl;
@@ -720,11 +730,13 @@ void IOSettings::ReadHalos()
 #ifndef ZOOM
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
+				//cout << " ASSIGN HALO TO GRID " << endl;
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
+				//cout << " DONE - ASSIGN HALO TO GRID " << endl;
 
 				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
 				 * will be initialized on each task when communicating the full halo list */
-				locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
+				//locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
 #endif
 				iLocHalos++;
 				iTmpHalos++;

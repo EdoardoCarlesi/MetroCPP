@@ -34,46 +34,66 @@ Grid::~Grid()
 
 void Grid::Clean()
 {
-
-	taskOnGridNode.clear();
-	taskOnGridNode.shrink_to_fit();
-
-	for (int iN = 0; iN < globalTaskOnGridNode.size(); iN++)
+	if (locNodes.size() > 0)
 	{
-		globalTaskOnGridNode[iN].clear();
-		globalTaskOnGridNode[iN].shrink_to_fit();
+		locNodes.clear();
+		locNodes.shrink_to_fit();
 	}
 
-	globalTaskOnGridNode.clear();
-	globalTaskOnGridNode.shrink_to_fit();
-
-	for (int iN = 0; iN < haloOnGridNode.size(); iN++)
+	if (taskOnGridNode.size() > 0)
 	{
-		haloOnGridNode[iN].clear();
-		haloOnGridNode[iN].shrink_to_fit();
+		taskOnGridNode.clear();
+		taskOnGridNode.shrink_to_fit();
 	}
 
-	haloOnGridNode.clear();
-	haloOnGridNode.shrink_to_fit();
-
-	for (int iN = 0; iN < buffOnGridNode.size(); iN++)
+	if (globalTaskOnGridNode.size() > 0)
 	{
-		buffOnGridNode[iN].clear();
-		buffOnGridNode[iN].shrink_to_fit();
+
+		for (int iN = 0; iN < globalTaskOnGridNode.size(); iN++)
+		{
+			globalTaskOnGridNode[iN].clear();
+			globalTaskOnGridNode[iN].shrink_to_fit();
+		}
+
+		globalTaskOnGridNode.clear();
+		globalTaskOnGridNode.shrink_to_fit();
 	}
 
-	buffOnGridNode.clear();
-	buffOnGridNode.shrink_to_fit();
-
-	for (int iN = 0; iN < buffNodes.size(); iN++)
+	if (haloOnGridNode.size() > 0)
 	{
-		buffNodes[iN].clear();
-		buffNodes[iN].shrink_to_fit();
+		for (int iN = 0; iN < haloOnGridNode.size(); iN++)
+		{
+			haloOnGridNode[iN].clear();
+			haloOnGridNode[iN].shrink_to_fit();
+		}
+
+		haloOnGridNode.clear();
+		haloOnGridNode.shrink_to_fit();
 	}
 
-	buffNodes.clear();
-	buffNodes.shrink_to_fit();
+	if (buffOnGridNode.size() > 0)
+	{
+		for (int iN = 0; iN < buffOnGridNode.size(); iN++)
+		{
+			buffOnGridNode[iN].clear();
+			buffOnGridNode[iN].shrink_to_fit();
+		}
 
+		buffOnGridNode.clear();
+		buffOnGridNode.shrink_to_fit();
+	}
+
+	if (buffNodes.size() > 0)
+	{
+		for (int iN = 0; iN < buffNodes.size(); iN++)
+		{
+			buffNodes[iN].clear();
+			buffNodes[iN].shrink_to_fit();
+		}
+
+		buffNodes.clear();
+		buffNodes.shrink_to_fit();	
+	}
 };
 
 

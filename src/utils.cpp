@@ -152,35 +152,78 @@ void ShiftHalosPartsGrids()
 	{ 
 		locParts[0].resize(nLocHalos[0]);
 		nLocParts[0] = nLocParts[1];
+		//cout << nLocHalos[1] << ", " << locParts[0].size() << ", " << locParts[1].size() << endl;
 
 		for (int iH = 0; iH < nLocHalos[0]; iH++)
 		{
 			locParts[0][iH].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT++)
-				locParts[0][iH][iT] = locParts[1][iH][iT];
+				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
 		}
-	}	
-
+	}
+	
 #ifndef ZOOM
-	GlobalGrid[0].globalTaskOnGridNode = GlobalGrid[1].globalTaskOnGridNode;
-	GlobalGrid[0].taskOnGridNode = GlobalGrid[1].taskOnGridNode;
-	GlobalGrid[0].locNodes = GlobalGrid[1].locNodes;
-	GlobalGrid[0].buffNodes = GlobalGrid[1].buffNodes;
-	GlobalGrid[0].haloOnGridNode = GlobalGrid[1].haloOnGridNode;
-	GlobalGrid[0].buffOnGridNode = GlobalGrid[1].buffOnGridNode;
+	GlobalGrid[0].taskOnGridNode.swap(GlobalGrid[1].taskOnGridNode);
+	GlobalGrid[0].locNodes.swap(GlobalGrid[1].locNodes);
+
+	int sizeTaskOnGridNode = GlobalGrid[1].globalTaskOnGridNode.size();
+	GlobalGrid[0].globalTaskOnGridNode.resize(sizeTaskOnGridNode);
+	for (int iN = 0; iN < sizeTaskOnGridNode; iN++)
+		GlobalGrid[0].globalTaskOnGridNode[iN].swap(GlobalGrid[1].globalTaskOnGridNode[iN]);
+
+	int sizeBuffNodes = GlobalGrid[1].buffNodes.size();
+	GlobalGrid[0].buffNodes.resize(sizeBuffNodes);
+	for (int iN = 0; iN < sizeBuffNodes; iN++)
+		GlobalGrid[0].buffNodes[iN].swap(GlobalGrid[1].buffNodes[iN]);
+
+	int sizeHaloOnGridNode = GlobalGrid[1].haloOnGridNode.size();
+	GlobalGrid[0].haloOnGridNode.resize(sizeHaloOnGridNode);
+	for (int iN = 0; iN < sizeHaloOnGridNode; iN++)
+		GlobalGrid[0].haloOnGridNode[iN].swap(GlobalGrid[1].haloOnGridNode[iN]);
+
+	int sizeBuffOnGridNode = GlobalGrid[1].buffOnGridNode.size();
+	GlobalGrid[0].buffOnGridNode.resize(sizeBuffOnGridNode);
+	for (int iN = 0; iN < sizeBuffOnGridNode; iN++)
+		GlobalGrid[0].buffOnGridNode[iN].swap(GlobalGrid[1].buffOnGridNode[iN]);
 #endif
 	
+	/* Now clean the halo & particle buffers */
+	locBuffHalos.clear();
+	locBuffHalos.shrink_to_fit();
+	
+	for (int iP = 0; iP < locBuffParts.size(); iP++)
+	{
+		for (int iT = 0; iT < nPTypes; iT++)
+		{
+			locBuffParts[iP][iT].clear();
+			locBuffParts[iP][iT].shrink_to_fit();
+		}
+
+		locBuffParts[iP].clear();
+		locBuffParts[iP].shrink_to_fit();
+	}
+	
+	locBuffParts.clear();
+	locBuffParts.shrink_to_fit();
+
 	/* Data from sim 1 has been copied into 0, so free 1 */
 	CleanMemory(1);
+	
+	if (locTask == 0)
+		cout << "Grid, halo and particle data has been copied and cleaned." << endl;
 
+	/* Reallocate a grid for the next loop */
+	GlobalGrid[1].Init(nGrid, boxSize);
 };
+
 
 
 float VectorModule(float *V)
 {
 	return sqrt(V[0]*V[0] + V[1]*V[1] + V[2]*V[2]);
 };
+
 
 
 float *UnitVector(float *V)

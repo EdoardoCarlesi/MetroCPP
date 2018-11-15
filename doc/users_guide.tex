@@ -1,0 +1,72 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[parfill]{parskip}
+
+\pagenumbering{Roman}
+\pagenumbering{arabic}
+\title{\textbf{METROC++} \\
+\emph{A parallel, object-oriented code for the computation of merger trees in 
+cosmological simulations}}
+\author{Edoardo Carlesi\\ Leibniz Institut f\"ur Astrophysik\\ Potsdam, Germany\\ ecarlesi@aip.de}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+\texttt{METROC++} is an acronym that stands for \textbf{ME}rger\textbf{TR}ees \textbf{O}n \textbf{C++}, and refers to the 
+infamous \textbf{Metro C} subway line in Rome, where the author of the code grew up and lived for more than 20 years.
+This legendary piece of infrastructure (which is still - in 2018 - largely under construction, though a shorter section of 
+it is already operating) took something of the order of a few Giga-Years to be build, a time span which can be compared to the
+formation time of most dark matter halos.\\
+
+The code has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization.
+
+In addition to the source code, a number of \texttt{bash} and \texttt{python} scripts are provided to ease the 
+
+The properties of the algorithms used by the code are described in the \href{https://arxiv.org/abs/1612.07053}{code paper} (Carlesi, MNRAS, 2018).
+
+
+
+\section{Basic usage}
+\subsection{Compiling the code}
+
+The main folder contains a \texttt{Makefile.config} file 
+
+\subsection{Code operation modes}
+\subsection{Configuration file}
+\subsection{Temporary files}
+
+The code produces a number of temporary files (\texttt{.tmp} format extension, located in the \texttt{tmp/} folder).
+These files are needed at runtime to 
+They can be produced manually or using the scripts (\texttt{find\_z.sh}, \texttt{find\_n.sh} located in the \texttt{scripts/} folder)
+and contain the list of files on which the halo finder will run on.
+This can be the full list of snapshots in one simulation, or can be edited to be only a subset of it.
+
+
+\section{Examples}
+\subsection{Full box simulation}
+\subsection{Zoom simulation}
+
+\section{Editing the code}
+\subsection{Code structure}
+\subsection{Other halo finders}
+
+Although \texttt{METROC++} was conceived and mainly tested using the \texttt{AHF} halo finder, it can be easily extended to 
+support other software as well, as long as:
+
+\begin{itemize}
+\item Halo catalogues include informations about the number and types of particles, positions and velocities for each object
+\item Particle catalogs contain the (unique) IDs for each halo particles' content
+\end{itemize}
+
+To add 
+
+\subsection{Improving the algorithms}
+
+
+\end{document}
+

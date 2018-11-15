@@ -123,6 +123,9 @@ int main(int argv, char **argc)
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
+			//if (iNumCat > 2)
+			//	GlobalGrid[1].Init(nGrid, boxSize);
+
 			clock_t iniTime = clock();
 		
 			iUseCat = 1;
@@ -178,9 +181,10 @@ int main(int argv, char **argc)
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 			ShiftHalosPartsGrids();
 
+#ifdef ZOOM
+			//CommTasks.CleanBuffer();
+#endif
 		}	/* Finish: the trees have now been built for this step */
-
-		//DebugTrees();
 
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;

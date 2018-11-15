@@ -1,8 +1,15 @@
 *.swp
 *.bkp
 *.o
+*.aux
+*.dvi
+*.lof
+*.log
+*.lot
+*.toc
 *.tmp.*
 *.mtree
+output.txt
 MetroCPP
 bin/MetroCPP
 bin/test

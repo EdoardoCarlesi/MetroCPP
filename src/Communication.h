@@ -24,6 +24,8 @@ private:
 	vector<int> recvTasks;
 
 #ifndef ZOOM
+	void CleanBuffer(void);
+
 	void SetSendRecvTasks(void);
 
 	// Communicate the buffers across all tasks

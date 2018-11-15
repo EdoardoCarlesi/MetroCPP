@@ -147,8 +147,10 @@ void Communication::ExchangeBuffers()
 					{
 						buffIndexSendHalo[iT].push_back(allIndex[iH]);
 						if (buffIndexSendHalo[iT][iH] > locHalos[iUseCat].size())
-							cout << "WARNING---> " << locTask << ", " << iT 
-								<< ") " << buffIndexSendHalo[iT][iH] << endl;	
+							cout << "WARNING---> on Task=" << locTask << ", toTask=" << iT
+								<< ", BuffSize=" << buffIndexSendHalo[iT].size() 
+								<< ", LocHSize=" << locHalos[iUseCat].size() 
+								<< ", IndexSend=" << buffIndexSendHalo[iT][iH] << endl;	
 					}
 				}
 
@@ -413,8 +415,10 @@ void Communication::BufferSendRecv()
 		buffRecvHalos.resize(nBuffRecvHalos);	
 
 #ifdef VERBOSE
-		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " to " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " by " << sendTask <<endl;
+		cout << iT << ") On task=" << locTask << ") sending " << nBuffSendHalos << " halos to " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvHalos << " halos to " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " bytes to " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " bytes by " << sendTask <<endl;
 #endif
 
 		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
@@ -452,7 +456,8 @@ void Communication::BufferSendRecv()
 		locBuffParts.resize(locBuffHalos.size());
 
 #ifdef VERBOSE
-		cout << "Allocating " << buffSendSizeParts/1024/1024 << "MB send buffer for " << nBuffSendHalos << endl;
+		cout << "OnTask=" << locTask <<  ", allocating " 
+		<< buffSendSizeParts/1024/1024 << "MB send buffer for " << nBuffSendHalos << endl;
 #else
 		if (locTask == 0 && iT == 0)
 			cout << "Allocating particle send buffer... " << endl;
@@ -659,4 +664,21 @@ void Communication::SyncOrphanHalos()
 };
 
 
+
+void Communication::CleanBuffer()
+{
+	if (buffIndexNodeHalo.size() > 0)
+		for (int iN = 0; iN < buffIndexNodeHalo.size(); iN++)
+		{
+			buffIndexNodeHalo[iN].clear();
+			buffIndexNodeHalo[iN].shrink_to_fit();
+		}
+
+	if (buffIndexSendHalo.size() > 0)
+		for (int iN = 0; iN < buffIndexSendHalo.size(); iN++)
+		{
+			buffIndexSendHalo[iN].clear();
+			buffIndexSendHalo[iN].shrink_to_fit();
+		}
+}
 
