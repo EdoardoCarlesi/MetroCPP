@@ -36,7 +36,15 @@ The properties of the algorithms used by the code are described in the \href{htt
 
 The main folder contains a \texttt{Makefile.config} file 
 
+\begin{itemize}
+\item {-DZOOM}
+\item {-DVERBOSE}
+\item {-DNPTYPES=}
+\end{itemize}
+
 \subsection{Code operation modes}
+
+
 \subsection{Configuration file}
 \subsection{Temporary files}
 
@@ -46,13 +54,22 @@ They can be produced manually or using the scripts (\texttt{find\_z.sh}, \texttt
 and contain the list of files on which the halo finder will run on.
 This can be the full list of snapshots in one simulation, or can be edited to be only a subset of it.
 
-
-\section{Examples}
-\subsection{Full box simulation}
-\subsection{Zoom simulation}
-
 \section{Editing the code}
 \subsection{Code structure}
+
+\begin{itemize}
+\item{\texttt{main.cpp}} A wrapper for the functions determined elsewhere
+\item{\texttt{utils.cpp}} General functions and utilities are implemented here
+\item{\texttt{spline.cpp}} The spline class is used for interpolation 
+\item{\texttt{global\_vars.cpp}} A list of global variables accessible throughout the whole program
+\item{\texttt{MergerTree.cpp}} This file contains the merger tree class, that tracks the merging of the halos, and series of functions (FindProgenitors) that compute the trees themselves
+\item{\texttt{IOSetting.cpp}} Input/Output settings
+\item{\texttt{Cosmology.cpp}} Everything related to cosmological calculations
+\item{\texttt{Communication.cpp}} Handles most of the communication among tasks - sending / receiving buffers and so on
+\item{\texttt{Grid.cpp}} This handles the grid on which halos are placed and the buffers
+\item{\texttt{Halo.cpp}} The halo class contains the main halo properties
+\end{itemize}
+
 \subsection{Other halo finders}
 
 Although \texttt{METROC++} was conceived and mainly tested using the \texttt{AHF} halo finder, it can be easily extended to 
@@ -66,6 +83,14 @@ support other software as well, as long as:
 To add 
 
 \subsection{Improving the algorithms}
+
+\section{Examples}
+
+\subsection{Full box simulation}
+To properly run the code for full box simulations, the \texttt{-DZOOM} flag needs to be commented in the \texttt{Makefile.config} file.
+
+\subsection{Zoom simulation}
+To properly run the code on zoom simulation, the \texttt{-DZOOM} flag needs to be switched on in the \texttt{Makefile.config} file.
 
 
 \end{document}

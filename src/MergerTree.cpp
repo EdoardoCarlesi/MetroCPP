@@ -409,43 +409,28 @@ void FindProgenitors(int iOne, int iTwo)
 				if (compCondition)
 				{	
 					int totComm = 0;
-					//if (-kH > locBuffParts.size() && kH < 0)  
-					if (kH < 0 && iH < 0)  // FIXME these two indexes should NEVER be negative at the same time
-								// WTF is going on??
-						cout << "OnTask=" << locTask << " kH= " << kH 
-							<< " iH = " << iH << ", iL " << iL  
-							<< " max=" << locBuffParts.size() << endl;
+
+					// Sanity check. These two indexes should NEVER be negative at the same time. We only have one buffer
+					if (kH < 0 && iH < 0)  
+						cout << "ERROR. Two negative indexes on task=" << locTask << " kH= " << kH 
+							<< " iH = " << iH << ". Only one negative index allowed. "  
+							<< " buffer size=" << locBuffParts.size() << endl;
 	
 					if (kH >= 0 && iH >= 0)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locParts[iTwo][kH]);
 					else if (kH < 0)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locBuffParts[-kH]);
-				//	else if (iH < 0)
-				//		thisNCommon = CommonParticles(locBuffParts[-iH], locParts[iTwo][kH]);
+					else if (iH < 0)
+						thisNCommon = CommonParticles(locBuffParts[-iH], locParts[iTwo][kH]);
 
 					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
 
-			/*		// FIXME c'e' qualche problema con gli indici porca madonna
-					if (iH > locParts[iOne].size() && iH > 0)  
-						cout << "OnTask=" << locTask << " iH= " << iH 
-							<< " max=" << locParts[iOne].size() << endl;
-
-					if (kH > locParts[iTwo].size() && kH > 0)  
-						cout << "OnTask=" << locTask << " iH= " << kH 
-							<< " max=" << locParts[iTwo].size() << endl;
-
-					if (-iH > locBuffParts.size() && iH < 0)  
-						cout << "OnTask=" << locTask << " -iH= " << iH 
-							<< " max=" << locBuffParts.size() << endl;
-
-			*/
-				/* This is very important: we keep track of the merging history ONLY if the number 
+					/* This is very important: we keep track of the merging history ONLY if the number 
 					 * of common particles is above a given threshold */
 					if (totComm > minPartCmp) 
 					{		
 	//					cout << locTask << ", " << jH << ", " << kH << ", " << iL << ", " <<  nLoopHalos << endl;
 
-	/*
 						for (int iT = 0; iT < nPTypes; iT++)
 							locMTrees[iOne][iL].nCommon[iT].push_back(thisNCommon[iT]);
 	
@@ -455,7 +440,7 @@ void FindProgenitors(int iOne, int iTwo)
 							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH].ID);
 						
 						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
-*/
+
 						totCmp++;
 					} else {
 						totSkip++;
@@ -470,6 +455,9 @@ void FindProgenitors(int iOne, int iTwo)
 				{
 #ifdef TEST
 					int addIndex = locHalos[iTwo].size();
+					locHalos[iTwo].push_back(locMTrees[iOne][iH].mainHalo);
+					locHalos[iTwo][addIndex].isToken = true;
+
 					locMTrees[iOne][iH].isOrphan = true;
 					
 					/* Update the local mtree with a copy of itself */
@@ -479,8 +467,6 @@ void FindProgenitors(int iOne, int iTwo)
 					/* The orphan halo is also copied to the next step - 
 					 * its position is recorded on the grid and it is added to the local iTwo halo list */
 					GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
-					locHalos[iTwo].push_back(locMTrees[iOne][iH].mainHalo);
-					locHalos[iTwo][addIndex].isToken = true;
 
 					// TODO: Add also particles to the locPart[iTwo] vector!!!!!
 

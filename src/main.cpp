@@ -123,9 +123,6 @@ int main(int argv, char **argc)
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
-			//if (iNumCat > 2)
-			//	GlobalGrid[1].Init(nGrid, boxSize);
-
 			clock_t iniTime = clock();
 		
 			iUseCat = 1;

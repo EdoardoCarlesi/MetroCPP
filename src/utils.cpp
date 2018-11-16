@@ -190,7 +190,6 @@ void ShiftHalosPartsGrids()
 	}
 
 //	int sizeBuffNodes = GlobalGrid[1].buffNodes.size();
-//	GlobalGrid[0].buffNodes.resize(sizeBuffNodes);
 //	for (int iN = 0; iN < sizeBuffNodes; iN++)
 //		GlobalGrid[0].buffNodes[iN].swap(GlobalGrid[1].buffNodes[iN]);
 

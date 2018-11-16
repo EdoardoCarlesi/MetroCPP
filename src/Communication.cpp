@@ -147,7 +147,7 @@ void Communication::ExchangeBuffers()
 					{
 						buffIndexSendHalo[iT].push_back(allIndex[iH]);
 						if (buffIndexSendHalo[iT][iH] > locHalos[iUseCat].size())
-							cout << "WARNING---> on Task=" << locTask << ", toTask=" << iT
+							cout << "WARNING. On Task=" << locTask << ", toTask=" << iT
 								<< ", BuffSize=" << buffIndexSendHalo[iT].size() 
 								<< ", LocHSize=" << locHalos[iUseCat].size() 
 								<< ", IndexSend=" << buffIndexSendHalo[iT][iH] << endl;	
@@ -403,7 +403,7 @@ void Communication::BufferSendRecv()
 				buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
 		
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
-				cout << "WARNING " << iH << " not in locHalos " << locTask << "-->" << sendTask << endl;
+				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
 		}
 
 		buffSendSizeHalos = nBuffSendHalos * sizeHalo;
