@@ -455,18 +455,18 @@ void FindProgenitors(int iOne, int iTwo)
 				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
 				{
 					int addIndex = locHalos[iTwo].size();
-					locHalos[iTwo].push_back(locMTrees[iOne][iH].mainHalo);
-					locHalos[iTwo][addIndex].isToken = true;
+				//	locHalos[iTwo].push_back(locHalos[iOne][iH]);
+				//	locHalos[iTwo][addIndex].isToken = true;
 
-					locMTrees[iOne][iH].isOrphan = true;
+				//	locMTrees[iOne][iH].isOrphan = true;
 					
 					/* Update the local mtree with a copy of itself */
-					locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
-					locMTrees[iOne][iH].indexProgenitor.push_back(addIndex);
+				//	locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
+				//	locMTrees[iOne][iH].indexProgenitor.push_back(addIndex);
 
 					/* The orphan halo is also copied to the next step - 
 					 * its position is recorded on the grid and it is added to the local iTwo halo list */
-					GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
+				//	GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
 
 					// TODO: Add also particles to the locPart[iTwo] vector!!!!!
 
@@ -476,8 +476,8 @@ void FindProgenitors(int iOne, int iTwo)
 
 				} else {
 					/* Very important check! Do it only in the fwd loop */
-					if (iOne < iTwo )
-						locMTrees[iOne][iH].isOrphan = false;
+					//if (iOne < iTwo )
+					//	locMTrees[iOne][iH].isOrphan = false;
 				}
 #endif
 
