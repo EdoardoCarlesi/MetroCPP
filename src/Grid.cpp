@@ -279,7 +279,7 @@ void Grid::AssignToGrid(float *X, int index)
 	iX = GridCoord(X);
 	thisNode = Index(iX[0], iX[1], iX[2]);
 	haloOnGridNode[thisNode].push_back(index);	// index is positive for locHalos and negative for locBuffHalos
-	taskOnGridNode[thisNode] = locTask + 1;		// Add one to distinguish from empty node!
+	taskOnGridNode[thisNode] = locTask + 1;		// Add one to distinguish from empty node (locTask = 0 has to be one, so that taskOnGridNode[] = 0 means no task is readin that)
 
 	locNodes.push_back(thisNode);
 	free(iX);

@@ -172,20 +172,33 @@ void ShiftHalosPartsGrids()
 	for (int iN = 0; iN < sizeTaskOnGridNode; iN++)
 		GlobalGrid[0].globalTaskOnGridNode[iN].swap(GlobalGrid[1].globalTaskOnGridNode[iN]);
 
-	int sizeBuffNodes = GlobalGrid[1].buffNodes.size();
-	GlobalGrid[0].buffNodes.resize(sizeBuffNodes);
-	for (int iN = 0; iN < sizeBuffNodes; iN++)
-		GlobalGrid[0].buffNodes[iN].swap(GlobalGrid[1].buffNodes[iN]);
-
 	int sizeHaloOnGridNode = GlobalGrid[1].haloOnGridNode.size();
 	GlobalGrid[0].haloOnGridNode.resize(sizeHaloOnGridNode);
 	for (int iN = 0; iN < sizeHaloOnGridNode; iN++)
-		GlobalGrid[0].haloOnGridNode[iN].swap(GlobalGrid[1].haloOnGridNode[iN]);
+	{
+		/* Copy only non-buffer halos */
+		int nHalosOnNode = GlobalGrid[1].haloOnGridNode[iN].size();
+	
+		for (int iH = 0; iH < nHalosOnNode; iH++)
+		{
 
-	int sizeBuffOnGridNode = GlobalGrid[1].buffOnGridNode.size();
-	GlobalGrid[0].buffOnGridNode.resize(sizeBuffOnGridNode);
-	for (int iN = 0; iN < sizeBuffOnGridNode; iN++)
-		GlobalGrid[0].buffOnGridNode[iN].swap(GlobalGrid[1].buffOnGridNode[iN]);
+			int thisIndex = GlobalGrid[1].haloOnGridNode[iN][iH];
+
+			if (thisIndex >= 0)
+				GlobalGrid[0].haloOnGridNode[iN].push_back(thisIndex);
+		}
+	}
+
+//	int sizeBuffNodes = GlobalGrid[1].buffNodes.size();
+//	GlobalGrid[0].buffNodes.resize(sizeBuffNodes);
+//	for (int iN = 0; iN < sizeBuffNodes; iN++)
+//		GlobalGrid[0].buffNodes[iN].swap(GlobalGrid[1].buffNodes[iN]);
+
+
+//	int sizeBuffOnGridNode = GlobalGrid[1].buffOnGridNode.size();
+//	GlobalGrid[0].buffOnGridNode.resize(sizeBuffOnGridNode);
+//	for (int iN = 0; iN < sizeBuffOnGridNode; iN++)
+//		GlobalGrid[0].buffOnGridNode[iN].swap(GlobalGrid[1].buffOnGridNode[iN]);
 #endif
 	
 	/* Now clean the halo & particle buffers */

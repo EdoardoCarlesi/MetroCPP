@@ -587,8 +587,8 @@ void CleanTrees(int iStep)
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections, back and forth, for " << halosPerTask << " halos." << endl;
 
-	if (locTask == 0)
-		cout << "nHalos " << locHalos[0].size() << ", nTrees: " << locMTrees[0].size() << endl; 
+	//if (locTask == 0)
+	//	cout << "nHalos " << locHalos[0].size() << ", nTrees: " << locMTrees[0].size() << endl; 
 
 	for (int kTree = 0; kTree < halosPerTask; kTree++)
 	{

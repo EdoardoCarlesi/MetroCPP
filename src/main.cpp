@@ -146,8 +146,10 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;
 		
-			/* This function also allocates the MergerTrees */
+			/* Forward halo connections
+			 * This function also allocates the MergerTrees */
 			FindProgenitors(0, 1);
+			MPI_Barrier(MPI_COMM_WORLD);
 
 			clock_t endTime = clock();
 			double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -158,7 +160,6 @@ int main(int argv, char **argc)
 #ifdef ZOOM
 			/* Orphan halo candidates need to be communicated in zoom mode only. 
 			 * In fullbox mode they are taken care of in the FindProgenitors function */
-			MPI_Barrier(MPI_COMM_WORLD);
 			CommTasks.SyncOrphanHalos();
 #endif
 
@@ -167,6 +168,7 @@ int main(int argv, char **argc)
 
 			iniTime = clock();
 	
+			/* Backward halo connections */
 			FindProgenitors(1, 0);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
@@ -182,7 +184,7 @@ int main(int argv, char **argc)
 			ShiftHalosPartsGrids();
 
 #ifdef ZOOM
-			//CommTasks.CleanBuffer();
+			CommTasks.CleanBuffer();
 #endif
 		}	/* Finish: the trees have now been built for this step */
 
