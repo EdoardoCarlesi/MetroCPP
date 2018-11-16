@@ -448,12 +448,12 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 			}	// for j, k = index(j)
 
+#ifdef TEST
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
 			 * minPartHalo, then we add it to the grid & the iTwo step & the iTwo grid */
 			if (locMTrees[iOne][iH].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
 				{
-#ifdef TEST
 					int addIndex = locHalos[iTwo].size();
 					locHalos[iTwo].push_back(locMTrees[iOne][iH].mainHalo);
 					locHalos[iTwo][addIndex].isToken = true;
@@ -472,7 +472,6 @@ void FindProgenitors(int iOne, int iTwo)
 
 					/* Add to the local count of total halos and orphan halos */
 					nLocHalos[iTwo]++;
-#endif
 					nLocOrphans++;
 
 				} else {
@@ -480,6 +479,7 @@ void FindProgenitors(int iOne, int iTwo)
 					if (iOne < iTwo )
 						locMTrees[iOne][iH].isOrphan = false;
 				}
+#endif
 
 		} // for i halo, the main one
 

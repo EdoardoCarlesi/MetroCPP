@@ -112,7 +112,14 @@ void Communication::ExchangeBuffers()
 	if (locTask == 0)
 		cout << "Exchanging buffer among tasks... " << endl;
 
-	// Resize the buffers - hold a list of halos/nodes to be received from each task
+	/* Make sure the buffers are clean */
+	if (buffIndexNodeHalo.size() > 0)
+		buffIndexNodeHalo.clear();
+
+	if (buffIndexSendHalo.size() > 0)
+		buffIndexSendHalo.clear();
+
+	/* Resize the buffers - hold a list of halos/nodes to be received from each task */
 	buffIndexNodeHalo.resize(totTask);
 	buffIndexSendHalo.resize(totTask);
 
@@ -416,9 +423,9 @@ void Communication::BufferSendRecv()
 
 #ifdef VERBOSE
 		cout << iT << ") On task=" << locTask << ") sending " << nBuffSendHalos << " halos to " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvHalos << " halos to " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " bytes to " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " bytes by " << sendTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvHalos << " halos by " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos/1024 << " kb to " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos/1024 << " kb by " << sendTask <<endl;
 #endif
 
 		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
