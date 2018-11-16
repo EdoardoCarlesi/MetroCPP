@@ -120,6 +120,7 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "Starting to loop on " << nSnapsUse << " halo and particle files." << endl;
 
+
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
