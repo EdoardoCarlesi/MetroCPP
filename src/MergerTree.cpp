@@ -126,7 +126,6 @@ void MergerTree::sortByMerit(int jSimu)
 	cout << idx << ", " << locHalos[iSimu][indexProgenitor[idx]].mTot << endl;
 	cout << 0   << ", " << locHalos[iSimu][indexProgenitor[0]].mTot << endl;
 	cout << "........." << endl;
-
 	int idx = 0;
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
@@ -448,38 +447,38 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 			}	// for j, k = index(j)
 
-#ifdef TEST
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
 			 * minPartHalo, then we add it to the grid & the iTwo step & the iTwo grid */
 			if (locMTrees[iOne][iH].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
 				{
 					int addIndex = locHalos[iTwo].size();
-				//	locHalos[iTwo].push_back(locHalos[iOne][iH]);
-				//	locHalos[iTwo][addIndex].isToken = true;
-
-				//	locMTrees[iOne][iH].isOrphan = true;
+					locHalos[iTwo].push_back(locHalos[iOne][iH]);
+					//cout << locHalos[iTwo].size() << ", indexNew= " << addIndex << endl;
+					locHalos[iTwo][addIndex].isToken = true;
+					locMTrees[iOne][iH].isOrphan = true;
 					
 					/* Update the local mtree with a copy of itself */
-				//	locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
-				//	locMTrees[iOne][iH].indexProgenitor.push_back(addIndex);
+					locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
+					locMTrees[iOne][iH].indexProgenitor.push_back(addIndex);
 
 					/* The orphan halo is also copied to the next step - 
 					 * its position is recorded on the grid and it is added to the local iTwo halo list */
-				//	GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
+					GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
+#ifdef TEST
 
+#endif
 					// TODO: Add also particles to the locPart[iTwo] vector!!!!!
 
 					/* Add to the local count of total halos and orphan halos */
-					nLocHalos[iTwo]++;
+					//nLocHalos[iTwo]++;
 					nLocOrphans++;
 
 				} else {
 					/* Very important check! Do it only in the fwd loop */
-					//if (iOne < iTwo )
-					//	locMTrees[iOne][iH].isOrphan = false;
+					if (iOne < iTwo )
+						locMTrees[iOne][iH].isOrphan = false;
 				}
-#endif
 
 		} // for i halo, the main one
 
@@ -746,6 +745,7 @@ void DebugTrees()
 				locCleanTrees[iC][iT].Info();
 	}
 };
+
 
 
 
