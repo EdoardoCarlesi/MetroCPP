@@ -1,7 +1,6 @@
 TO DO NEXT:
 
-
-FIX the AssignProgenitor function, subhalo ids seem not to be correctly initialized
+Make the output .tmp files with all the halo lists selectable from the .cfg file
 
 
 Expand: 

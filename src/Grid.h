@@ -30,12 +30,6 @@ public:
 	// This function determines the nodes placed on different tasks required for the buffer region
 	void FindBufferNodes(vector<int>);	
 
-	// This function finds the nodes (on the receiving end) that need to be communicated
-	void RecvBufferNodes(void); 	
-
-	// This uses the locXax, locXmin to determine the nodes belonging to each task	
-	void FindPatchOnTask(void);	
-
 	// This assigns a coordinate to the grid, and stores the id associated to the point in the node
 	void AssignToGrid(float *, int);	
 

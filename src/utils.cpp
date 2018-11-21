@@ -138,8 +138,6 @@ vector<string> SplitString (string strIn, string delim)
 
 void ShiftHalosPartsGrids()
 {
-	CleanMemory(0);
-
 	if (locTask == 0)
 		cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
 
@@ -172,9 +170,6 @@ void ShiftHalosPartsGrids()
 
 #endif
 
-	//cout << "===>OnTask=" << locTask << " Grid[0]: " << GlobalGrid[0].locNodes.size() 
-	//	<< " Grid[1]: " << GlobalGrid[1].locNodes.size() << endl;
-
 	/* Now clean the halo & particle buffers */
 	locBuffHalos.clear();
 	locBuffHalos.shrink_to_fit();
@@ -193,9 +188,6 @@ void ShiftHalosPartsGrids()
 	
 	locBuffParts.clear();
 	locBuffParts.shrink_to_fit();
-
-	/* Data from sim 1 has been copied into 0, so free 1 */
-	CleanMemory(1);
 	
 	if (locTask == 0)
 		cout << "Grid, halo and particle data has been copied and cleaned." << endl;

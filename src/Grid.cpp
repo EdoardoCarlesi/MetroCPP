@@ -22,13 +22,7 @@ Grid::Grid()
 
 Grid::~Grid()
 {
-	//if (locTask == 0)
-	//	cout << "Clearing grid..." << endl;
-	
 	Clean();
-
-	//if (locTask == 0)
-	//	cout << "Done." << endl;
 };
 
 
@@ -194,25 +188,6 @@ int * Grid::GridCoord(float *X)
 };
 
 
-/* This function specifies on which task is located each node of the global grid */	// DEPRECATED
-void Grid::FindPatchOnTask()
-{
-/*
-	int *ixMax, *ixMin;
-	ixMax = new int[3];	ixMin = new int[3];	
-	
-	ixMax = GridCoord(locXmax);
-	ixMin = GridCoord(locXmin);
-
-	for (int i = ixMin[0]; i < ixMax[0]; i++)
-		for (int j = ixMin[1]; j < ixMax[1]; j++)
-			for (int k = ixMin[2]; k < ixMax[2]; k++)
-				taskOnGridNode[Index(i, j, k)] = locTask + 1;	// distinguish from the "null" nodes
-
-	free(ixMax); free(ixMin);
-*/
-};
-
 
 void Grid::FindNearbyNodes(int index, int nCells)
 {
@@ -224,35 +199,21 @@ void Grid::FindNearbyNodes(int index, int nCells)
 	/* Periodic boundary conditions are taken care of by the Index() function, no need to implement them here */
 	for (int i = -nCells; i < nCells+1; i++)
 	{
-		//jX[0] = (iX[0] + i) % N;
 		jX[0] = iX[0] + i;
 
 		for (int j = -nCells; j < nCells+1; j++)
 		{
-			//jX[1] = (iX[1] + j) % N;
 			jX[1] = (iX[1] + j);
 
 			for (int k = -nCells; k < nCells+1; k++)
 			{ 
-				//jX[2] = (iX[2] + k) % N;
 				jX[2] = (iX[2] + k);
 				thisIndex = Index(jX[0], jX[1], jX[2]);
 
 				/* There might be nodes shared among several tasks, so we have to loop here */
-				//for (int l = 0; l < 1; l++)
 				for (int l = 0; l < globalTaskOnGridNode[thisIndex].size(); l++)
 				{
-					/*
-					if (thisIndex < 0)
-						cout << locTask << "] " << thisIndex << " " 
-						<< iX[0] << " " << iX[1] << " " << iX[2] << " " 
-						<< jX[0] << " " << jX[1] << " " << jX[2] << " "
-						<< globalTaskOnGridNode.size() << " " << N << endl;
-					*/
 						thisTask = globalTaskOnGridNode[thisIndex][l] -1;
-
-					//if (locTask == 0)
-					//	cout << "locTask=" << locTask << ", "<< thisTask << " " << thisIndex << endl;
 
 					// Only add the task to the communication buffer if the node is not already there
 					if (thisTask != locTask && thisTask > -1)
@@ -266,10 +227,8 @@ void Grid::FindNearbyNodes(int index, int nCells)
 
 void Grid::SortLocNodes()
 {
-	//cout << "OnTask = " << locTask << " (before) SortLocNodes: " << locNodes.size() << endl;
 	sort(locNodes.begin(), locNodes.end());
 	locNodes.erase(unique(locNodes.begin(), locNodes.end()), locNodes.end());
-	//cout << "OnTask = " << locTask << " (after ) SortLocNodes: " << locNodes.size() << endl;
 };
 
 
@@ -298,11 +257,10 @@ void Grid::AssignToGrid(float *X, int index)
  */
 void Grid::FindBufferNodes(vector<int> useNodes)
 {
-	int nCells = 2;
+	int nCells = 2;		// TODO find a way to select the number of buffer cells!!!!!	FIXME TODO 
 
 	if (buffNodes.size() == 0)
 		buffNodes.resize(totTask);
-	//cout << locTask << " pre  size " << locNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
 
 	// Do a loop on all the nodes contained in this task to find out which nodes need to be communicated
 	for (int i = 0; i < useNodes.size(); i++)
@@ -314,39 +272,8 @@ void Grid::FindBufferNodes(vector<int> useNodes)
 		sort(buffNodes[i].begin(), buffNodes[i].end());
 		buffNodes[i].erase(unique(buffNodes[i].begin(), buffNodes[i].end()), buffNodes[i].end());
 	}
-
-	//cout << locTask << " post size " << locNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
 };
 
-
-void Grid::RecvBufferNodes()
-{
-
-#ifdef TEST_BLOCK
-	// On each task, we identify the edge of the subbox and identify the additional nodes needed 
-
-	// Create an array with all the tasks, which contains the list of nodes to be requested from each task
-	// recvNodes[0] = [18922929, 10238933, 192929] ---> these are the nodes that locTask will request from task 0
-	// do a push_back() for each new node encountered
-
-	// PSEUDO-CODE FIXME TODO
-	vector <vector <int>> recvNodes;
-	recvNodes.resize(totTask);
-
-	nCellsBuffer = VmaxTot * timeStep / cellSize;
-
-	xMinBuff = xMin - nCellsBuff;
-	for (ix = xMinBuff; ix < xMin; ix ++)
-	// Take a slab - fix the ix and then loop over all 
-	//r (iy...)
-	thisNode = Index(ix, iy, iz);
-	thisTask = taskOnGridNode[thisNode];	
-	recvNodes[thisTask].push_back(thisNode);
-	
-//		for (iy = xMinBuff; ix < xMin; ix ++)
- 
-#endif
-};
 
 
 void Grid::Info()
