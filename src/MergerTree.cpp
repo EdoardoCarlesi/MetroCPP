@@ -159,9 +159,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 	rMax *= 25.0; 
 	//rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir; 
 	//rMax *= dMaxFactor * 5.0;
-	
 	//cout << iHalo << " " << jHalo << " " << locHalos[iOne][iHalo].Distance(cmpHalo.X) << " " << rMax << endl;
-
 	// Only check for pairwise distance
 	//if (locHalos[iOne][iHalo].Distance(cmpHalo.X) < rMax)
 	//	return true;
@@ -184,7 +182,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 
 	// If we are dealing with token halos, enlarge the search radius
 	if (locHalos[iOne][iHalo].isToken || cmpHalo.isToken)
-			rMax *= 2.0;
+		rMax *= locHalos[iOne][iHalo].nOrphanSteps;
 	
 	// Only check for pairwise distance
 	if (locHalos[iOne][iHalo].Distance(cmpHalo.X) < rMax)
@@ -220,14 +218,16 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Loop also on the buffer halos, in the backward loop only! */
 	if (iOne > iTwo)
 		nLoopHalos = nLocHalos[iOne] + locBuffHalos.size();
-	//cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << endl;
 #endif
-
-	//cout << "Task=" << locTask << " " << nLoopHalos << ", " << locHalos[iOne].size() << endl;
 
 	locMTrees[iOne].clear();
 	locMTrees[iOne].shrink_to_fit();
 	locMTrees[iOne].resize(nLoopHalos);
+
+//#ifdef VERBOSE
+	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
+		" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
+//#endif
 
 #ifdef ZOOM
 
@@ -358,6 +358,12 @@ void FindProgenitors(int iOne, int iTwo)
 
 #else						
 
+#ifdef VERBOSE
+	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos; 
+	cout << ", nHalos[0]=" << locHalos[iOne].size() << ", nHalos[1]=" << locHalos[iTwo].size() << ", n2:" << nLocHalos[iTwo] << endl;
+#endif
+
+
 		for (int iL = 0; iL < nLoopHalos; iL++)
 		{
 			int iH = 0; 
@@ -374,7 +380,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 			locMTrees[iOne][iL].mainHalo = thisHalo; 
 			locMTrees[iOne][iL].nCommon.resize(nPTypes);
-
+	
 			if (iL == nStepsCounter * floor(iL / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 
@@ -403,13 +409,15 @@ void FindProgenitors(int iOne, int iTwo)
 				else
 					compCondition = CompareHalos(kH, iH, iTwo, iOne);
 
+//				compCondition = false;
+
 				/* Compare halos --> this functions checks whether the two halos are too far 
 				   or velocities are oriented on opposite directions */
 				if (compCondition)
 				{	
 					int totComm = 0;
 
-					// Sanity check. These two indexes should NEVER be negative at the same time. We only have one buffer
+				// Sanity check. These two indexes should NEVER be negative at the same time. We only have one buffer
 					if (kH < 0 && iH < 0)  
 						cout << "ERROR. Two negative indexes on task=" << locTask << " kH= " << kH 
 							<< " iH = " << iH << ". Only one negative index allowed. "  
@@ -428,8 +436,7 @@ void FindProgenitors(int iOne, int iTwo)
 					 * of common particles is above a given threshold */
 					if (totComm > minPartCmp) 
 					{		
-	//					cout << locTask << ", " << jH << ", " << kH << ", " << iL << ", " <<  nLoopHalos << endl;
-
+	//	cout << locTask << ", " << jH << ", " << kH << ", " << iL << ", " <<  nLoopHalos << endl;
 						for (int iT = 0; iT < nPTypes; iT++)
 							locMTrees[iOne][iL].nCommon[iT].push_back(thisNCommon[iT]);
 	
@@ -437,9 +444,11 @@ void FindProgenitors(int iOne, int iTwo)
 							locMTrees[iOne][iL].idProgenitor.push_back(locHalos[iTwo][kH].ID);
 						else 
 							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH].ID);
+							//locMTrees[iOne][iL].idProgenitor.push_back(1234855873);
 						
 						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
-
+/*
+*/
 						totCmp++;
 					} else {
 						totSkip++;
@@ -447,6 +456,7 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 			}	// for j, k = index(j)
 
+#ifdef TEST
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
 			 * minPartHalo, then we add it to the grid & the iTwo step & the iTwo grid */
 			if (locMTrees[iOne][iH].idProgenitor.size() == 0 && 
@@ -465,20 +475,25 @@ void FindProgenitors(int iOne, int iTwo)
 					/* The orphan halo is also copied to the next step - 
 					 * its position is recorded on the grid and it is added to the local iTwo halo list */
 					GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
-#ifdef TEST
 
-#endif
-					// TODO: Add also particles to the locPart[iTwo] vector!!!!!
+					/* Resize and keep track of the particle content of the orphan halo */
+					locParts[iTwo].resize(addIndex+1);
+					locParts[iTwo][addIndex].resize(nPTypes+1); 
 
+					for (int iP = 0; iP < nPTypes; iP++)
+						copy(locParts[iOne][iH][iP].begin(), locParts[iOne][iH][iP].begin(), 
+							back_inserter(locParts[iTwo][addIndex][iP]));
+					
 					/* Add to the local count of total halos and orphan halos */
-					//nLocHalos[iTwo]++;
+					nLocHalos[iTwo]++;
 					nLocOrphans++;
-
 				} else {
 					/* Very important check! Do it only in the fwd loop */
 					if (iOne < iTwo )
 						locMTrees[iOne][iH].isOrphan = false;
 				}
+#endif
+#endif
 
 		} // for i halo, the main one
 
@@ -486,6 +501,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 		MPI_Barrier(MPI_COMM_WORLD);
 
+#ifdef TEST
 		if (iOne < iTwo)
 		{
 			int nTotOrphans = 0;
@@ -598,7 +614,6 @@ void CleanTrees(int iStep)
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
 			unsigned long long int descID;
-
 #ifndef ZOOM 		
 			if (jTree < 0) 
 			{
@@ -618,14 +633,14 @@ void CleanTrees(int iStep)
 			/* Sanity check */
 			if (descID == 0)
 			{
-				//cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
-				//	<< " | " << iTree << " " << jTree << endl;
+				cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
+					<< " | " << iTree << " " << jTree << endl;
 
-				//locHalos[0][iTree].Info();
-				//locHalos[1][jTree].Info();
+				locHalos[0][iTree].Info();
+				locHalos[1][jTree].Info();
 			}
 
-#ifdef TEST
+//#ifdef TEST
 			if (mainID == descID)
 			{		// FIXME there is some segfault around here...
 
@@ -647,11 +662,11 @@ void CleanTrees(int iStep)
 						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 				}
 			}
-#endif
+//#endif
 		}	// kTree & iTree loop
 
-		//if (mergerTree.idProgenitor.size() > 0)
-		//	locCleanTrees[iStep-1].push_back(mergerTree);
+		if (mergerTree.idProgenitor.size() > 0)
+			locCleanTrees[iStep-1].push_back(mergerTree);
 
 		mergerTree.Clean();
 	}

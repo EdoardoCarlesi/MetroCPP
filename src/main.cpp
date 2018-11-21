@@ -176,12 +176,12 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 				cout << "\nDone in " << elapsed << "s. " << endl;
 
-			CleanTrees(iNumCat);
+			//CleanTrees(iNumCat);
 
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 			ShiftHalosPartsGrids();
 
-#ifdef ZOOM
+#ifndef ZOOM
 			CommTasks.CleanBuffer();
 #endif
 		}	/* Finish: the trees have now been built for this step */

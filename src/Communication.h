@@ -18,14 +18,14 @@ public:
 	/* Communicate orphan halo properties among different tasks */
 	void SyncOrphanHalos(void);
 
+	void CleanBuffer(void);
+
 private:
 	// Determine the send and recv tasks consistently
 	vector<int> sendTasks;
 	vector<int> recvTasks;
 
 #ifndef ZOOM
-	void CleanBuffer(void);
-
 	void SetSendRecvTasks(void);
 
 	// Communicate the buffers across all tasks

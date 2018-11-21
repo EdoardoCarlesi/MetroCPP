@@ -20,8 +20,6 @@ void InitLocVariables(void)
         locHalosSize[0] = 0; locHalosSize[1] = 0;
 	nLocParts[0] = 0; nLocParts[1] = 0;
 
-	minPartCmp = 10;
-
 	nPTypes = NPTYPES;
 
 	locParts.resize(2);
@@ -173,33 +171,46 @@ void ShiftHalosPartsGrids()
 		GlobalGrid[0].globalTaskOnGridNode[iN].swap(GlobalGrid[1].globalTaskOnGridNode[iN]);
 
 	int sizeHaloOnGridNode = GlobalGrid[1].haloOnGridNode.size();
-	GlobalGrid[0].haloOnGridNode.resize(sizeHaloOnGridNode);
+
+	//cout << "OnTask=" << locTask << ", SIZE HALO ON GRID NODE: " << sizeHaloOnGridNode << endl;
+	if (sizeHaloOnGridNode > 0)
+		GlobalGrid[0].haloOnGridNode.resize(sizeHaloOnGridNode);
+
 	for (int iN = 0; iN < sizeHaloOnGridNode; iN++)
 	{
 		/* Copy only non-buffer halos */
-		int nHalosOnNode = GlobalGrid[1].haloOnGridNode[iN].size();
-	
+		int nHalosOnNode = GlobalGrid[1].haloOnGridNode[iN].size();	
+
+		if (nHalosOnNode > 0)
+		{
+			GlobalGrid[0].haloOnGridNode[iN].resize(sizeHaloOnGridNode);
+		}
+
 		for (int iH = 0; iH < nHalosOnNode; iH++)
 		{
-
 			int thisIndex = GlobalGrid[1].haloOnGridNode[iN][iH];
+			GlobalGrid[0].haloOnGridNode[iN][iH] = thisIndex;
 
-			if (thisIndex >= 0)
-				GlobalGrid[0].haloOnGridNode[iN].push_back(thisIndex);
+			//if (thisIndex >= 0)
+			//	GlobalGrid[0].haloOnGridNode[iN].push_back(thisIndex);
 		}
+	
+				//cout << "OnTask=" <<locTask << " node: " << iN <<  
+				//	" , HaloOnGridNode:" << GlobalGrid[1].haloOnGridNode[iN].size() << endl;
 	}
 
-//	int sizeBuffNodes = GlobalGrid[1].buffNodes.size();
-//	for (int iN = 0; iN < sizeBuffNodes; iN++)
-//		GlobalGrid[0].buffNodes[iN].swap(GlobalGrid[1].buffNodes[iN]);
 
+/*
+	int sizeBuffNodes = GlobalGrid[1].buffNodes.size();
+	for (int iN = 0; iN < sizeBuffNodes; iN++)
+		GlobalGrid[0].buffNodes[iN].swap(GlobalGrid[1].buffNodes[iN]);
 
-//	int sizeBuffOnGridNode = GlobalGrid[1].buffOnGridNode.size();
-//	GlobalGrid[0].buffOnGridNode.resize(sizeBuffOnGridNode);
-//	for (int iN = 0; iN < sizeBuffOnGridNode; iN++)
-//		GlobalGrid[0].buffOnGridNode[iN].swap(GlobalGrid[1].buffOnGridNode[iN]);
+	int sizeBuffOnGridNode = GlobalGrid[1].buffOnGridNode.size();
+	GlobalGrid[0].buffOnGridNode.resize(sizeBuffOnGridNode);
+	for (int iN = 0; iN < sizeBuffOnGridNode; iN++)
+		GlobalGrid[0].buffOnGridNode[iN].swap(GlobalGrid[1].buffOnGridNode[iN]);
+*/
 #endif
-	
 	/* Now clean the halo & particle buffers */
 	locBuffHalos.clear();
 	locBuffHalos.shrink_to_fit();

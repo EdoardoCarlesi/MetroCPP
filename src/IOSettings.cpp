@@ -189,6 +189,7 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
 	else if (arg[0] == "facOrphanSteps")	facOrphanSteps = stoi(arg[1]);
 	else if (arg[0] == "minPartHalo")	minPartHalo = stoi(arg[1]);
+	else if (arg[0] == "minPartCmp")	minPartCmp = stoi(arg[1]);
 	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
 	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "pathOutput")	pathOutput = arg[1];

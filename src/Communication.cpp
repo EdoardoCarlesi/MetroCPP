@@ -128,6 +128,8 @@ void Communication::ExchangeBuffers()
 		if (iT != locTask)
 		{
 			sizeSendNode = GlobalGrid[1].buffNodes[iT].size();
+	
+			//cout << " OnTask= " << locTask << ", nNodes: " << sizeSendNode << endl;
 
 			MPI_Sendrecv(&sizeSendNode, 1, MPI_INT, iT, 0, 
 			  	     &sizeRecvNode, 1, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
@@ -410,7 +412,8 @@ void Communication::BufferSendRecv()
 				buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
 		
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
-				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
+				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). " 
+					<< "Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
 		}
 
 		buffSendSizeHalos = nBuffSendHalos * sizeHalo;
