@@ -10,13 +10,13 @@ public:
 	Communication() { };
 	~Communication() { };	
 
-#ifndef ZOOM
+#ifdef ZOOM
+	void SyncOrphanHalos(void);
+#else 
 	void BroadcastAndGatherGrid(void);
 #endif
-	void BufferSendRecv(void);	
 
-	/* Communicate orphan halo properties among different tasks */
-	void SyncOrphanHalos(void);
+	void BufferSendRecv(void);	
 
 	void CleanBuffer(void);
 

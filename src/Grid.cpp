@@ -266,8 +266,10 @@ void Grid::FindNearbyNodes(int index, int nCells)
 
 void Grid::SortLocNodes()
 {
+	//cout << "OnTask = " << locTask << " (before) SortLocNodes: " << locNodes.size() << endl;
 	sort(locNodes.begin(), locNodes.end());
 	locNodes.erase(unique(locNodes.begin(), locNodes.end()), locNodes.end());
+	//cout << "OnTask = " << locTask << " (after ) SortLocNodes: " << locNodes.size() << endl;
 };
 
 
@@ -300,7 +302,7 @@ void Grid::FindBufferNodes(vector<int> useNodes)
 
 	if (buffNodes.size() == 0)
 		buffNodes.resize(totTask);
-	//cout << locTask << " size " << buffNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
+	//cout << locTask << " pre  size " << locNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
 
 	// Do a loop on all the nodes contained in this task to find out which nodes need to be communicated
 	for (int i = 0; i < useNodes.size(); i++)
@@ -312,6 +314,8 @@ void Grid::FindBufferNodes(vector<int> useNodes)
 		sort(buffNodes[i].begin(), buffNodes[i].end());
 		buffNodes[i].erase(unique(buffNodes[i].begin(), buffNodes[i].end()), buffNodes[i].end());
 	}
+
+	//cout << locTask << " post size " << locNodes.size() << " " << useNodes.size() << " " << globalTaskOnGridNode.size() << endl;;
 };
 
 

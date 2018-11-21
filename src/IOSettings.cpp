@@ -784,13 +784,7 @@ void IOSettings::ReadHalos()
 #ifndef ZOOM
 	// After reading in all the catalogs, find out, sort and remove duplicates of nodes being allocated to the task
 	GlobalGrid[iUseCat].SortLocNodes();
-#else
-	//cout << "On task=" << locTask << " a subset of " << nLocHalos[iUseCat] << " haloes has been read in." << endl; 
 #endif
-
-//#ifdef VERBOSE
-	//cout << "On task=" << locTask << ", " << nLocHalos[iUseCat] * sizeHalo /1024/1024 << " MB haloes read " << endl; 
-//#endif
 };
 
 

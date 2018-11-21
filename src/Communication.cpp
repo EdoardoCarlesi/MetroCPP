@@ -142,7 +142,7 @@ void Communication::ExchangeBuffers()
 				MPI_Sendrecv(&GlobalGrid[1].buffNodes[iT][0], sizeSendNode, MPI_INT, iT, 0, 
 				                   &buffIndexNodeHalo[iT][0], sizeRecvNode, MPI_INT, iT, 0, MPI_COMM_WORLD, &status);
 #ifdef VERBOSE
-				cout << "Task=" << locTask << " to=" << iT << ", send=" << 
+				cout << "Task=" << locTask << " is sending nodes list to=" << iT << ", send=" << 
 				 	sizeSendNode << ", recv= " << sizeRecvNode << endl;
 #endif
 				/* Now each task knows which nodes need to be sent and to which task.
@@ -427,8 +427,8 @@ void Communication::BufferSendRecv()
 #ifdef VERBOSE
 		cout << iT << ") On task=" << locTask << ") sending " << nBuffSendHalos << " halos to " << recvTask <<endl;
 		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvHalos << " halos by " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos/1024 << " kb to " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos/1024 << " kb by " << sendTask <<endl;
+		//cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos/1024 << " kb to " << recvTask <<endl;
+		//cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos/1024 << " kb by " << sendTask <<endl;
 #endif
 
 		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
@@ -467,7 +467,7 @@ void Communication::BufferSendRecv()
 
 #ifdef VERBOSE
 		cout << "OnTask=" << locTask <<  ", allocating " 
-		<< buffSendSizeParts/1024/1024 << "MB send buffer for " << nBuffSendHalos << endl;
+			<< buffSendSizeParts/1024/1024 << "MB particle send buffer. " << endl;
 #else
 		if (locTask == 0 && iT == 0)
 			cout << "Allocating particle send buffer... " << endl;
@@ -561,6 +561,7 @@ void Communication::BufferSendRecv()
 #endif	// ZOOM mode
 
 
+#ifdef ZOOM	
 /* Once the forward correlations of the trees have been built, we communicate orphan halo properties across different tasks */
 void Communication::SyncOrphanHalos()
 {
@@ -573,7 +574,6 @@ void Communication::SyncOrphanHalos()
 
 	//cout << "-->Task=" << locTask << " has " << locOrphans << endl;
 
-#ifdef ZOOM	
 	posOrphans = (int *) calloc(totTask, sizeof(int));
 	dispOrphans = (int *) calloc(totTask, sizeof(int));
 	
@@ -663,7 +663,6 @@ void Communication::SyncOrphanHalos()
 			nLocHalos[1]++;
 		}
 	}	// if < nOrphanSteps
-#endif
 
 	// SANITY CHECK
 	//cout << "Task=" << locTask << " has " << nLocHalos[1] << " (" << locHalos[1].size() << ") halos including orphans. " << endl; 
@@ -672,6 +671,7 @@ void Communication::SyncOrphanHalos()
 	orphanHaloIndex.clear();
 	orphanHaloIndex.shrink_to_fit();
 };
+#endif		// ZOOM
 
 
 

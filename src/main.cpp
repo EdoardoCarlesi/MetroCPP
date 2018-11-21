@@ -129,6 +129,7 @@ int main(int argv, char **argc)
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
 			SettingsIO.ReadParticles();	
+
 #ifndef ZOOM
 			/* Now every task knows which nodes belongs to which task */
 			CommTasks.BroadcastAndGatherGrid();
@@ -137,16 +138,20 @@ int main(int argv, char **argc)
 			 * The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 #endif
+
+			cout << locTask << ", pre  [ " << iNumCat << "] MAIN GG[1]= "  << GlobalGrid[1].locNodes.size() << endl;
 			/* Now exchange the halos in the requested buffer zones among the different tasks.
 			 * In zoom mode we send ALL halos to ALL tasks */
 			CommTasks.BufferSendRecv();
+			cout << locTask << ", post2 [ " << iNumCat << "] MAIN GG[1]= "  << GlobalGrid[1].locNodes.size() << endl;
+
 
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;
 		
 			/* Forward halo connections
 			 * This function also allocates the MergerTrees */
-			FindProgenitors(0, 1);
+			//FindProgenitors(0, 1);
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			clock_t endTime = clock();
@@ -167,7 +172,7 @@ int main(int argv, char **argc)
 			iniTime = clock();
 	
 			/* Backward halo connections */
-			FindProgenitors(1, 0);
+			//FindProgenitors(1, 0);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();
@@ -177,12 +182,13 @@ int main(int argv, char **argc)
 				cout << "\nDone in " << elapsed << "s. " << endl;
 
 			//CleanTrees(iNumCat);
+	
 
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
+			CommTasks.CleanBuffer();
 			ShiftHalosPartsGrids();
 
 #ifndef ZOOM
-			CommTasks.CleanBuffer();
 #endif
 		}	/* Finish: the trees have now been built for this step */
 
