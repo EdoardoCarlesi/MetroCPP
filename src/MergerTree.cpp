@@ -224,10 +224,10 @@ void FindProgenitors(int iOne, int iTwo)
 	locMTrees[iOne].shrink_to_fit();
 	locMTrees[iOne].resize(nLoopHalos);
 
-//#ifdef VERBOSE
+#ifdef VERBOSE
 	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
 		" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
-//#endif
+#endif
 
 #ifdef ZOOM
 
@@ -409,8 +409,6 @@ void FindProgenitors(int iOne, int iTwo)
 				else
 					compCondition = CompareHalos(kH, iH, iTwo, iOne);
 
-//				compCondition = false;
-
 				/* Compare halos --> this functions checks whether the two halos are too far 
 				   or velocities are oriented on opposite directions */
 				if (compCondition)
@@ -436,7 +434,6 @@ void FindProgenitors(int iOne, int iTwo)
 					 * of common particles is above a given threshold */
 					if (totComm > minPartCmp) 
 					{		
-	//	cout << locTask << ", " << jH << ", " << kH << ", " << iL << ", " <<  nLoopHalos << endl;
 						for (int iT = 0; iT < nPTypes; iT++)
 							locMTrees[iOne][iL].nCommon[iT].push_back(thisNCommon[iT]);
 	
@@ -444,11 +441,8 @@ void FindProgenitors(int iOne, int iTwo)
 							locMTrees[iOne][iL].idProgenitor.push_back(locHalos[iTwo][kH].ID);
 						else 
 							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH].ID);
-							//locMTrees[iOne][iL].idProgenitor.push_back(1234855873);
 						
 						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
-/*
-*/
 						totCmp++;
 					} else {
 						totSkip++;
@@ -492,8 +486,7 @@ void FindProgenitors(int iOne, int iTwo)
 					if (iOne < iTwo )
 						locMTrees[iOne][iH].isOrphan = false;
 				}
-#endif
-#endif
+#endif		// TEST
 
 		} // for i halo, the main one
 
@@ -501,7 +494,6 @@ void FindProgenitors(int iOne, int iTwo)
 
 		MPI_Barrier(MPI_COMM_WORLD);
 
-#ifdef TEST
 		if (iOne < iTwo)
 		{
 			int nTotOrphans = 0;
@@ -514,6 +506,8 @@ void FindProgenitors(int iOne, int iTwo)
 
 		}
 
+#ifdef TEST
+#endif
 #endif		// ifdef ZOOM
 };
 

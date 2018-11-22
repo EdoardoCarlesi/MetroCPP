@@ -138,6 +138,8 @@ vector<string> SplitString (string strIn, string delim)
 
 void ShiftHalosPartsGrids()
 {
+	CleanMemory(0);
+	
 	if (locTask == 0)
 		cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
 
@@ -161,7 +163,8 @@ void ShiftHalosPartsGrids()
 	
 #ifndef ZOOM
 	/* Re assign the halos to the locNodes on GlobalGrid[0] 
-	 * DO NOT COPY IT FROM GlobalGrid[1] - this contains also the buffer nodes in locNodes */
+	 * DO NOT COPY IT FROM GlobalGrid[1] - this contains also the buffer nodes in locNodes, it is difficult 
+	 * to disentangle, and will grow the buffer exponentially at each step */
 	
 	GlobalGrid[0].Init(nGrid, boxSize);
 
@@ -190,10 +193,14 @@ void ShiftHalosPartsGrids()
 	locBuffParts.shrink_to_fit();
 	
 	if (locTask == 0)
-		cout << "Grid, halo and particle data has been copied and cleaned." << endl;
+		cout << "Grid, halo and particle data has been cleaned and copied 1 ---> 0." << endl;
 
+	CleanMemory(1);
+
+#ifndef ZOOM
 	/* Reallocate a grid for the next loop */
 	GlobalGrid[1].Init(nGrid, boxSize);
+#endif
 };
 
 
