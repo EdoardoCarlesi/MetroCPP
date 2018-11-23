@@ -31,6 +31,8 @@ vector<vector<vector<vector<unsigned long long int>>>> locParts;
 
 #ifndef ZOOM
 vector<Halo> locBuffHalos;
+vector<Halo> locOrphHalos;
+vector<vector<vector<unsigned long long int>>> locOrphParts;
 vector<vector<vector<unsigned long long int>>> locBuffParts;
 #else
 vector<int> locTreeIndex;

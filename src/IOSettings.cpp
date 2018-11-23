@@ -594,9 +594,9 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
-//#ifdef ZOOM
+#ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
-//#endif
+#endif
 				locParts[iUseCat][iLocHalos].resize(nPTypes);
 
 				iLine++;
@@ -615,8 +615,7 @@ void IOSettings::ReadParticles(void)
 				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[nPTypes])
 #endif
 				{	
-
-					// Sort the ordered IDs
+					/* Sort the ordered IDs */
 					for (int iT = 0; iT < nPTypes; iT++)
 					{	
 						if (tmpParts[iT].size() > 0)

@@ -146,7 +146,7 @@ int main(int argv, char **argc)
 		
 			/* Forward halo connections
 			 * This function also allocates the MergerTrees */
-			//FindProgenitors(0, 1);
+			FindProgenitors(0, 1);
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			clock_t endTime = clock();
@@ -167,7 +167,7 @@ int main(int argv, char **argc)
 			iniTime = clock();
 	
 			/* Backward halo connections */
-			//FindProgenitors(1, 0);
+			FindProgenitors(1, 0);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();

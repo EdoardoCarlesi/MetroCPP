@@ -51,9 +51,13 @@ extern map <unsigned long long int, int> locId2Index;
 /* Extra halos coming from the buffer nodes communicated from other tasks */
 extern vector<Halo> locBuffHalos;
 
+/* In full box mode each task keeps track of its orphans locally */
+extern vector<Halo> locOrphHalos;
+
 /* Extra particles coming from the buffer areas located on other tasks */
 extern vector<vector<vector<unsigned long long int>>> locBuffParts;
 
+extern vector<vector<vector<unsigned long long int>>> locOrphParts;
 #else
 
 /* This variable keeps track of the halos that should be used on each task for the backward comparison, 

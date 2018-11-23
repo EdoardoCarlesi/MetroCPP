@@ -224,13 +224,15 @@ void FindProgenitors(int iOne, int iTwo)
 	locMTrees[iOne].shrink_to_fit();
 	locMTrees[iOne].resize(nLoopHalos);
 
+	//cout << "OnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
+	//	" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
+
 #ifdef VERBOSE
 	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
 		" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
 #endif
 
 #ifdef ZOOM
-
 			/**************************************************
 			 *	Comparison for zoom simulations           *
 			 **************************************************/
@@ -240,7 +242,8 @@ void FindProgenitors(int iOne, int iTwo)
 
 	/* For consistency across tasks and to keep track of all possible orphans, IDs need to be initialized here */
 	for (int iT = 0; iT < locHalos[iOne].size(); iT++)
-		locMTrees[iOne][iT].mainHalo.ID = locHalos[iOne][iT].ID;
+		locMTrees[iOne][iT].mainHalo = locHalos[iOne][iT];
+		//locMTrees[iOne][iT].mainHalo.ID = locHalos[iOne][iT].ID;
 
 	/* The way forward/backward comparisons are done is different: in the forward mode, halos are split among the tasks as 
 	 * Task 1 --> halo 1, task 2 ---> halo 2, assuming that the halos are ordered with increasing (decreasing) number of particles.
@@ -351,18 +354,15 @@ void FindProgenitors(int iOne, int iTwo)
 	sort(locTreeIndex.begin(), locTreeIndex.end());
 	locTreeIndex.erase(unique(locTreeIndex.begin(), locTreeIndex.end()), locTreeIndex.end());
 
-
 			/**************************************************
 			 *	Comparison for fullbox simulations        *
 			 **************************************************/
-
 #else						
 
 #ifdef VERBOSE
 	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos; 
 	cout << ", nHalos[0]=" << locHalos[iOne].size() << ", nHalos[1]=" << locHalos[iTwo].size() << ", n2:" << nLocHalos[iTwo] << endl;
 #endif
-
 
 		for (int iL = 0; iL < nLoopHalos; iL++)
 		{
@@ -381,6 +381,9 @@ void FindProgenitors(int iOne, int iTwo)
 			locMTrees[iOne][iL].mainHalo = thisHalo; 
 			locMTrees[iOne][iL].nCommon.resize(nPTypes);
 	
+			//if (locHalos[iOne][iL].isToken)
+			//	cout << iL << ", TokenHalo " << endl; 
+
 			if (iL == nStepsCounter * floor(iL / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 
@@ -389,12 +392,8 @@ void FindProgenitors(int iOne, int iTwo)
 			/* We only loop on a subset of halos */
 			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
 
-			// FIXME this loop could be speeded up a little bit if we skip the comparisons of token halos 
+			// TODO this loop could be speeded up a little bit if we skip the comparisons of token halos 
 			// in the 1 --> 0 (backwards) loop, but maybe it's not even worth it...
-
-		//	if (indexes.size() < 1)
-		//	cout << "INDEXES < 1 " << endl;
-
 			/* The vector "indexes" contains the list of haloes (in the local memory & buffer) to be compared */
 			for (int jH = 0; jH < indexes.size(); jH++)
 			{
@@ -408,6 +407,7 @@ void FindProgenitors(int iOne, int iTwo)
 					compCondition = CompareHalos(iH, kH, iOne, iTwo);
 				else
 					compCondition = CompareHalos(kH, iH, iTwo, iOne);
+				//compCondition = false;
 
 				/* Compare halos --> this functions checks whether the two halos are too far 
 				   or velocities are oriented on opposite directions */
@@ -450,52 +450,48 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 			}	// for j, k = index(j)
 
-#ifdef TEST
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
 			 * minPartHalo, then we add it to the grid & the iTwo step & the iTwo grid */
 			if (locMTrees[iOne][iH].idProgenitor.size() == 0 && 
-				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
+				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo && iOne == 0)
+				//locMTrees[iOne][iH].mainHalo.nPart[nPTypes] > minPartHalo && iOne < iTwo)
 				{
-					int addIndex = locHalos[iTwo].size();
-					locHalos[iTwo].push_back(locHalos[iOne][iH]);
-					//cout << locHalos[iTwo].size() << ", indexNew= " << addIndex << endl;
-					locHalos[iTwo][addIndex].isToken = true;
-					locMTrees[iOne][iH].isOrphan = true;
-					
+					//if (iOne == 1)
+					//cout << "MadonnaMaialaPurulenta" << endl;
+					Halo thisHalo = locHalos[iOne][iH];
+					//locHalos[iOne][iH];
+				//	locOrphHalos.push_back(thisHalo);
+				//	locOrphHalos.push_back(locHalos[iOne][iH]);
+
 					/* Update the local mtree with a copy of itself */
-					locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
-					locMTrees[iOne][iH].indexProgenitor.push_back(addIndex);
+				//	locMTrees[iOne][iH].isOrphan = true;
+				//	locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
+				//	locMTrees[iOne][iH].indexProgenitor.push_back(nLocHalos[iTwo] + locOrphHalos.size());
 
-					/* The orphan halo is also copied to the next step - 
-					 * its position is recorded on the grid and it is added to the local iTwo halo list */
-					GlobalGrid[iTwo].AssignToGrid(locMTrees[iOne][iH].mainHalo.X, addIndex);
-
-					/* Resize and keep track of the particle content of the orphan halo */
-					locParts[iTwo].resize(addIndex+1);
-					locParts[iTwo][addIndex].resize(nPTypes+1); 
-
-					for (int iP = 0; iP < nPTypes; iP++)
-						copy(locParts[iOne][iH][iP].begin(), locParts[iOne][iH][iP].begin(), 
-							back_inserter(locParts[iTwo][addIndex][iP]));
-					
-					/* Add to the local count of total halos and orphan halos */
-					nLocHalos[iTwo]++;
+				//	locOrphParts.push_back(locParts[iOne][iH]);
+					//locParts[iTwo][addIndex].resize(nPTypes+1); 
+					//locParts[iTwo].push_back(locParts[iOne][iH]);
+					//for (int iP = 0; iP < nPTypes; iP++)
+					//	copy(locParts[iOne][iH][iP].begin(), locParts[iOne][iH][iP].begin(), 
+					//		back_inserter(locParts[iTwo][addIndex][iP]));
 					nLocOrphans++;
 				} else {
 					/* Very important check! Do it only in the fwd loop */
-					if (iOne < iTwo )
-						locMTrees[iOne][iH].isOrphan = false;
+					//if (iOne < iTwo )
+					//	locMTrees[iOne][iH].isOrphan = false;
 				}
-#endif		// TEST
-
+#ifdef TEST
+#endif
 		} // for i halo, the main one
 
 		//cout << "DONE ON TASK " << locTask << endl;
 
+	/*
 		MPI_Barrier(MPI_COMM_WORLD);
 
 		if (iOne < iTwo)
 		{
+			nLocOrphans = locOrphHalos.size();
 			int nTotOrphans = 0;
 
 			//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << endl;
@@ -505,9 +501,7 @@ void FindProgenitors(int iOne, int iTwo)
 				cout << "\nFound " << nTotOrphans << " orphan halos on  " << totTask << " tasks. " << endl;
 
 		}
-
-#ifdef TEST
-#endif
+	*/
 #endif		// ifdef ZOOM
 };
 
