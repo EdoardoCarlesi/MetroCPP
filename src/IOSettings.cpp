@@ -516,11 +516,17 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 				ifstream haloExists(haloFiles[iF][jF]);
 				if (haloExists.fail())
-					cout << "WARNING: on task =" << locTask << " " << haloFiles[iF][jF] << " not found." << endl;
+				{
+					cout << "ERROR: on task =" << locTask << " " << haloFiles[iF][jF] << " not found." << endl;
+					exit(0);
+				}
 
 				ifstream partExists(partFiles[iF][jF]);
 				if (partExists.fail())
+				{
 					cout << "WARNING: on task =" << locTask << " " << haloFiles[iF][jF] << " not found." << endl;
+					exit(0);
+				}
 			}
 
 #endif
