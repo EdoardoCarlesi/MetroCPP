@@ -167,7 +167,7 @@ int main(int argv, char **argc)
 			iniTime = clock();
 	
 			/* Backward halo connections */
-			FindProgenitors(1, 0);
+			//FindProgenitors(1, 0);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();

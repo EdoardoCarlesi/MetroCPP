@@ -257,7 +257,8 @@ void Grid::AssignToGrid(float *X, int index)
  */
 void Grid::FindBufferNodes(vector<int> useNodes)
 {
-	int nCells = 2;		// TODO find a way to select the number of buffer cells!!!!!	FIXME TODO 
+	int nCells = 3;		// TODO find a way to select the number of buffer cells!!!!!	FIXME TODO 
+				// Edit: test with 1,2 or 3 seem to give the same results...
 
 	if (buffNodes.size() == 0)
 		buffNodes.resize(totTask);

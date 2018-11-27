@@ -53,6 +53,7 @@ extern vector<Halo> locBuffHalos;
 
 /* In full box mode each task keeps track of its orphans locally */
 extern vector<Halo> locOrphHalos;
+extern vector<int> locOrphIndex;
 
 /* Extra particles coming from the buffer areas located on other tasks */
 extern vector<vector<vector<unsigned long long int>>> locBuffParts;

@@ -146,6 +146,10 @@ void ShiftHalosPartsGrids()
 	nLocHalos[0] = nLocHalos[1];
 	locHalos[0] = locHalos[1];
 
+	/* Keep track of the orphan halos at the next step */
+	for (int iO = 0; iO < locOrphHalos.size(); iO++)
+		locHalos[0].push_back(locOrphHalos[iO]);
+
 	if (runMode == 0 || runMode == 2)
 	{ 
 		locParts[0].resize(nLocHalos[0]);
@@ -159,8 +163,22 @@ void ShiftHalosPartsGrids()
 			for (int iT = 0; iT < nPTypes; iT++)
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
 		}
+
+		for (int iO = 0; iO < locOrphHalos.size(); iO++)
+		{
+			locParts[0].push_back(locOrphParts[iO]);
+			locParts[0][nLocHalos[0]+iO].resize(nPTypes);
+
+			for (int iT = 0; iT < nPTypes; iT++)
+				locParts[0][nLocHalos[0]+iO][iT].swap(locOrphParts[iO][iT]);
+		}	
 	}
-	
+		
+	/* Now free and reset the orphan halo trackers */
+	nLocHalos[0] += locOrphHalos.size();
+	locOrphHalos.clear();
+	locOrphHalos.shrink_to_fit();
+
 #ifndef ZOOM
 	/* Re assign the halos to the locNodes on GlobalGrid[0] 
 	 * DO NOT COPY IT FROM GlobalGrid[1] - this contains also the buffer nodes in locNodes, it is difficult 

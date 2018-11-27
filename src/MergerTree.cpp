@@ -149,54 +149,71 @@ void MergerTree::sortByMerit(int jSimu)
 /* Given two halos, decide whether to compare their particle content or not */
 bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 {
-	float min = 100000.0, max = 0.0;
-	float rMax = 0.0, vMax = 0.0, fVel = 0.5e-2, vOne = 0.0, vTwo = 0.0;
-	Halo cmpHalo;
+	bool order;
+	float fVel = 0.4e-2, fDir = 1.0;
+	float dX[3], dV[3];
+	float min = 100000.0, max = 0.0, dT = 1.0;
+	float rMax = 0.0, vMax = 0.0, vOne = 0.0, vTwo = 0.0, dNow = 0.0, dNew = 0.0;
+	Halo cmpHalo, thisHalo;
+	thisHalo = locHalos[iOne][iHalo];
 
-#ifdef ZOOM	// TODO this is not clear yet
+#ifdef ZOOM
 	cmpHalo = locHalos[iTwo][jHalo];
-	rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir;
-	rMax *= 25.0; 
-	//rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir; 
-	//rMax *= dMaxFactor * 5.0;
-	//cout << iHalo << " " << jHalo << " " << locHalos[iOne][iHalo].Distance(cmpHalo.X) << " " << rMax << endl;
-	// Only check for pairwise distance
-	//if (locHalos[iOne][iHalo].Distance(cmpHalo.X) < rMax)
-	//	return true;
-	//else 
-	//	return false;
+
+	rMax = thisHalo.rVir + cmpHalo.rVir;
+	rMax *= 25.0;	// FIXME check why this works...
 #else
-	// TODO introduce more checks on the time, velocity and so on
-	// do some check - if jHalo > nLocHalos ---> go look into the buffer halos FIXME
 	if (jHalo >= 0)
 		cmpHalo = locHalos[iTwo][jHalo];
 	if (jHalo < 0)
 		cmpHalo = locBuffHalos[-jHalo];
-
-	rMax = locHalos[iOne][iHalo].rVir + cmpHalo.rVir; 
 #endif
 
-	vOne = VectorModule(locHalos[iOne][iHalo].V); vTwo = VectorModule(cmpHalo.V);
-	vMax = (vOne + vTwo) * fVel;
-	rMax *= dMaxFactor * vMax;
+	vOne = VectorModule(thisHalo.V);
+	vTwo = VectorModule(cmpHalo.V);
+	dNow = thisHalo.Distance(cmpHalo.X);
+	vMax = (vOne + vTwo);
+	
+#ifdef TEST // FIXME improve the check on wether halos are moving away or getting closer
+		// Also put more constrains using physical velocity and distance...
+	/* Linearly extrapolate the distance at the next step to see if the halos are getting closer or further away */
+	for (int iX = 0; iX < 3; iX++)
+		dX[iX] = (cmpHalo.X[iX] + cmpHalo.V[iX] * dT - thisHalo.X[iX] - thisHalo.V[iX] * dT);
+
+	dNew = VectorModule(dX);
+
+	fDir = (dNew / dNow);	
+	//fDir = pow(fDir, 2.0)
+
+	/* In forward mode, iOne = 0 and iTwo = 1. We expect d(iOne) < d(iTwo; and vice versa 
+	 * If the two halos are getting away from each other, then reduce the fVel factor */
+	if (iOne == 0)
+	{
+		//cout << locTask << ", " << iHalo << ", old=" << dNow << ", new=" << dNew << " fac:" << fDir << " vmax:" << vMax << endl;
+		fVel *= fDir;	// if dNew < dNow, halos are getting closer - increase the search radius
+	} else {
+		fVel /= fDir;
+	}
+#endif	
+	
+	rMax = thisHalo.rVir + cmpHalo.rVir; 
+
+#ifdef ZOOM
+	// FIXME check why this works...
+	rMax *= 25.0;	
+#endif
+
+	rMax *= dMaxFactor * vMax * fVel; 
 
 	// If we are dealing with token halos, enlarge the search radius
-	if (locHalos[iOne][iHalo].isToken || cmpHalo.isToken)
+	if (thisHalo.isToken || cmpHalo.isToken)
 		rMax *= locHalos[iOne][iHalo].nOrphanSteps;
 	
 	// Only check for pairwise distance
-	if (locHalos[iOne][iHalo].Distance(cmpHalo.X) < rMax)
+	if (dNow < rMax)
 	{
-		//cout << "Halo comparison: " << locHalos[iOne][iHalo].Distance(cmpHalo.X) << " r: " << rMax << endl;
-		//locHalos[iOne][iHalo].Info();
-		//cmpHalo.Info();
-		//cout << "--" << endl;
 		return true;
 	} else {
-		//cout << "Skipping halo comparison: " << endl;
-		//locHalos[iOne][iHalo].Info();
-		//cmpHalo.Info();
-		//cout << "--" << endl;
 		return false;
 	}
 	
@@ -450,58 +467,55 @@ void FindProgenitors(int iOne, int iTwo)
 				} // Halo Comparison
 			}	// for j, k = index(j)
 
+		/* Very important check! Check for orphans only in the fwd loop to avoid segfaults */
+		if (iOne == 0)
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
 			 * minPartHalo, then we add it to the grid & the iTwo step & the iTwo grid */
 			if (locMTrees[iOne][iH].idProgenitor.size() == 0 && 
-				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo && iOne == 0)
-				//locMTrees[iOne][iH].mainHalo.nPart[nPTypes] > minPartHalo && iOne < iTwo)
+				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo)
 				{
-					//if (iOne == 1)
-					//cout << "MadonnaMaialaPurulenta" << endl;
 					Halo thisHalo = locHalos[iOne][iH];
-					//locHalos[iOne][iH];
-				//	locOrphHalos.push_back(thisHalo);
-				//	locOrphHalos.push_back(locHalos[iOne][iH]);
+					thisHalo.isToken = true;
+					thisHalo.nOrphanSteps++;
+
+					/* Update the container of local orphan halos */
+					locOrphIndex.push_back(iH);
+					locOrphHalos.push_back(thisHalo);
 
 					/* Update the local mtree with a copy of itself */
-				//	locMTrees[iOne][iH].isOrphan = true;
-				//	locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
-				//	locMTrees[iOne][iH].indexProgenitor.push_back(nLocHalos[iTwo] + locOrphHalos.size());
+					locMTrees[iOne][iH].isOrphan = true;
+					locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
 
-				//	locOrphParts.push_back(locParts[iOne][iH]);
-					//locParts[iTwo][addIndex].resize(nPTypes+1); 
-					//locParts[iTwo].push_back(locParts[iOne][iH]);
-					//for (int iP = 0; iP < nPTypes; iP++)
-					//	copy(locParts[iOne][iH][iP].begin(), locParts[iOne][iH][iP].begin(), 
-					//		back_inserter(locParts[iTwo][addIndex][iP]));
+					/* Update the particle content */
+					locOrphParts.push_back(locParts[iOne][iH]);
+					locOrphParts[nLocOrphans].resize(nPTypes);
+
+					for (int iP = 0; iP < nPTypes; iP++)
+						copy(locParts[iOne][iH][iP].begin(), locParts[iOne][iH][iP].begin(), 
+							back_inserter(locOrphParts[nLocOrphans][iP]));
+
 					nLocOrphans++;
 				} else {
-					/* Very important check! Do it only in the fwd loop */
-					//if (iOne < iTwo )
-					//	locMTrees[iOne][iH].isOrphan = false;
+					locMTrees[iOne][iH].isOrphan = false;
 				}
-#ifdef TEST
-#endif
 		} // for i halo, the main one
 
 		//cout << "DONE ON TASK " << locTask << endl;
 
-	/*
 		MPI_Barrier(MPI_COMM_WORLD);
 
-		if (iOne < iTwo)
+		if (iOne == 0)
 		{
 			nLocOrphans = locOrphHalos.size();
 			int nTotOrphans = 0;
 
-			//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << endl;
+			//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
 			MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 			if (locTask == 0)
 				cout << "\nFound " << nTotOrphans << " orphan halos on  " << totTask << " tasks. " << endl;
 
 		}
-	*/
 #endif		// ifdef ZOOM
 };
 
