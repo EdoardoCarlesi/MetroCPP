@@ -31,7 +31,7 @@ void Communication::BroadcastAndGatherGrid()
 {
 	size_t gridSize = GlobalGrid[iUseCat].nNodes, globalGridSize = 0;
 	vector<int> tmpTaskOnGridNode, allNonZeroTasks, allNonZeroNodes;
-	int iNonZero = 0, nNonZero = 0, thisTask = 0, thisNode = 0;
+	int nNonZero = 0, thisTask = 0, thisNode = 0;
 	
 	if (locTask == 0)
 		cout << "Broadcasting node informations to all tasks for Grid[" << iUseCat << "]." << endl;

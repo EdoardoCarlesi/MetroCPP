@@ -69,14 +69,13 @@ void IOSettings::SetCosmology(Cosmology *Cosmo)
 
 void IOSettings::FindCatID()
 {	
+	int iS = 0, sysOut = 0;
 	string outputSh;
 	string inputSh;
 	string optionsSh;
 	string outputTmp;
 	string lineIn;
 	string cleanTmp;
-	char *tmpLine;
-	int iS = 0, sysOut = 0;
 
 #ifdef ZOOM
 	string boolZoom = "true";
@@ -544,9 +543,11 @@ void IOSettings::ReadParticles(void)
 	string tmpStrUrlPart, lineIn;
 	const char *tmpUrlPart;
 	unsigned long long int locHaloID = 0, partID = 0;
-	unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
+	//unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
+	int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
 	int partType = 0;
+	//int partType = 0, iTmpParts = 0;
 
 #ifdef VERBOSE
 	cout << "onTask=" << locTask << " part size: " << locParts[iUseCat].size() << endl;
@@ -799,8 +800,8 @@ void IOSettings::ReadHalos()
 void IOSettings::ReadTrees()
 {
 	unsigned long long int hostHaloID = 0, progHaloID = 0;
-	int hostPart = 0, progPart = 0, orphanHalo = 0, commDummy = 0;
-	int iLine = 0, iHalo = 0, thisNumCat = 0, nProgHalo = 0;
+	int hostPart = 0, progPart = 0, orphanHalo = 0; 
+	int iLine = 0, thisNumCat = 0, nProgHalo = 0;
 	int commPart = 0;
 
 	char charChunk[2], charSnap[4];
@@ -817,7 +818,9 @@ void IOSettings::ReadTrees()
 	{
 		if (locTask == 0) 
 			cout << "ERROR: nTreeChunks in the .cfg file needs to be equal to the number of MPI Tasks in use. " << endl;
-			exit(0);
+
+		exit(0);
+		
 	} else {
 		urlTree = pathTree + outPrefix + charSnap + "." + charChunk + ".mtree";
 		ifstream fileIn(urlTree);
