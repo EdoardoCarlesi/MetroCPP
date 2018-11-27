@@ -146,9 +146,11 @@ void ShiftHalosPartsGrids()
 	nLocHalos[0] = nLocHalos[1];
 	locHalos[0] = locHalos[1];
 
+#ifndef ZOOM
 	/* Keep track of the orphan halos at the next step */
 	for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		locHalos[0].push_back(locOrphHalos[iO]);
+#endif
 
 	if (runMode == 0 || runMode == 2)
 	{ 
@@ -164,6 +166,10 @@ void ShiftHalosPartsGrids()
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
 		}
 
+#ifdef ZOOM
+
+	}
+#else
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
 			locParts[0].push_back(locOrphParts[iO]);
@@ -179,7 +185,6 @@ void ShiftHalosPartsGrids()
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
 
-#ifndef ZOOM
 	/* Re assign the halos to the locNodes on GlobalGrid[0] 
 	 * DO NOT COPY IT FROM GlobalGrid[1] - this contains also the buffer nodes in locNodes, it is difficult 
 	 * to disentangle, and will grow the buffer exponentially at each step */
@@ -189,7 +194,6 @@ void ShiftHalosPartsGrids()
 	for (int iH = 0; iH < nLocHalos[0]; iH++)
 		GlobalGrid[0].AssignToGrid(locHalos[0][iH].X, iH);
 
-#endif
 
 	/* Now clean the halo & particle buffers */
 	locBuffHalos.clear();
@@ -209,6 +213,7 @@ void ShiftHalosPartsGrids()
 	
 	locBuffParts.clear();
 	locBuffParts.shrink_to_fit();
+#endif
 	
 	if (locTask == 0)
 		cout << "Grid, halo and particle data has been cleaned and copied 1 ---> 0." << endl;

@@ -490,7 +490,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 				ifstream partExists(partFiles[iF][jF]);
 				if (partExists.fail())
 				{
-					partFiles[iF][0] = pathInput + partPrefix + strSnaps[i] + ".0000.z" + charZ + "." + partSuffix;
+					partFiles[iF][0] = pathInput + partPrefix + strSnaps[iF] + ".0000.z" + charZ + "." + partSuffix;
 
 					ifstream partExists(partFiles[iF][jF]);
 						if (partExists.fail())

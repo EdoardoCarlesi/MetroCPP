@@ -30,7 +30,7 @@ private:
 
 	// Communicate the buffers across all tasks
 	void ExchangeBuffers(void);
-
+#else
 	// Buffers for halo and node communication
 	vector<vector<int>> buffIndexNodeHalo;
 	
