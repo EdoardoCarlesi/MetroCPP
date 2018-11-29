@@ -5,9 +5,12 @@
 #include <sstream>
 #include <string>
 #include <cctype>
+#include <map>
 
 #include "global_vars.h"
 #include "utils.h"
+
+using namespace std;
 
 
 /* 
@@ -167,8 +170,7 @@ void ShiftHalosPartsGrids()
 		}
 
 #ifdef ZOOM
-
-	}
+	}	
 #else
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
@@ -253,17 +255,31 @@ float *UnitVector(float *V)
 //int SortIndexes(vector<float> vec) {
 vector<int> SortIndexes(vector<float> vec) {
 	int nVec = vec.size();
-
 	vector<int> idx;
+	vector<float> newVec;
+	map<float, int> floatPos;
 	idx.resize(nVec);
+
+	newVec = vec;
+
+	for (int iV = 0; iV < nVec; iV++)
+		floatPos.insert(make_pair(vec[iV], iV));
+
+	sort(newVec.begin(), newVec.end());
+
+	float thisG = vec[0];
+
+	for (int iV = 0; iV < nVec; iV++)
+		idx[iV] = floatPos[newVec[iV]];
+
+	/*
 	
 	for (int iV = 0; iV < nVec; iV++)
 		idx[iV] = iV;
 
 	sort(idx.begin(), idx.end(), [&vec](int i1, int i2) 
-		{return vec[i1] > vec[i2];});
+		{return vec[i1] < vec[i2];});
 
-	/*
 	//int idx0 = 0; 
 	//float maxV = 100000.0;
 	//float maxV = 0.0;

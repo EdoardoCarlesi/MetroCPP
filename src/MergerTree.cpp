@@ -60,7 +60,7 @@ void MergerTree::Clean()
 
 	idProgenitor.clear();
 	indexProgenitor.clear();
-	subHalos.clear();
+	progHalos.clear();
 };
 
 
@@ -77,68 +77,70 @@ MergerTree::~MergerTree()
 
 
 /* This sorting algorithm might be very inefficient but it's straightforward to implement, 
- * plus we will rarely deal with halos with more than 10^6 progenitors */
-void MergerTree::sortByMerit(int jSimu)
+ * plus we will rarely deal with halos with more than 10^3 progenitors */
+void MergerTree::SortByMerit()
 {
 	vector<unsigned long long int> tmpIdx;
+	vector<vector<int>> tmpNCommon;
 	vector<float> allMerit;
 	vector<int> idx, tmpIndex;
-	//vector<Halo> tmpSubHalos;
+	vector<Halo> tmpProgHalos;
 
-	int iSimu = (jSimu + 1) % 2; 
 	float merit = 0.0;
 
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
-		int thisIndex = indexProgenitor[iM];
-		Halo thisProgHalo = locHalos[iSimu][thisIndex];
 		int nComm = 0;
 
 		for(int iC = 0; iC < nPTypes; iC++)
 				nComm += nCommon[iC][iM];
 
-		merit = ((float) nComm * nComm) / (mainHalo.nPart[1] * thisProgHalo.nPart[1]);
+		merit = ((float) nComm * nComm) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
 		merit *= merit;
-
-		//cout << iM << " " << merit << " " << thisProgHalo.mTot << " " << endl;
 
 		allMerit.push_back(merit);
 	}
 	
 	idx = SortIndexes(allMerit);
+	tmpProgHalos.resize(idx.size());
 	tmpIndex.resize(idx.size());
 	tmpIdx.resize(idx.size());
-	//tmpSubHalos.resize(idx.size());
+	tmpNCommon.resize(nPTypes);
+
+	for (int iT = 0; iT < nPTypes; iT++)
+		tmpNCommon[iT].resize(idx.size());
 
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
-		//cout << iM << ", " << idx[iM] << ", " << idProgenitor[iM] << ", " << idProgenitor.size() << endl;
+		//if (idx[iM] != iM & idProgenitor.size() > 200)
+		//	progHalos[iM].Info();
+		
+
+		// FIXME
+		for (int iT = 0; iT < nPTypes; iT++)
+			tmpNCommon[iT][iM] = nCommon[iT][iM];
+
 		tmpIdx[iM] = idProgenitor[idx[iM]];
 		tmpIndex[iM] = indexProgenitor[idx[iM]];
-		//tmpSubHalos[iM] = subHalos[idx[iM]];
+		tmpProgHalos[iM] = progHalos[idx[iM]];
 	}	
 
-	idProgenitor = tmpIdx;
-	indexProgenitor = tmpIndex;
-	//subHalos = tmpSubHalos;
-
-	/*	
-	cout << idx << ", " << locHalos[iSimu][indexProgenitor[idx]].mTot << endl;
-	cout << 0   << ", " << locHalos[iSimu][indexProgenitor[0]].mTot << endl;
-	cout << "........." << endl;
-	int idx = 0;
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
-		cout << locTask << "] (" << idx[iM] << ", " << iM << ") (" 
-			<< allMerit[idx[iM]] << ", " << allMerit[iM] << ") (" 
-			<< locHalos[iSimu][indexProgenitor[iM]].mTot << ", " 
-			<< locHalos[iSimu][indexProgenitor[idx[iM]]].mTot << ") " << endl; 
+		idProgenitor[iM] = tmpIdx[iM];
+		indexProgenitor[iM] = tmpIndex[iM];
+		progHalos[iM] = tmpProgHalos[iM];
+
+		for (int iT = 0; iT < nPTypes; iT++)
+			nCommon[iT][iM] = tmpNCommon[iT][iM];
 	}
-		cout << endl;
-	}*/
 
-
-
+	tmpIdx.clear();
+	tmpIdx.shrink_to_fit();
+	tmpIndex.clear();
+	tmpIndex.shrink_to_fit();
+	tmpProgHalos.clear();
+	tmpProgHalos.shrink_to_fit();
 };
 
 
@@ -224,7 +226,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 void FindProgenitors(int iOne, int iTwo)
 {
 	vector<int> thisNCommon, indexes, totNCommon;
-	float rSearch = 0, facRSearch = 20.0;
+	float rSearch = 0, facRSearch = 30.0;			//TODO find a better way to implement facRSearch
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	int totCmp = 0, totSkip = 0, nLocOrphans = 0; 
 	int nLoopHalos = 0;
@@ -244,10 +246,14 @@ void FindProgenitors(int iOne, int iTwo)
 	//cout << "OnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
 	//	" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
 
+
+
 #ifdef VERBOSE
 	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
 		" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
 #endif
+
+
 
 #ifdef ZOOM
 			/**************************************************
@@ -299,7 +305,7 @@ void FindProgenitors(int iOne, int iTwo)
 		Halo thisHalo = locHalos[iOne][thisIndex];
 		
 		/* Save some halo properties on the mtree vector */
-		locMTrees[iOne][thisIndex].mainHalo = thisHalo;
+		locMTrees[iOne][thisIndex].mainHalo = thisHalo;	//TODO isn't this redndant???
 		locMTrees[iOne][thisIndex].nCommon.resize(nPTypes);
 	
 			/* In a zoom-in run, we loop over all the halos on the iTwo step */
@@ -345,7 +351,7 @@ void FindProgenitors(int iOne, int iTwo)
 				thisNCommon.shrink_to_fit();
 			}
 
-			locMTrees[iOne][thisIndex].sortByMerit(iOne);
+			locMTrees[iOne][thisIndex].SortByMerit();
 
 			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
 			 * minPartHalo, then we keep track of its position in the global locHalos[iOne] array  */
@@ -424,7 +430,6 @@ void FindProgenitors(int iOne, int iTwo)
 					compCondition = CompareHalos(iH, kH, iOne, iTwo);
 				else
 					compCondition = CompareHalos(kH, iH, iTwo, iOne);
-				//compCondition = false;
 
 				/* Compare halos --> this functions checks whether the two halos are too far 
 				   or velocities are oriented on opposite directions */
@@ -432,7 +437,7 @@ void FindProgenitors(int iOne, int iTwo)
 				{	
 					int totComm = 0;
 
-				// Sanity check. These two indexes should NEVER be negative at the same time. We only have one buffer
+					// These two indexes should NEVER be negative at the same time. We only have one buffer
 					if (kH < 0 && iH < 0)  
 						cout << "ERROR. Two negative indexes on task=" << locTask << " kH= " << kH 
 							<< " iH = " << iH << ". Only one negative index allowed. "  
@@ -464,7 +469,7 @@ void FindProgenitors(int iOne, int iTwo)
 					} else {
 						totSkip++;
 					}
-				} // Halo Comparison
+				} 	// if Halo Comparison
 			}	// for j, k = index(j)
 
 		/* Very important check! Check for orphans only in the fwd loop to avoid segfaults */
@@ -584,7 +589,7 @@ void CleanTrees(int iStep)
 	if (locTask < halosRemaind)
 		halosPerTask += 1;
 #else
-	halosPerTask = nLocHalos[0];
+	halosPerTask = nLocHalos[0]; //locMTrees[0].size();
 #endif
 
 	if (locTask == 0)
@@ -602,17 +607,32 @@ void CleanTrees(int iStep)
 		int iTree = kTree;
 #endif
 		unsigned long long int mainID = locHalos[0][iTree].ID;
+		int nProgSize = locMTrees[0][iTree].idProgenitor.size();
 
 		MergerTree mergerTree;
 		mergerTree.nCommon.resize(nPTypes);
 		mergerTree.mainHalo = locHalos[0][iTree];
 		mergerTree.isOrphan = locMTrees[0][iTree].isOrphan;
-	
+
+		if (mergerTree.isOrphan)
+		{
+			nProgSize = 0;
+			locMTrees[0][iTree].idProgenitor[0] = mainID;
+			mergerTree.idProgenitor.push_back(mainID);
+			mergerTree.progHalos.push_back(locHalos[0][iTree]);
+			
+			for (int iT = 0; iT < nPTypes; iT++)
+			{
+				mergerTree.nCommon[iT].resize(1);
+				mergerTree.nCommon[iT][0] = locHalos[0][iTree].nPart[iT];
+			}
+		}
+
 		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
 		 * reconstruction of the full merger history. This will be done later. */
-		for (int iProg = 0; iProg < locMTrees[0][iTree].idProgenitor.size(); iProg++)
+		for (int iProg = 0; iProg < nProgSize; iProg++)
 		{
-			Halo subHalo;	
+			Halo progHalo;	
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
 			unsigned long long int descID;
@@ -620,20 +640,34 @@ void CleanTrees(int iStep)
 			if (jTree < 0) 
 			{
 				if (nLocHalos[1]-jTree > locMTrees[1].size())
-				cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] << ", " << locMTrees[1].size() << endl;
-				descID = locMTrees[1][nLocHalos[1]-jTree].idProgenitor[0];	// The progenitor in the backwards tree
-				subHalo = locMTrees[1][jTree].mainHalo;
+					cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] << ", " << locMTrees[1].size() << endl;
+
+				/* This kind of error might be due to the incorrect setting of the facRSearch variable */
+				if(locMTrees[1][nLocHalos[1]-jTree].idProgenitor.size() == 0)
+				{
+					cout << "ERROR OnTask:" <<  locTask << ", jTree:" <<  jTree 
+						<< ", nHalos:" << nLocHalos[1] << ", locTrees:" << locMTrees[1].size() << endl;
+	
+					progHalo.Info();
+					mergerTree.mainHalo.Info();
+					cout << "index: " << locMTrees[1][nLocHalos[1]-jTree].indexProgenitor.size() <<
+					" id: " << locMTrees[1][nLocHalos[1]-jTree].idProgenitor.size() << endl;	
+				} else {
+					progHalo = locMTrees[1][nLocHalos[1]-jTree].mainHalo;	
+					descID = locMTrees[1][nLocHalos[1]-jTree].idProgenitor[0];	
+				}
+		
 			} else {
 				descID = locMTrees[1][jTree].idProgenitor[0];	
-				subHalo = locMTrees[1][jTree].mainHalo;
+				progHalo = locMTrees[1][jTree].mainHalo;
 			}
 #else
 			descID = locMTrees[1][jTree].idProgenitor[0];	
-			subHalo = locMTrees[1][jTree].mainHalo;
+			progHalo = locMTrees[1][jTree].mainHalo;
 #endif
 
 			/* Sanity check */
-			if (descID == 0)
+			if (descID == 0 && progHalo.nPart[1] > minPartHalo)
 			{
 				cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
 					<< " | " << iTree << " " << jTree << endl;
@@ -642,30 +676,20 @@ void CleanTrees(int iStep)
 				locHalos[1][jTree].Info();
 			}
 
-//#ifdef TEST
 			if (mainID == descID)
-			{		// FIXME there is some segfault around here...
+			{
+				mergerTree.idProgenitor.push_back(progID);
+				mergerTree.indexProgenitor.push_back(jTree);
+				mergerTree.progHalos.push_back(progHalo);
 
-				if (locMTrees[0][iTree].isOrphan)
-				{
-					mergerTree.idProgenitor.push_back(locMTrees[0][iTree].mainHalo.ID);
-					mergerTree.indexProgenitor.push_back(jTree);
-					mergerTree.subHalos.push_back(locHalos[0][iTree]);
+				for(int iT = 0; iT < nPTypes; iT++)
+					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 
-					for(int iT = 0; iT < nPTypes; iT++)
-						mergerTree.nCommon[iT].push_back(locHalos[0][iTree].nPart[iT]);
-				} else {
-					mergerTree.idProgenitor.push_back(0);
-					mergerTree.idProgenitor.push_back(progID);
-					mergerTree.indexProgenitor.push_back(jTree);
-					mergerTree.subHalos.push_back(subHalo);
-
-					for(int iT = 0; iT < nPTypes; iT++)
-						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
-				}
-			}
-//#endif
+			}	// mainID = descID
 		}	// kTree & iTree loop
+	
+		if (!mergerTree.isOrphan)	
+			mergerTree.SortByMerit();
 
 		if (mergerTree.idProgenitor.size() > 0)
 			locCleanTrees[iStep-1].push_back(mergerTree);
@@ -728,13 +752,13 @@ void AssignProgenitor()
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
-		//cout << iC << " " << locCleanTrees[iNumCat-1][iC].subHalos.size() << endl;
+		//cout << iC << " " << locCleanTrees[iNumCat-1][iC].progHalos.size() << endl;
 
-		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].subHalos.size(); iS++ )
+		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].progHalos.size(); iS++ )
 		{
-			subID = locCleanTrees[iNumCat-1][iC].subHalos[iC].ID;
+			subID = locCleanTrees[iNumCat-1][iC].progHalos[iC].ID;
 			subIndex = id2Index[subID];
-			locCleanTrees[iNumCat-1][iC].subHalos[iS] = locHalos[iUseCat][subIndex];
+			locCleanTrees[iNumCat-1][iC].progHalos[iS] = locHalos[iUseCat][subIndex];
 
 			//if (subIndex == 0)
 			//	cout << iS << ", SubIndex: " << subID << " " << subIndex << " " << endl;

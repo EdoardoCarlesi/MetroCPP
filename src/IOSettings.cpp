@@ -855,17 +855,17 @@ void IOSettings::ReadTrees()
 					for (int iC = 0; iC < nPTypes; iC++)
 						mergerTree.nCommon[iC].resize(nProgHalo);
 
-					mergerTree.subHalos.resize(nProgHalo);
+					mergerTree.progHalos.resize(nProgHalo);
 					mergerTree.idProgenitor.resize(nProgHalo);
 					mergerTree.indexProgenitor.resize(nProgHalo);
 
 					if (orphanHalo == 1)
 					{
 						mergerTree.isOrphan = true;
-						mergerTree.subHalos[0].isToken = true;
+						mergerTree.progHalos[0].isToken = true;
 					} else {
 						mergerTree.isOrphan = false;
-						mergerTree.subHalos[0].isToken = false;
+						mergerTree.progHalos[0].isToken = false;
 					}
 
 					iLine++;
@@ -884,8 +884,8 @@ void IOSettings::ReadTrees()
 
 					mergerTree.idProgenitor[iLine-1] = progHaloID;
 					mergerTree.nCommon[1][iLine-1] = commPart;
-					mergerTree.subHalos[iLine-1].ID = progHaloID;
-					mergerTree.subHalos[iLine-1].nPart[1] = progPart;
+					mergerTree.progHalos[iLine-1].ID = progHaloID;
+					mergerTree.progHalos[iLine-1].nPart[1] = progPart;
 					iLine++;
 				}
 
@@ -996,16 +996,23 @@ void IOSettings::WriteTrees()
 
 			fileOut << thisTree.mainHalo.ID << " " 
 				<< thisTree.mainHalo.nPart[1] << " " 
+				//<< thisTree.mainHalo.X[0] << " " 
+				//<< thisTree.mainHalo.X[1] << " " 
+				//<< thisTree.mainHalo.X[2] << " " 
 				<< thisTree.idProgenitor.size() << " "
 				<< orphan << endl;
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
-				Halo subHalo = thisTree.subHalos[iP];
+				Halo progHalo = thisTree.progHalos[iP];
 
-				fileOut	<< thisTree.nCommon[1][iP]		<< " " 
-                                	<< thisTree.idProgenitor[iP] 		<< " "
-					<< subHalo.nPart[1] << endl;
+				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
+                                	//<< thisTree.idProgenitor[iP] 		<< " "
+                                	<< progHalo.ID		 	<< " "
+                                	//<< progHalo.X[0]		 	<< " "
+                                	//<< progHalo.X[1]		 	<< " "
+                                	//<< progHalo.X[2]		 	<< " "
+					<< progHalo.nPart[1] << endl;
 			}
                 }
 		

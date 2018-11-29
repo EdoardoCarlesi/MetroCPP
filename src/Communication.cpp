@@ -470,7 +470,7 @@ void Communication::BufferSendRecv()
 			<< buffSendSizeParts/1024/1024 << "MB particle send buffer. " << endl;
 #else
 		if (locTask == 0 && iT == 0)
-			cout << "Allocating particle send buffer... " << endl;
+			cout << "Allocating " << buffSendSizeParts/1024/1024 << " MB for the particle send buffer. " << endl;
 #endif
 
 		/* MPI_Pack variables - for some reason if defined at the beginning MPI_Pack crashes... */
@@ -508,7 +508,8 @@ void Communication::BufferSendRecv()
 		cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
 #else
 		if (locTask == 0 && iT == 0)
-			cout << "Allocating particle recv buffer..." << endl;
+			cout << "Allocating " << buffRecvSizeParts/1024/1024 
+				<< "MB for the particle recv buffer. " << endl;
 #endif
 
 		/* Send and recv the MPI_Pack-ed buffers */

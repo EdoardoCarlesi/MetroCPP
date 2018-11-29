@@ -15,7 +15,7 @@ public:
 	MergerTree();
 	~MergerTree();
 
-	vector<Halo> subHalos;				// SubHalos of the main tree
+	vector<Halo> progHalos;				// progenitor Halos of the main tree
 	Halo mainHalo;					// Main halo of the MTree, to be stored in the cleantree only
 
 	bool isOrphan;					// If no progenitor is found, the halo is orphan and a token placeholder halo is 
@@ -24,7 +24,7 @@ public:
 	vector<int> indexProgenitor;			// local array index of progenitors
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 
-	void sortByMerit(int);				// Once possible progenitors have been found, compare
+	void SortByMerit(void);				// Once possible progenitors have been found, compare
 	void Clean(void);
 	void Info(void);
 };

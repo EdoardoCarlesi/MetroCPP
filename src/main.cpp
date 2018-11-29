@@ -167,7 +167,7 @@ int main(int argv, char **argc)
 			iniTime = clock();
 	
 			/* Backward halo connections */
-			//FindProgenitors(1, 0);
+			FindProgenitors(1, 0);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();
@@ -176,7 +176,7 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 				cout << "\nDone in " << elapsed << "s. " << endl;
 
-			//CleanTrees(iNumCat);
+			CleanTrees(iNumCat);
 
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 #ifndef ZOOM
