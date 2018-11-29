@@ -449,10 +449,10 @@ void IOSettings::DistributeFilesAmongTasks(void)
 		cout << "Reading halo/particle files on Task=0. Total number of tasks= " << totTask << endl; 
 #else
 	nLocChunks = int (nChunks / totTask);
-	nLocRemind = nChunks % totTask;
+	nLocRemind = nChunks % totTask;		//FIXME check this setting
 
 	if (locTask == 0)
-		cout << "Each task is reading " << nChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
+		cout << "Each task is reading " << nLocChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
 #endif
 
 	haloFiles.resize(nSnaps);
@@ -467,7 +467,8 @@ void IOSettings::DistributeFilesAmongTasks(void)
 		partFiles[iF].resize(nLocChunks);
 #endif
 
-		for (int jF = 0; jF < nLocChunks + nLocRemind; jF++)
+		//for (int jF = 0; jF < nLocChunks + nLocRemind; jF++)
+		for (int jF = 0; jF < nLocChunks; jF++)
 		{
 #ifdef ZOOM
 			if (locTask == 0)
