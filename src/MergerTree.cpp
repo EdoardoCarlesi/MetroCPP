@@ -118,7 +118,7 @@ void MergerTree::SortByMerit()
 
 		// FIXME
 		for (int iT = 0; iT < nPTypes; iT++)
-			tmpNCommon[iT][iM] = nCommon[iT][iM];
+			tmpNCommon[iT][iM] = nCommon[iT][idx[iM]];
 
 		tmpIdx[iM] = idProgenitor[idx[iM]];
 		tmpIndex[iM] = indexProgenitor[idx[iM]];
