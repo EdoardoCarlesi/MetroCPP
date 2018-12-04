@@ -7,7 +7,8 @@ include ../Makefile.config
 # compiler optimization:
 #CXXFLAGS += -g -O0           # debug mode
 CXXFLAGS += -O3 -std=c++11               # normal mode
-CXXFLAGS += -Wunused-result -fpermissive 
+#CXXFLAGS += -Wunused-result -fpermissive 
+CXXFLAGS += -fpermissive 
 EXEC = MetroCPP
 EXEC_T = test
 

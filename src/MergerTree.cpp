@@ -18,10 +18,12 @@ HaloTree::HaloTree()
 };
 
 
+
 HaloTree::~HaloTree()
 {
 	Clean();
 };
+
 
 
 void HaloTree::Clean()
@@ -32,6 +34,7 @@ void HaloTree::Clean()
 	mTree.clear();
 	mainHalo.clear();
 };
+
 
 
 void MergerTree::Info()
@@ -112,17 +115,17 @@ void MergerTree::SortByMerit()
 
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
-		//if (idx[iM] != iM & idProgenitor.size() > 200)
-		//	progHalos[iM].Info();
-		
+		/* Inverse sort - from largest to smallest */
+		int oldIdx, newIdx;
+		oldIdx = idProgenitor.size() - iM - 1;
+		newIdx = idx[iM];
 
-		// FIXME
 		for (int iT = 0; iT < nPTypes; iT++)
-			tmpNCommon[iT][iM] = nCommon[iT][idx[iM]];
+			tmpNCommon[iT][oldIdx] = nCommon[iT][newIdx];
 
-		tmpIdx[iM] = idProgenitor[idx[iM]];
-		tmpIndex[iM] = indexProgenitor[idx[iM]];
-		tmpProgHalos[iM] = progHalos[idx[iM]];
+		tmpIdx[oldIdx] = idProgenitor[newIdx];
+		tmpIndex[oldIdx] = indexProgenitor[newIdx];
+		tmpProgHalos[oldIdx] = progHalos[newIdx];
 	}	
 
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
@@ -382,11 +385,6 @@ void FindProgenitors(int iOne, int iTwo)
 			 **************************************************/
 #else						
 
-#ifdef VERBOSE
-	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos; 
-	cout << ", nHalos[0]=" << locHalos[iOne].size() << ", nHalos[1]=" << locHalos[iTwo].size() << ", n2:" << nLocHalos[iTwo] << endl;
-#endif
-
 		for (int iL = 0; iL < nLoopHalos; iL++)
 		{
 			int iH = 0; 
@@ -581,11 +579,11 @@ void InitTrees(int nUseCat)
 void CleanTrees(int iStep)
 {
 	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
-
-#ifdef ZOOM
+	int nErr = 0;
         halosPerTask = int(nLocHalos[0] / totTask);
         halosRemaind = nLocHalos[0] % totTask;
 
+#ifdef ZOOM
 	if (locTask < halosRemaind)
 		halosPerTask += 1;
 #else
@@ -595,8 +593,10 @@ void CleanTrees(int iStep)
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections, back and forth, for " << halosPerTask << " halos." << endl;
 
-	//if (locTask == 0)
-	//	cout << "nHalos " << locHalos[0].size() << ", nTrees: " << locMTrees[0].size() << endl; 
+#ifdef VERBOSE
+	if (locTask == 0)
+		cout << "nHalos " << locHalos[0].size() << ", nTrees: " << locMTrees[0].size() << endl; 
+#endif
 
 	for (int kTree = 0; kTree < halosPerTask; kTree++)
 	{
@@ -678,25 +678,40 @@ void CleanTrees(int iStep)
 
 			if (mainID == descID)
 			{
-				mergerTree.idProgenitor.push_back(progID);
-				mergerTree.indexProgenitor.push_back(jTree);
-				mergerTree.progHalos.push_back(progHalo);
 
-				for(int iT = 0; iT < nPTypes; iT++)
-					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+				try
+				{
+					mergerTree.idProgenitor.push_back(progID);
+					mergerTree.indexProgenitor.push_back(jTree);
+					mergerTree.progHalos.push_back(progHalo);
+
+					for(int iT = 0; iT < nPTypes; iT++)
+						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
+					
+					throw 123;
+				} catch (int t) {
+					//cout << kTree << " ";
+					//cout << "Error on task = " << locTask << " iTree:" << iTree << " jTree: " << jTree << endl;
+					//locHalos[0][iTree].Info();
+					//locHalos[1][jTree].Info();
+					nErr++;
+				}
+				
 
 			}	// mainID = descID
 		}	// kTree & iTree loop
 	
-		if (!mergerTree.isOrphan)	
-			mergerTree.SortByMerit();
+		//if (!mergerTree.isOrphan)	
+		//	mergerTree.SortByMerit();
 
-		if (mergerTree.idProgenitor.size() > 0)
-			locCleanTrees[iStep-1].push_back(mergerTree);
+		//if (mergerTree.idProgenitor.size() > 0)
+		//	locCleanTrees[iStep-1].push_back(mergerTree);
 
 		mergerTree.Clean();
 	}
 	
+	cout << "OnTask = " << locTask << " n errors = " << nErr << endl;
+
 #ifdef ZOOM
 	locTreeIndex.clear();
 	locTreeIndex.shrink_to_fit();

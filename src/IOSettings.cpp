@@ -247,8 +247,8 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 
 void IOSettings::CheckStatus()
 {
-	cout << "On task="	 << locTask << endl;
-	cout << "nSnaps        = " << nSnaps << endl;
+	cout << "On task     = " << locTask << endl;
+	cout << "nSnaps      = " << nSnaps << endl;
 	cout << "nChunks     = " << nChunks << endl;
 	cout << "inputFormat = " << inputFormat << endl;
 	cout << "nGrid       = " << nGrid << endl;
