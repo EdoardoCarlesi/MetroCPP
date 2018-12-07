@@ -691,8 +691,8 @@ void CleanTrees(int iStep)
 			if (mainID == descID)
 			{
 
-				try
-				{
+				//try
+				//{
 					mergerTree.idProgenitor.push_back(progID);
 					mergerTree.indexProgenitor.push_back(jTree);
 					mergerTree.progHalos.push_back(progHalo);
@@ -700,14 +700,14 @@ void CleanTrees(int iStep)
 					for(int iT = 0; iT < nPTypes; iT++)
 						mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 					
-					throw 123;
-				} catch (int t) {
+				//	throw 123;
+				//} catch (int t) {
 					//cout << kTree << " ";
 					//cout << "Error on task = " << locTask << " iTree:" << iTree << " jTree: " << jTree << endl;
 					//locHalos[0][iTree].Info();
 					//locHalos[1][jTree].Info();
-					nErr++;
-				}
+				//	nErr++;
+				//}
 				
 
 			}	// mainID = descID
@@ -715,16 +715,16 @@ void CleanTrees(int iStep)
 #endif
 		}	// iProg for loop
 	
-		//if (!mergerTree.isOrphan)	
-		//	mergerTree.SortByMerit();
+		if (!mergerTree.isOrphan)	
+			mergerTree.SortByMerit();
 
-		//if (mergerTree.idProgenitor.size() > 0)
-		//	locCleanTrees[iStep-1].push_back(mergerTree);
+		if (mergerTree.idProgenitor.size() > 0)
+			locCleanTrees[iStep-1].push_back(mergerTree);
 
 		mergerTree.Clean();
 	}	// kTree for loop
 	
-	cout << "OnTask = " << locTask << " n errors = " << nErr << endl;
+	//cout << "OnTask = " << locTask << " n errors = " << nErr << endl;
 
 #ifdef ZOOM
 	locTreeIndex.clear();

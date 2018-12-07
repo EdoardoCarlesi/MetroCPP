@@ -228,7 +228,7 @@ int main(int argv, char **argc)
 		}
 
 		// FIXME this is to test only
-		//SettingsIO.WriteTrees();
+		SettingsIO.WriteTrees();
 	}
 
 	/* Proceed with smoothing & interpolating the MAH of single halos */
