@@ -110,7 +110,7 @@ void Communication::ExchangeBuffers()
 	vector<int> allIndex;
 	
 	if (locTask == 0)
-		cout << "Exchanging buffer among tasks... " << endl;
+		cout << "Exchanging buffer information... " << endl;
 
 	/* Make sure the buffers are clean */
 	if (buffIndexNodeHalo.size() > 0)
@@ -384,7 +384,7 @@ void Communication::BufferSendRecv()
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (locTask == 0)
-		cout << "Exchanging halos in the buffer region across all tasks..." << endl; 
+		cout << "Exchanging halos in the buffer region..." << endl; 
 
 	/*
 	 * 		FIRST EXCHANGE HALO BUFFERS
@@ -459,6 +459,10 @@ void Communication::BufferSendRecv()
 		/*
 		 * 		COMMUNICATE PARTICLE BUFFERS
 		 */
+
+	
+	if (runMode == 0 || runMode == 2)	// Exchange particles only if running in mode 0 or 2	(i.e. building the raw trees from scratch)
+	{
 
 		/* Local particles to be sent will be mpi-packed into this buffer */
 		buffSendParts = (void *) malloc(buffSendSizeParts);
@@ -543,7 +547,10 @@ void Communication::BufferSendRecv()
 
 			iBuffTotHalo++;		// Keep track of the total number of halos in the buffer
 		}
-	}	/* Loop on all the send/recv tasks */
+
+	}	/* runMode == 0 */
+
+}	/* Loop on all the send/recv tasks */
 
 	/* Now assign the halos on the buffer to the respective nodes */
 	for (int iH = 0; iH < iBuffTotHalo; iH++)
@@ -672,9 +679,27 @@ void Communication::SyncOrphanHalos()
 	orphanHaloIndex.clear();
 	orphanHaloIndex.shrink_to_fit();
 };
+
+#else	// We use a simpler function to synchronize the indexes in non zoom mode
+
+void Communication::SyncIndex()
+{
+	// Restart the map just in case
+	///id2Index.clear();
+	
+	for (int iH = 0; iH < locHalos[1].size(); iH++)
+	{
+		id2Index[locHalos[1][iH].ID] = iH;
+	}
+
+	for (int iH = 0; iH < locBuffHalos.size(); iH++)
+	{
+		id2Index[locBuffHalos[iH].ID] = -iH;
+	}
+
+}
+
 #endif		// ZOOM
-
-
 
 void Communication::CleanBuffer()
 {

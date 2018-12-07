@@ -771,32 +771,41 @@ void AssignDescendant()
 
 void AssignProgenitor()
 {
-	unsigned long long int subID = 0;
-	int subIndex = 0;
+	unsigned long long int progID = 0;
+	int progIndex = 0;
 
 	orphanHaloIndex.clear();
 	orphanHaloIndex.shrink_to_fit();
 
-	//cout << "AssignDescendant(): " << locCleanTrees[iNumCat-1].size() << endl;
-
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
-		//cout << iC << " " << locCleanTrees[iNumCat-1][iC].progHalos.size() << endl;
-
 		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].progHalos.size(); iS++ )
 		{
-			subID = locCleanTrees[iNumCat-1][iC].progHalos[iC].ID;
-			subIndex = id2Index[subID];
-			locCleanTrees[iNumCat-1][iC].progHalos[iS] = locHalos[iUseCat][subIndex];
+			progID = locCleanTrees[iNumCat-1][iC].progHalos[iS].ID;
+	
+			if(locCleanTrees[iNumCat-1][iC].isOrphan)
+			{
+				locCleanTrees[iNumCat-1][iC].progHalos[0] = locCleanTrees[iNumCat-1][iC].mainHalo; 
+			} else {
 
-			//if (subIndex == 0)
-			//	cout << iS << ", SubIndex: " << subID << " " << subIndex << " " << endl;
+				if (id2Index.find(progID) != id2Index.end()) 
+				{
+					progIndex = id2Index[progID];
+	
+					if (progIndex > 0)
+						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locHalos[iUseCat][progIndex];
+					else
+						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[progIndex];
 
+				} else {
+					cout << locTask << " does not have ID: " << progID << endl;
+				}
+			}
 		}
 	}
 
 	/* Halos have been assigned, so we can clear the map */
-	//id2Index.clear();	
+	id2Index.clear();	
 
 };
 

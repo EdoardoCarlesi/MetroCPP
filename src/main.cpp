@@ -202,32 +202,42 @@ int main(int argv, char **argc)
 		iNumCat = 0;	iUseCat = 0;
 
 		SettingsIO.ReadHalos();
-#ifdef ZOOM	// We need to scatter catalogs through the tasks only when in ZOOM mode
+
+#ifdef ZOOM	
+		/* We need to scatter catalogs through the tasks only when in ZOOM mode	*/
 		CommTasks.BufferSendRecv();
+#else		
+		/* Communicate grid info across all tasks */
+		CommTasks.BroadcastAndGatherGrid();
 #endif
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
-			//for (int iH = 0; iH < 5; iH++)
- 	       		  //      if (locTask == 0)
-        	        //	        cout << iNumCat << "====>" << locHalos[iUseCat][iH].ID 
-			//			<< " " << id2Index[locHalos[iUseCat][iH].ID] << " " << locHalos[0].size() << endl;
-
-
-			iUseCat = 0;			// Descendant halos are in the locHalo[0] vector
+			/* Initialize descendant halos */
+			iUseCat = 0;			
 			SettingsIO.ReadTrees();
 			AssignDescendant();
-	
+
+			// TODO: At this point we could fix halo masses and position using some interpolation scheme
+			
+			/* Now locate progenitors in the next snapshot */
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
-#ifdef ZOOM
+			
+			/* Again, for completeness we need to locate and communicate halo buffers */
+			CommTasks.BroadcastAndGatherGrid();
+			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 			CommTasks.BufferSendRecv();
+#ifdef ZOOM
 			CommTasks.SyncOrphanHalos();
+#else
+			CommTasks.SyncIndex();
 #endif
 			AssignProgenitor();
 			ShiftHalosPartsGrids();
 		}
 
-		// FIXME this is to test only
+		// TODO: once the MAHs have been computed, we need to smooth over 
+
 		SettingsIO.WriteTrees();
 	}
 
