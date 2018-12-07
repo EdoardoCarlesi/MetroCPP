@@ -557,7 +557,8 @@ void IOSettings::ReadParticles(void)
 	tmpParts.resize(nPTypes);
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
 	nLocChunks = haloFiles[iNumCat].size();
-	//cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << " nP: " << locParts[iUseCat].size() << endl;
+
+	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << " nP: " << locParts[iUseCat].size() << endl;
 
 #ifdef VERBOSE
 	cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << endl;
@@ -777,7 +778,11 @@ void IOSettings::ReadHalos()
 		cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 #endif
 		/* Append to the locHalo file */
-		locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
+		//locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
+
+		for (int iH = 0; iH < tmpHalos.size(); iH++)
+				locHalos[iUseCat].push_back(tmpHalos[iH]);
+
 		tmpHalos.clear();
 		tmpHalos.shrink_to_fit();
 #endif

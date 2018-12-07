@@ -229,7 +229,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 void FindProgenitors(int iOne, int iTwo)
 {
 	vector<int> thisNCommon, indexes, totNCommon;
-	float rSearch = 0, facRSearch = 30.0;			//TODO find a better way to implement facRSearch
+	float rSearch = 0, facRSearch = 40.0, radiusSearchMax = 5000.0;		//TODO find a better way to implement facRSearch
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	int totCmp = 0, totSkip = 0, nLocOrphans = 0; 
 	int nLoopHalos = 0;
@@ -408,7 +408,8 @@ void FindProgenitors(int iOne, int iTwo)
 			if (iL == nStepsCounter * floor(iL / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
 
-			rSearch = facRSearch * thisHalo.rVir;
+			//rSearch = 5000.0; //facRSearch * thisHalo.rVir;
+			rSearch = radiusSearchMax; //facRSearch * thisHalo.rVir;
 
 			/* We only loop on a subset of halos */
 			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
@@ -658,7 +659,17 @@ void CleanTrees(int iStep)
 				}
 		
 			} else {
-				descID = locMTrees[1][jTree].idProgenitor[0];	
+			
+				if (jTree > locMTrees[1].size())
+					cout << "ERROR in CleanTrees(). MTree size: " << locMTrees[1].size() << ", indexj: " << jTree << endl;
+						
+				if (locMTrees[1][jTree].idProgenitor.size() > 0)
+				{
+					descID = locMTrees[1][jTree].idProgenitor[0];	
+				} else {
+					locMTrees[1][jTree].mainHalo.Info();
+				}
+
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
 #else
@@ -672,8 +683,9 @@ void CleanTrees(int iStep)
 				cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
 					<< " | " << iTree << " " << jTree << endl;
 
-				locHalos[0][iTree].Info();
-				locHalos[1][jTree].Info();
+				//locMTrees[0][iTree].Info();
+				//locMTrees[1][jTree].Info();
+				//locHalos[1][jTree].Info();
 			}
 
 			if (mainID == descID)
@@ -699,7 +711,9 @@ void CleanTrees(int iStep)
 				
 
 			}	// mainID = descID
-		}	// kTree & iTree loop
+#ifdef TEST
+#endif
+		}	// iProg for loop
 	
 		//if (!mergerTree.isOrphan)	
 		//	mergerTree.SortByMerit();
@@ -708,7 +722,7 @@ void CleanTrees(int iStep)
 		//	locCleanTrees[iStep-1].push_back(mergerTree);
 
 		mergerTree.Clean();
-	}
+	}	// kTree for loop
 	
 	cout << "OnTask = " << locTask << " n errors = " << nErr << endl;
 

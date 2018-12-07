@@ -180,9 +180,9 @@ int main(int argv, char **argc)
 
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 #ifndef ZOOM
-			//CommTasks.CleanBuffer();
+			CommTasks.CleanBuffer();
 #endif
-			//ShiftHalosPartsGrids();
+			ShiftHalosPartsGrids();
 			
 		}	/* Finish: the trees have now been built for this step */
 
