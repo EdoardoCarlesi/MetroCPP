@@ -190,7 +190,7 @@ int main(int argv, char **argc)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
 
 		MPI_Barrier(MPI_COMM_WORLD);
-		SettingsIO.WriteTrees();
+		SettingsIO.WriteTrees(); 	// TODO write trees at each step
 	
 		CleanMemory(0);
 
@@ -214,6 +214,7 @@ int main(int argv, char **argc)
 		{
 			/* Initialize descendant halos */
 			iUseCat = 0;			
+			CommTasks.SyncIndex();
 			SettingsIO.ReadTrees();
 			AssignDescendant();
 
@@ -234,6 +235,7 @@ int main(int argv, char **argc)
 #endif
 			AssignProgenitor();
 			ShiftHalosPartsGrids();
+			// TODO: NEED TO ADD THE ORPHAN HALOS in 0 to 1 and copy them to the next step!!!!!!
 		}
 
 		// TODO: once the MAHs have been computed, we need to smooth over 

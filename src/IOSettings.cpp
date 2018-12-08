@@ -874,18 +874,10 @@ void IOSettings::ReadTrees()
 					}
 
 					iLine++;
-
-					//if (locTask == 0 && nProgHalo > 1) 
-					//	cout << "host: " << iLine << " ID:"  
-					//		<< hostHaloID << " nHost:" << hostPart << " nProg:" << nProgHalo << endl;
 				} 
 				else if (iLine > 0 && iLine < nProgHalo+1)	/* Read-in properties of progenitors */
 				{
 		        		sscanf(lineRead, "%d  %llu  %d", &commPart, &progHaloID, &progPart);
-
-					//if (locTask == 0 && nProgHalo > 0) 
-					//	cout << iLine << " " << nProgHalo << " " << commPart << " " 
-					//		<< progHaloID << " " << progPart << endl;
 
 					mergerTree.idProgenitor[iLine-1] = progHaloID;
 					mergerTree.nCommon[1][iLine-1] = commPart;
@@ -903,8 +895,6 @@ void IOSettings::ReadTrees()
 				}
 			}
 		}
-#ifdef TEST		
-#endif
 	}	/* End if using the correct number of tasks */
 
 };
@@ -1012,7 +1002,7 @@ void IOSettings::WriteTrees()
 				Halo progHalo = thisTree.progHalos[iP];
 
 				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
-                                	//<< thisTree.idProgenitor[iP] 		<< " "
+                                	//<< thisTree.idProgenitor[iP] 	<< " "
                                 	<< progHalo.ID		 	<< " "
                                 	//<< progHalo.X[0]		 	<< " "
                                 	//<< progHalo.X[1]		 	<< " "

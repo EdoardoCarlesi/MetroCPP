@@ -682,24 +682,22 @@ void Communication::SyncOrphanHalos()
 
 #else	// We use a simpler function to synchronize the indexes in non zoom mode
 
+
 void Communication::SyncIndex()
 {
-	// Restart the map just in case
-	///id2Index.clear();
+	/* Clean the map just in case */
+	id2Index.clear();
 	
-	for (int iH = 0; iH < locHalos[1].size(); iH++)
-	{
-		id2Index[locHalos[1][iH].ID] = iH;
-	}
+	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
+		id2Index[locHalos[iUseCat][iH].ID] = iH;
 
-	for (int iH = 0; iH < locBuffHalos.size(); iH++)
-	{
-		id2Index[locBuffHalos[iH].ID] = -iH;
-	}
+	if (iUseCat == 1)
+		for (int iH = 0; iH < locBuffHalos.size(); iH++)
+			id2Index[locBuffHalos[iH].ID] = -iH;
 
 }
-
 #endif		// ZOOM
+
 
 void Communication::CleanBuffer()
 {

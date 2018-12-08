@@ -76,8 +76,12 @@ void CleanMemory(int iCat)
 	if (locTask ==0)
 		cout << "Cleaning memory for catalog " << iCat << endl;	
 
-	locHalos[iCat].clear();
-	locHalos[iCat].shrink_to_fit();
+	if (locHalos[iCat].size() > 0)
+	{
+		locHalos[iCat].clear();
+		locHalos[iCat].shrink_to_fit();
+	}
+
 	nLocHalos[iCat] = 0;
 
 	/* Clean the particles if not running in post processing mode only */
@@ -149,6 +153,8 @@ void ShiftHalosPartsGrids()
 	nLocHalos[0] = nLocHalos[1];
 	locHalos[0] = locHalos[1];
 
+	//cout << locTask << " Orphan: " << locOrphHalos.size() << endl;
+
 #ifndef ZOOM
 	/* Keep track of the orphan halos at the next step */
 	for (int iO = 0; iO < locOrphHalos.size(); iO++)
@@ -180,7 +186,7 @@ void ShiftHalosPartsGrids()
 			for (int iT = 0; iT < nPTypes; iT++)
 				locParts[0][nLocHalos[0]+iO][iT].swap(locOrphParts[iO][iT]);
 		}	
-	}
+	}	// runMode 0 or 2
 		
 	/* Now free and reset the orphan halo trackers */
 	nLocHalos[0] += locOrphHalos.size();
@@ -196,26 +202,30 @@ void ShiftHalosPartsGrids()
 	for (int iH = 0; iH < nLocHalos[0]; iH++)
 		GlobalGrid[0].AssignToGrid(locHalos[0][iH].X, iH);
 
-
 	/* Now clean the halo & particle buffers */
 	locBuffHalos.clear();
 	locBuffHalos.shrink_to_fit();
 	
-	for (int iP = 0; iP < locBuffParts.size(); iP++)
+	if (runMode == 0 || runMode == 2)
 	{
-		for (int iT = 0; iT < nPTypes; iT++)
-		{
-			locBuffParts[iP][iT].clear();
-			locBuffParts[iP][iT].shrink_to_fit();
-		}
 
-		locBuffParts[iP].clear();
-		locBuffParts[iP].shrink_to_fit();
+		for (int iP = 0; iP < locBuffParts.size(); iP++)
+		{
+			for (int iT = 0; iT < nPTypes; iT++)
+			{
+				locBuffParts[iP][iT].clear();
+				locBuffParts[iP][iT].shrink_to_fit();
+			}
+	
+			locBuffParts[iP].clear();
+			locBuffParts[iP].shrink_to_fit();
+		}
+	
+		locBuffParts.clear();
+		locBuffParts.shrink_to_fit();
 	}
 	
-	locBuffParts.clear();
-	locBuffParts.shrink_to_fit();
-#endif
+#endif	// ZOOM mode
 	
 	if (locTask == 0)
 		cout << "Grid, halo and particle data has been cleaned and copied 1 ---> 0." << endl;
