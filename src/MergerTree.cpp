@@ -790,7 +790,8 @@ void AssignProgenitor()
 						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex];
 
 				} else {
-					cout << locTask << " does not have progenitor ID: " << progID << endl;
+					//cout << locTask << " does not have progenitor ID: " << progID << endl;
+					//locCleanTrees[iNumCat-1][iC].progHalos[iS].Info();
 				}
 			}
 		}

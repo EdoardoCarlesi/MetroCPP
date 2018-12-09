@@ -781,7 +781,7 @@ void IOSettings::ReadHalos()
 		//locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
 
 		for (int iH = 0; iH < tmpHalos.size(); iH++)
-				locHalos[iUseCat].push_back(tmpHalos[iH]);
+			locHalos[iUseCat].push_back(tmpHalos[iH]);
 
 		tmpHalos.clear();
 		tmpHalos.shrink_to_fit();

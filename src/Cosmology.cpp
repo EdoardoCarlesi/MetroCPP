@@ -34,43 +34,66 @@ float Cosmology::Rho0(float boxSizeMpc, int nPart)
 
 
 /* Compute the gravitational acceleration around a given halo */
-void Cosmology::GravAcc(Halo useHalo, float a0, float a1)
+void Cosmology::GravAcc(int haloIndex, float a0, float a1)
 {
+	float rHalo[3], rHalos, rCutoff, *rNorm;	
+	float a_i0[3], a_i1[3], x_i0[3];
 	float useM, deltaT, deltaV;
-	float *rNorm;	rNorm = (float *) calloc(3, sizeof(float));
 
+#ifdef TEST
 	/* Percentage of accuracy on the interpolated velocity computation */
 	deltaV = VectorModule(useHalo.V) * 0.1;
 	deltaT = A2Sec(a0, a1);
 
 	/* It is faster to simply start the loop on all halos */
-	for (int iH = 0; iH < locHalos[0].size(); iH++)
+	for (int iH = 0; iH < locCleanTrees[iNumCat-1].size(); iH++)
 	{
-		Halo thisHalo; thisHalo = locHalos[0][iH];
-		float rHalos = useHalo.Distance(thisHalo.X);
+		Halo thisHaloA1; thisHaloA1 = locCleanTrees[iNumCat-1][iH];
+		rHalos = useHalo.Distance(thisHaloA1.X);
 		
 		/* The cutoff radius depends on the mass of each halo */
-		float rCutoff = sqrt((G_MpcMsunS * thisHalo.mTot * deltaT) / deltaV); 
+		rCutoff = sqrt((G_MpcMsunS * thisHaloA1.mTot * deltaT) / deltaV); 
 
 		/* Now use the halo for comparison only if it is within a given radius */
 		if (rHalos < rCutoff)
 		{
-			float thisAcc = G_MpcMsunS * thisHalo.mTot / (rHalos * rHalos);
+			thisAcc = G_MpcMsunS * thisHaloA1.mTot / (rHalos * rHalos);
 
 			for (int iX = 0; iX < 3; iX++) 
-				rNorm[iX] = (useHalo.X[iX] - thisHalo.X[iX]);	
+				rHalo[iX] = (useHalo.X[iX] - thisHalo.X[iX]);	
 
-			rNorm = UnitVector(rNorm);
+			rNorm = UnitVector(&rHalo[0]);
 
 			for (int iX = 0; iX < 3; iX++) 
-				useHalo.V[iX] += rNorm[iX] * thisAcc;
-
-			// TODO do some kind of leapfrog interpolation to compute the position at this intermediate step
+				a_i1[iX] += rNorm[iX] * thisAcc;
 
 		}
-		
-	}
 
+		/* For the leapfrog algorithm we need to run the code at the two timesteps */
+		Halo thisHaloA1; thisHaloA1 = locHalos[1][iH];
+		rHalos = useHalo.Distance(thisHaloA1.X);
+		
+		/* The cutoff radius depends on the mass of each halo */
+		rCutoff = sqrt((G_MpcMsunS * thisHaloA1.mTot * deltaT) / deltaV); 
+
+		/* Now use the halo for comparison only if it is within a given radius */
+		if (rHalos < rCutoff)
+		{
+			//float thisAcc = G_MpcMsunS * thisHalo.mTot / (rHalos * rHalos);
+
+			for (int iX = 0; iX < 3; iX++) 
+				rHalo[iX] = (useHalo.X[iX] - thisHalo.X[iX]);	
+
+			rNorm = UnitVector(&rHalo[0]);
+
+			for (int iX = 0; iX < 3; iX++) 
+				a_i0[iX] += rNorm[iX] * thisAcc;
+
+		}
+
+	
+	}
+#endif
 };
 
 

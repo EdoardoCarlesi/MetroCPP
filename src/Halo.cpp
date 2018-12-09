@@ -18,6 +18,14 @@ Halo::Halo()
 	fMhires = 1.000;
 	isToken = false; 	
 	
+	nPart[nPTypes] = 0;
+
+	for (int iX = 0; iX <3; iX++)
+	{
+		X[iX] = -1.0;
+		V[iX] = 0.00;
+	}
+
 	for (int iT = 0; iT < nPTypes; iT++)
 		nPart[0] = 0;
 };

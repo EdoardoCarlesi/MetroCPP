@@ -24,7 +24,7 @@ public:
 	float RhoC(float, int);
 		
 	/* This function computes the gravitational acceleration due to the neighbouring halos for a token halo */
-	void GravAcc(Halo, float, float);
+	void GravAcc(int, float, float);
 
 	/* Splines used for interpolation */
 	tk::spline pk;

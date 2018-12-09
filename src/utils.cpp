@@ -32,7 +32,6 @@ void InitLocVariables(void)
 #ifndef ZOOM
 	GlobalGrid[0].Init(nGrid, boxSize);
 	GlobalGrid[1].Init(nGrid, boxSize);
-	BufferGrid.Init(nGrid, boxSize);
 #endif
 
 	sizeHalo = sizeof(Halo);

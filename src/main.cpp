@@ -40,6 +40,11 @@ int main(int argv, char **argc)
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
+                
+	/* Error handler */
+	MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN); 
+	//MPI::COMM_WORLD.Set_errhandler ( MPI::ERRORS_THROW_EXCEPTIONS );
+	//MPI::COMM_WORLD.Set_errhandler ( MPI::ERRORS_RETURN);
 
 	/* These are the local variables and I/O settings that are defined for each task*/
 	InitLocVariables();
@@ -223,9 +228,10 @@ int main(int argv, char **argc)
 			/* Now locate progenitors in the next snapshot */
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
-			
+#ifndef ZOOM
 			/* Again, for completeness we need to locate and communicate halo buffers */
 			CommTasks.BroadcastAndGatherGrid();
+#endif
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 			CommTasks.BufferSendRecv();
 #ifdef ZOOM
@@ -234,8 +240,10 @@ int main(int argv, char **argc)
 			CommTasks.SyncIndex();
 #endif
 			AssignProgenitor();
+#ifndef ZOOM
+			CommTasks.CleanBuffer();
+#endif
 			ShiftHalosPartsGrids();
-			// TODO: NEED TO ADD THE ORPHAN HALOS in 0 to 1 and copy them to the next step!!!!!!
 		}
 
 		// TODO: once the MAHs have been computed, we need to smooth over 
