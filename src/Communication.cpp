@@ -34,7 +34,8 @@ void Communication::BroadcastAndGatherGrid()
 	int nNonZero = 0, thisTask = 0, thisNode = 0;
 	
 	if (locTask == 0)
-		cout << "Broadcasting node information to all tasks for Grid[" << iUseCat << "]." << endl;
+		//cout << "Broadcasting node information to all tasks for Grid[" << iUseCat << "]." << endl;
+		cout << "Broadcasting node information to all tasks... << endl;
 
 	if (locTask == 0)
 		tmpTaskOnGridNode.resize(totTask * gridSize);
@@ -461,62 +462,25 @@ void Communication::BufferSendRecv()
 		cout << iT << ") On task=" << locTask << ") sending " << nBuffSendHalos << " halos to " << sendTask <<endl;
 		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHalos << " b to " << sendTask <<endl;
 #endif
-
-		//if (sendTask != recvTask) {
 		MPI_Sendrecv(&nBuffSendHalos, 1, MPI_INT, sendTask, 0, 
 			     &nBuffRecvHalos, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
-		//} else {
-		//MPI_Irecv(&nBuffRecvHalos, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &request_recv);
-		//MPI_Isend(&nBuffSendHalos, 1, MPI_INT, sendTask, 0, MPI_COMM_WORLD, &request_send);
-		//}
 
-		//if (nBuffSendHalos == 0)
-		{
-			Halo dummyHalo;
-		//	buffSendHalos.push_back(dummyHalo); //resize(1);
-		//	buffSendSizeHalos = sizeHalo;
-		}
-
-		//if (nBuffRecvHalos > 0)
-		{
-			buffRecvSizeHalos = nBuffRecvHalos * sizeHalo;
-			buffRecvHalos.resize(nBuffRecvHalos);	
-		//} else {
-			//cout << "On task " << locTask << " buffer recv halos is " << nBuffRecvHalos << endl;
-		//	Halo dummyHalo;
-		//	buffRecvHalos.push_back(dummyHalo); //resize(1);
-		//	buffRecvSizeHalos = sizeHalo;
-		}
+		buffRecvSizeHalos = nBuffRecvHalos * sizeHalo;
+		buffRecvHalos.resize(nBuffRecvHalos);	
 
 #ifdef VERBOSE
 		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvHalos << " halos from " << recvTask <<endl;
 		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHalos << " b from " << recvTask <<endl;
 #endif
-
-		//MPI_Barrier(MPI_COMM_WORLD);
-
-	//	if (sendTask != recvTask) {
 		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
 			     &buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
 
-	//	} else {
 		/* Non-blocking communication, avoids deadlocks */
+		/*
 		//if (nBuffSendHalos > 0)
 		//	MPI_Isend(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &request_send);
 		//if (nBuffRecvHalos > 0)
 		//	MPI_Irecv(&buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &request_recv);
-
-		if (nBuffRecvHalos > 0)
-		{
-			cout << "OnTask " << locTask << " recv: " << recvTask << " size: " << buffRecvSizeHalos << endl;
-
-			//if (buffRecvSizeHalos > 0) 
-		//		MPI_Irecv(&buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &request_recv);
-		}
-		//}
-	
-		//}
-		/*
 		try {
 		} catch (MPI::Exception e) {
 			cout << "MPI ERROR EXCEPTION ON Task: " << locTask << ", send: " << sendTask 
@@ -542,12 +506,10 @@ void Communication::BufferSendRecv()
 			buffSendHalos.shrink_to_fit();
 		}
 
-		cout << "Halos sent/recv on " << locTask << " in mode " << runMode << endl;
-
 	/*
-	 * 		COMMUNICATE PARTICLE BUFFERS
+	 * 		MPI_Pack & exchange particle buffers
 	 */
-	
+
 	if (runMode == 0 || runMode == 2)	// Exchange particles only if running in mode 0 or 2	(i.e. building the raw trees from scratch)
 	{
 
