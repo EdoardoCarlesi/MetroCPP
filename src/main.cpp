@@ -40,6 +40,11 @@ int main(int argv, char **argc)
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
+                
+	/* Error handler */
+	MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN); 
+	//MPI::COMM_WORLD.Set_errhandler ( MPI::ERRORS_THROW_EXCEPTIONS );
+	//MPI::COMM_WORLD.Set_errhandler ( MPI::ERRORS_RETURN);
 
 	/* These are the local variables and I/O settings that are defined for each task*/
 	InitLocVariables();
@@ -167,7 +172,7 @@ int main(int argv, char **argc)
 			iniTime = clock();
 	
 			/* Backward halo connections */
-			//FindProgenitors(1, 0);
+			FindProgenitors(1, 0);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();
@@ -176,21 +181,19 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 				cout << "\nDone in " << elapsed << "s. " << endl;
 
-			//CleanTrees(iNumCat);
+			CleanTrees(iNumCat);
 
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 #ifndef ZOOM
 			CommTasks.CleanBuffer();
 #endif
 			ShiftHalosPartsGrids();
+			SettingsIO.WriteTree(iNumCat); 	// TODO write trees at each step
 			
 		}	/* Finish: the trees have now been built for this step */
 
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
-
-		MPI_Barrier(MPI_COMM_WORLD);
-		SettingsIO.WriteTrees();
 	
 		CleanMemory(0);
 
@@ -202,33 +205,45 @@ int main(int argv, char **argc)
 		iNumCat = 0;	iUseCat = 0;
 
 		SettingsIO.ReadHalos();
-#ifdef ZOOM	// We need to scatter catalogs through the tasks only when in ZOOM mode
+
+#ifdef ZOOM	
+		/* We need to scatter catalogs through the tasks only when in ZOOM mode	*/
 		CommTasks.BufferSendRecv();
+#else		
+		/* Communicate grid info across all tasks */
+		CommTasks.BroadcastAndGatherGrid();
 #endif
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
-			//for (int iH = 0; iH < 5; iH++)
- 	       		  //      if (locTask == 0)
-        	        //	        cout << iNumCat << "====>" << locHalos[iUseCat][iH].ID 
-			//			<< " " << id2Index[locHalos[iUseCat][iH].ID] << " " << locHalos[0].size() << endl;
-
-
-			iUseCat = 0;			// Descendant halos are in the locHalo[0] vector
+			/* Initialize descendant halos */
+			iUseCat = 0;			
+			CommTasks.SyncIndex();
 			SettingsIO.ReadTrees();
 			AssignDescendant();
-	
+
+			// TODO: At this point we could fix halo masses and position using some interpolation scheme
+			
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
 #ifdef ZOOM
 			CommTasks.BufferSendRecv();
 			CommTasks.SyncOrphanHalos();
-#endif
 			AssignProgenitor();
+#else
+			CommTasks.BroadcastAndGatherGrid();
+			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
+			CommTasks.BufferSendRecv();
+			CommTasks.SyncIndex();
+			AssignProgenitor();
+			CommTasks.CleanBuffer();
+#endif
+
 			ShiftHalosPartsGrids();
 		}
 
-		// FIXME this is to test only
-		//SettingsIO.WriteTrees();
+		SettingsIO.WriteTrees();
+
+		// TODO: once the MAHs have been computed, we need to smooth over 
 	}
 
 	/* Proceed with smoothing & interpolating the MAH of single halos */

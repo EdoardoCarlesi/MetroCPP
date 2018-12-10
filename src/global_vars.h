@@ -19,13 +19,13 @@ class Grid;
 
 // This is the grid that keeps track of halos positions and tasks they are located on
 extern Grid GlobalGrid[2];
-extern Grid BufferGrid;
 #endif
 
 /* MPI variables */
 extern int locTask;
 extern int totTask;
 extern MPI_Status status;
+extern MPI_Request request_recv, request_send;
 
 /* Halo & particle related variables for each task */
 extern vector<vector<Halo>> locHalos;

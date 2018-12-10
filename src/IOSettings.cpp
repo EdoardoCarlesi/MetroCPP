@@ -247,8 +247,8 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 
 void IOSettings::CheckStatus()
 {
-	cout << "On task="	 << locTask << endl;
-	cout << "nSnaps        = " << nSnaps << endl;
+	cout << "On task     = " << locTask << endl;
+	cout << "nSnaps      = " << nSnaps << endl;
 	cout << "nChunks     = " << nChunks << endl;
 	cout << "inputFormat = " << inputFormat << endl;
 	cout << "nGrid       = " << nGrid << endl;
@@ -557,6 +557,7 @@ void IOSettings::ReadParticles(void)
 	tmpParts.resize(nPTypes);
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
 	nLocChunks = haloFiles[iNumCat].size();
+
 	//cout << locTask << ") Reading particles for n halos = " << nLocHalos[iUseCat] << " nP: " << locParts[iUseCat].size() << endl;
 
 #ifdef VERBOSE
@@ -777,7 +778,11 @@ void IOSettings::ReadHalos()
 		cout << "NHalos: " << tmpHalos.size() << " on task=" << locTask << endl;
 #endif
 		/* Append to the locHalo file */
-		locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
+		//locHalos[iUseCat].insert(locHalos[iUseCat].end(), tmpHalos.begin(), tmpHalos.end());
+
+		for (int iH = 0; iH < tmpHalos.size(); iH++)
+			locHalos[iUseCat].push_back(tmpHalos[iH]);
+
 		tmpHalos.clear();
 		tmpHalos.shrink_to_fit();
 #endif
@@ -855,37 +860,29 @@ void IOSettings::ReadTrees()
 					for (int iC = 0; iC < nPTypes; iC++)
 						mergerTree.nCommon[iC].resize(nProgHalo);
 
-					mergerTree.subHalos.resize(nProgHalo);
+					mergerTree.progHalos.resize(nProgHalo);
 					mergerTree.idProgenitor.resize(nProgHalo);
 					mergerTree.indexProgenitor.resize(nProgHalo);
 
 					if (orphanHalo == 1)
 					{
 						mergerTree.isOrphan = true;
-						mergerTree.subHalos[0].isToken = true;
+						mergerTree.progHalos[0].isToken = true;
 					} else {
 						mergerTree.isOrphan = false;
-						mergerTree.subHalos[0].isToken = false;
+						mergerTree.progHalos[0].isToken = false;
 					}
 
 					iLine++;
-
-					//if (locTask == 0 && nProgHalo > 1) 
-					//	cout << "host: " << iLine << " ID:"  
-					//		<< hostHaloID << " nHost:" << hostPart << " nProg:" << nProgHalo << endl;
 				} 
 				else if (iLine > 0 && iLine < nProgHalo+1)	/* Read-in properties of progenitors */
 				{
 		        		sscanf(lineRead, "%d  %llu  %d", &commPart, &progHaloID, &progPart);
 
-					//if (locTask == 0 && nProgHalo > 0) 
-					//	cout << iLine << " " << nProgHalo << " " << commPart << " " 
-					//		<< progHaloID << " " << progPart << endl;
-
 					mergerTree.idProgenitor[iLine-1] = progHaloID;
 					mergerTree.nCommon[1][iLine-1] = commPart;
-					mergerTree.subHalos[iLine-1].ID = progHaloID;
-					mergerTree.subHalos[iLine-1].nPart[1] = progPart;
+					mergerTree.progHalos[iLine-1].ID = progHaloID;
+					mergerTree.progHalos[iLine-1].nPart[1] = progPart;
 					iLine++;
 				}
 
@@ -898,8 +895,6 @@ void IOSettings::ReadTrees()
 				}
 			}
 		}
-#ifdef TEST		
-#endif
 	}	/* End if using the correct number of tasks */
 
 };
@@ -957,6 +952,72 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 
 
 
+void IOSettings::WriteTree(int iThisCat)
+{
+	string outName;
+        string strCpu = to_string(locTask);
+	int totTrees = locCleanTrees.size(), orphan;
+
+        for (int iC = iThisCat-1; iC < iThisCat; iC++)
+        {
+		char *strFnm;	strFnm = (char *) calloc(4, sizeof(char));
+		sprintf(strFnm, "%03d", iC);
+
+		if (runMode == 1)
+			outName = pathOutput + outPrefix + strFnm + "." + strCpu + ".restore." + outSuffix;
+		else
+			outName = pathOutput + outPrefix + strFnm + "." + strCpu + "." + outSuffix;
+
+		ofstream fileOut;
+		fileOut.open(outName);
+
+                if (locTask == 0)
+                        cout << "Printing trees to file " << outName << endl;
+
+		if (locTask == 0)
+		{
+			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)" << endl;
+			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)" << endl;
+		} 
+
+                for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
+                {
+			MergerTree thisTree = locCleanTrees[iC][iT];
+
+			if (thisTree.isOrphan)
+				orphan = 1;	
+			else
+				orphan = 0;
+
+			fileOut << thisTree.mainHalo.ID << " " 
+				<< thisTree.mainHalo.nPart[1] << " " 
+				//<< thisTree.mainHalo.X[0] << " " 
+				//<< thisTree.mainHalo.X[1] << " " 
+				//<< thisTree.mainHalo.X[2] << " " 
+				<< thisTree.idProgenitor.size() << " "
+				<< orphan << endl;
+
+                        for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
+			{
+				Halo progHalo = thisTree.progHalos[iP];
+
+				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
+                                	//<< thisTree.idProgenitor[iP] 	<< " "
+                                	<< progHalo.ID		 	<< " "
+                                	//<< progHalo.X[0]		 	<< " "
+                                	//<< progHalo.X[1]		 	<< " "
+                                	//<< progHalo.X[2]		 	<< " "
+					<< progHalo.nPart[1] << endl;
+			}
+                }
+		
+                //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
+		fileOut.close();
+        }
+};
+
+
+
 void IOSettings::WriteTrees()
 {
 	string outName;
@@ -996,16 +1057,23 @@ void IOSettings::WriteTrees()
 
 			fileOut << thisTree.mainHalo.ID << " " 
 				<< thisTree.mainHalo.nPart[1] << " " 
+				//<< thisTree.mainHalo.X[0] << " " 
+				//<< thisTree.mainHalo.X[1] << " " 
+				//<< thisTree.mainHalo.X[2] << " " 
 				<< thisTree.idProgenitor.size() << " "
 				<< orphan << endl;
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
-				Halo subHalo = thisTree.subHalos[iP];
+				Halo progHalo = thisTree.progHalos[iP];
 
-				fileOut	<< thisTree.nCommon[1][iP]		<< " " 
-                                	<< thisTree.idProgenitor[iP] 		<< " "
-					<< subHalo.nPart[1] << endl;
+				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
+                                	//<< thisTree.idProgenitor[iP] 	<< " "
+                                	<< progHalo.ID		 	<< " "
+                                	//<< progHalo.X[0]		 	<< " "
+                                	//<< progHalo.X[1]		 	<< " "
+                                	//<< progHalo.X[2]		 	<< " "
+					<< progHalo.nPart[1] << endl;
 			}
                 }
 		

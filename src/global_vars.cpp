@@ -12,11 +12,11 @@ using namespace std;
  */
 int locTask;
 int totTask;
+MPI_Request request_recv, request_send;
 MPI_Status status;
 
 #ifndef ZOOM
 Grid GlobalGrid[2];
-Grid BufferGrid;
 #endif
 
 vector<vector<MergerTree>> locMTrees;

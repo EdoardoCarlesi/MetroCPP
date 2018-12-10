@@ -13,6 +13,7 @@ public:
 #ifdef ZOOM
 	void SyncOrphanHalos(void);
 #else 
+	void SyncIndex(void);
 	void BroadcastAndGatherGrid(void);
 #endif
 
