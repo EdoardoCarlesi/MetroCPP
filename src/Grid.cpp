@@ -172,7 +172,6 @@ vector<int> Grid::ListNearbyHalos(float *X, float R)
 			}
 
 	return haloIndex;
-
 };
 
 

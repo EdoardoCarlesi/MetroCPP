@@ -188,14 +188,14 @@ int main(int argv, char **argc)
 			CommTasks.CleanBuffer();
 #endif
 			ShiftHalosPartsGrids();
+			SettingsIO.WriteTree(iNumCat); 	// TODO write trees at each step
 			
 		}	/* Finish: the trees have now been built for this step */
 
+		SettingsIO.WriteTrees();
+
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
-
-		MPI_Barrier(MPI_COMM_WORLD);
-		SettingsIO.WriteTrees(); 	// TODO write trees at each step
 	
 		CleanMemory(0);
 
@@ -225,30 +225,27 @@ int main(int argv, char **argc)
 
 			// TODO: At this point we could fix halo masses and position using some interpolation scheme
 			
-			/* Now locate progenitors in the next snapshot */
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
-#ifndef ZOOM
-			/* Again, for completeness we need to locate and communicate halo buffers */
+#ifdef ZOOM
+			CommTasks.BufferSendRecv();
+			CommTasks.SyncOrphanHalos();
+			AssignProgenitor();
+#else
 			CommTasks.BroadcastAndGatherGrid();
-#endif
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 			CommTasks.BufferSendRecv();
-#ifdef ZOOM
-			CommTasks.SyncOrphanHalos();
-#else
 			CommTasks.SyncIndex();
-#endif
 			AssignProgenitor();
-#ifndef ZOOM
 			CommTasks.CleanBuffer();
 #endif
+
 			ShiftHalosPartsGrids();
 		}
 
-		// TODO: once the MAHs have been computed, we need to smooth over 
-
 		SettingsIO.WriteTrees();
+
+		// TODO: once the MAHs have been computed, we need to smooth over 
 	}
 
 	/* Proceed with smoothing & interpolating the MAH of single halos */

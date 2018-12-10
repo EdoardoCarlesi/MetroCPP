@@ -952,6 +952,72 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 
 
 
+void IOSettings::WriteTree(int iThisCat)
+{
+	string outName;
+        string strCpu = to_string(locTask);
+	int totTrees = locCleanTrees.size(), orphan;
+
+        for (int iC = iThisCat-1; iC < iThisCat; iC++)
+        {
+		char *strFnm;	strFnm = (char *) calloc(4, sizeof(char));
+		sprintf(strFnm, "%03d", iC);
+
+		if (runMode == 1)
+			outName = pathOutput + outPrefix + strFnm + "." + strCpu + ".restore." + outSuffix;
+		else
+			outName = pathOutput + outPrefix + strFnm + "." + strCpu + "." + outSuffix;
+
+		ofstream fileOut;
+		fileOut.open(outName);
+
+                if (locTask == 0)
+                        cout << "Printing trees to file " << outName << endl;
+
+		if (locTask == 0)
+		{
+			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)" << endl;
+			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)" << endl;
+		} 
+
+                for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
+                {
+			MergerTree thisTree = locCleanTrees[iC][iT];
+
+			if (thisTree.isOrphan)
+				orphan = 1;	
+			else
+				orphan = 0;
+
+			fileOut << thisTree.mainHalo.ID << " " 
+				<< thisTree.mainHalo.nPart[1] << " " 
+				//<< thisTree.mainHalo.X[0] << " " 
+				//<< thisTree.mainHalo.X[1] << " " 
+				//<< thisTree.mainHalo.X[2] << " " 
+				<< thisTree.idProgenitor.size() << " "
+				<< orphan << endl;
+
+                        for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
+			{
+				Halo progHalo = thisTree.progHalos[iP];
+
+				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
+                                	//<< thisTree.idProgenitor[iP] 	<< " "
+                                	<< progHalo.ID		 	<< " "
+                                	//<< progHalo.X[0]		 	<< " "
+                                	//<< progHalo.X[1]		 	<< " "
+                                	//<< progHalo.X[2]		 	<< " "
+					<< progHalo.nPart[1] << endl;
+			}
+                }
+		
+                //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
+		fileOut.close();
+        }
+};
+
+
+
 void IOSettings::WriteTrees()
 {
 	string outName;

@@ -63,6 +63,7 @@ public:
 	void ReadTrees();
 
 	/* Write output */
+	void WriteTree(int);
 	void WriteTrees();
 	void WriteSmoothTrees();
 

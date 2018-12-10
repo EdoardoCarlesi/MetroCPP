@@ -44,9 +44,9 @@ void MergerTree::Info()
 	if (isOrphan)
 		for (int iP = 0; iP < idProgenitor.size(); iP++)
 			cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << endl;
-		else
-			for (int iP = 0; iP < idProgenitor.size(); iP++)
-				cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
+	else
+		for (int iP = 0; iP < idProgenitor.size(); iP++)
+			cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
 
 };
 
@@ -168,10 +168,10 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 	rMax = thisHalo.rVir + cmpHalo.rVir;
 	rMax *= 25.0;	// FIXME check why this works...
 #else
-	if (jHalo >= 0)
+	if (jHalo > -1)
 		cmpHalo = locHalos[iTwo][jHalo];
-	if (jHalo < 0)
-		cmpHalo = locBuffHalos[-jHalo];
+	else
+		cmpHalo = locBuffHalos[-jHalo-1];	// Compensate with +1 - the indexes are shifted by -1 to avoid overlap with index 0
 #endif
 
 	vOne = VectorModule(thisHalo.V);
@@ -248,7 +248,6 @@ void FindProgenitors(int iOne, int iTwo)
 
 	//cout << "OnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
 	//	" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
-
 
 
 #ifdef VERBOSE
@@ -395,8 +394,8 @@ void FindProgenitors(int iOne, int iTwo)
 				iH = iL;
 				thisHalo = locHalos[iOne][iH];
 			} else {
-				iH = nLocHalos[iOne] - iL;
-				thisHalo = locBuffHalos[-iH];
+				iH = nLocHalos[iOne]-iL-1;
+				thisHalo = locBuffHalos[-iH-1];
 			}
 
 			locMTrees[iOne][iL].mainHalo = thisHalo; 
@@ -442,12 +441,12 @@ void FindProgenitors(int iOne, int iTwo)
 							<< " iH = " << iH << ". Only one negative index allowed. "  
 							<< " buffer size=" << locBuffParts.size() << endl;
 	
-					if (kH >= 0 && iH >= 0)
+					if (kH > -1 && iH > -1)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locParts[iTwo][kH]);
 					else if (kH < 0)
-						thisNCommon = CommonParticles(locParts[iOne][iH], locBuffParts[-kH]);
+						thisNCommon = CommonParticles(locParts[iOne][iH], locBuffParts[-kH-1]);
 					else if (iH < 0)
-						thisNCommon = CommonParticles(locBuffParts[-iH], locParts[iTwo][kH]);
+						thisNCommon = CommonParticles(locBuffParts[-iH-1], locParts[iTwo][kH]);
 
 					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
 
@@ -455,15 +454,19 @@ void FindProgenitors(int iOne, int iTwo)
 					 * of common particles is above a given threshold */
 					if (totComm > minPartCmp) 
 					{		
+						//if (iL > nLocHalos[iOne])
+						//	cout << " There are " << iL << " halos on task " << locTask << endl; 
+
 						for (int iT = 0; iT < nPTypes; iT++)
 							locMTrees[iOne][iL].nCommon[iT].push_back(thisNCommon[iT]);
 	
-						if (kH >= 0)	// In the backward comparison kH is only on the task halos, always > 0
+						if (kH > -1)	// In the backward comparison kH is only on the task halos, always > 0
 							locMTrees[iOne][iL].idProgenitor.push_back(locHalos[iTwo][kH].ID);
 						else 
-							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH].ID);
+							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH-1].ID);	
 						
 						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
+				
 						totCmp++;
 					} else {
 						totSkip++;
@@ -504,9 +507,7 @@ void FindProgenitors(int iOne, int iTwo)
 				}
 		} // for i halo, the main one
 
-		//cout << "DONE ON TASK " << locTask << endl;
-
-		MPI_Barrier(MPI_COMM_WORLD);
+		//MPI_Barrier(MPI_COMM_WORLD);
 
 		if (iOne == 0)
 		{
@@ -536,26 +537,24 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 
 	for (int iT = 0; iT < nPTypes; iT++)
 	{
-		int thisSize = partsHaloOne[iT].size();
+		int oneSize = partsHaloOne[iT].size();
+		int twoSize = partsHaloTwo[iT].size();
 
-		if (thisSize > 0)
+		if (oneSize > 0 && twoSize > 0)
 		{
-			//cout << locTask << " " << iT << " " << partsHaloOne[iT][0] << " " << partsHaloOne[iT][1]
-			//	<< " " << partsHaloTwo[iT][0] << " " << partsHaloTwo[iT][1] << endl;
-
 			// This is the maximum possible number of common particles
-			thisCommon.resize(thisSize);
+			thisCommon.resize(twoSize);
 	
 			// Find out how many particles are shared among the two arrays
 			iter = set_intersection(partsHaloOne[iT].begin(), partsHaloOne[iT].end(), 
-				partsHaloTwo[iT].begin(), partsHaloTwo[iT].end(), thisCommon.begin());	
+					partsHaloTwo[iT].begin(), partsHaloTwo[iT].end(), thisCommon.begin());	
 
 			// Resize the array and free some memory
 			thisCommon.resize(iter - thisCommon.begin());
 
 			// Now compute how many particles in common are there
 			nCommon[iT] = thisCommon.size();
-		
+
 			// Clear the vector and free all the allocated memory
 			thisCommon.clear();
 	 		thisCommon.shrink_to_fit();
@@ -640,22 +639,26 @@ void CleanTrees(int iStep)
 #ifndef ZOOM 		
 			if (jTree < 0) 
 			{
-				if (nLocHalos[1]-jTree > locMTrees[1].size())
+				int kTree = -jTree -1;			// Need to correct for the "offset" factor
+
+				if (kTree > locMTrees[1].size())
 					cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] << ", " << locMTrees[1].size() << endl;
 
 				/* This kind of error might be due to the incorrect setting of the facRSearch variable */
-				if(locMTrees[1][nLocHalos[1]-jTree].idProgenitor.size() == 0)
+				if(locMTrees[1][kTree + nLocHalos[1]].idProgenitor.size() == 0)
 				{
 					cout << "ERROR OnTask:" <<  locTask << ", jTree:" <<  jTree 
-						<< ", nHalos:" << nLocHalos[1] << ", locTrees:" << locMTrees[1].size() << endl;
+						<< ", nHalos:" << nLocHalos[1] << ", locTrees:" << locMTrees[1][kTree+nLocHalos[1]].progHalos.size() << endl;
 	
 					progHalo.Info();
 					mergerTree.mainHalo.Info();
-					cout << "index: " << locMTrees[1][nLocHalos[1]-jTree].indexProgenitor.size() <<
-					" id: " << locMTrees[1][nLocHalos[1]-jTree].idProgenitor.size() << endl;	
+					locMTrees[1][kTree + nLocHalos[1]+1].mainHalo.Info();
+
+					//cout << "index: " << locMTrees[1][nLocHalos[1]-jTree].indexProgenitor.size() <<
+					//" id: " << locMTrees[1][nLocHalos[1]-jTree].idProgenitor.size() << endl;	
 				} else {
-					progHalo = locMTrees[1][nLocHalos[1]-jTree].mainHalo;	
-					descID = locMTrees[1][nLocHalos[1]-jTree].idProgenitor[0];	
+					progHalo = locMTrees[1][nLocHalos[1]+kTree].mainHalo;	
+					descID = locMTrees[1][nLocHalos[1]+kTree].idProgenitor[0];	
 				}
 		
 			} else {
@@ -787,7 +790,7 @@ void AssignProgenitor()
 					if (progIndex > -1)
 						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locHalos[iUseCat][progIndex];
 					else
-						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex];
+						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex-1];
 
 				} else {
 					//cout << locTask << " does not have progenitor ID: " << progID << endl;
