@@ -157,14 +157,17 @@ void ShiftHalosPartsGrids()
 #ifndef ZOOM
 	/* Keep track of the orphan halos at the next step */
 	for (int iO = 0; iO < locOrphHalos.size(); iO++)
+	{
+		if (!locOrphHalos[iO].isToken || locOrphHalos[iO].nOrphanSteps == 0)
+			cout << "Bad assignment of token status to halo " << iO << " on task " << locTask << endl;
 		locHalos[0].push_back(locOrphHalos[iO]);
+	}
 #endif
 
 	if (runMode == 0 || runMode == 2)
 	{ 
 		locParts[0].resize(nLocHalos[0]);
 		nLocParts[0] = nLocParts[1];
-		//cout << nLocHalos[1] << ", " << locParts[0].size() << ", " << locParts[1].size() << endl;
 
 		for (int iH = 0; iH < nLocHalos[0]; iH++)
 		{

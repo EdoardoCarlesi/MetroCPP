@@ -99,7 +99,8 @@ void MergerTree::SortByMerit()
 				nComm += nCommon[iC][iM];
 
 		merit = ((float) nComm * nComm) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
-		merit *= merit * (1.0 + 0.00001 * iM);	// We change the merit slightly, just in case some halos have the same particle numbers
+		merit *= merit * (1.0 + 0.001 * ( (int) (iM * 1.33) / float(iM)));	// We change the merit slightly, 
+										// just in case some halos have the same particle numbers
 
 		allMerit.push_back(merit);
 	}
@@ -232,7 +233,7 @@ void FindProgenitors(int iOne, int iTwo)
 	float rSearch = 0, facRSearch = 40.0, radiusSearchMax = 5000.0;		//TODO find a better way to implement facRSearch
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
 	int totCmp = 0, totSkip = 0, nLocOrphans = 0; 
-	int nLoopHalos = 0;
+	int nLoopHalos = 0, iOldOrphans = 0, iFixOrphans = 0;
 	
 	nLoopHalos = nLocHalos[iOne];
 
@@ -343,8 +344,12 @@ void FindProgenitors(int iOne, int iTwo)
 						/* We keep track of the halos on iTwo that have been matched on iOne on the 
 						 * local task, so that we can avoid looping on all iTwo halos afterwards */
 						if (iOne < iTwo)
+						{
 							locTreeIndex.push_back(jH);
-					
+							if (thisHalo.isToken)
+								iFixOrphans++;
+						}
+
 						totCmp++;
 					}
 				} // CompareHalos
@@ -401,8 +406,10 @@ void FindProgenitors(int iOne, int iTwo)
 			locMTrees[iOne][iL].mainHalo = thisHalo; 
 			locMTrees[iOne][iL].nCommon.resize(nPTypes);
 	
-			//if (locHalos[iOne][iL].isToken)
-			//	cout << iL << ", TokenHalo " << endl; 
+			//if (thisHalo.isToken)
+			//{
+			//	cout << iL << " iOne: "<< iOne << ", Token n steps = " << thisHalo.nOrphanSteps << endl; 
+			//}
 
 			if (iL == nStepsCounter * floor(iL / nStepsCounter) && locTask == 0)
 					cout << "." << flush; 
@@ -466,7 +473,10 @@ void FindProgenitors(int iOne, int iTwo)
 							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH-1].ID);	
 						
 						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
-				
+							
+							if (thisHalo.isToken)
+								iFixOrphans++;
+					
 						totCmp++;
 					} else {
 						totSkip++;
@@ -484,6 +494,10 @@ void FindProgenitors(int iOne, int iTwo)
 					Halo thisHalo = locHalos[iOne][iH];
 					thisHalo.isToken = true;
 					thisHalo.nOrphanSteps++;
+
+					if (thisHalo.nOrphanSteps > 1)
+						iOldOrphans++;
+					//cout << iL << " iOne: "<< iOne << ", Token n steps = " << thisHalo.nOrphanSteps << endl; 
 
 					/* Update the container of local orphan halos */
 					locOrphIndex.push_back(iH);
@@ -512,13 +526,17 @@ void FindProgenitors(int iOne, int iTwo)
 		if (iOne == 0)
 		{
 			nLocOrphans = locOrphHalos.size();
-			int nTotOrphans = 0;
+			int nTotOrphans = 0, nTotFix = 0, nTotOld = 0; 
 
 			//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
 			MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 			if (locTask == 0)
-				cout << "\nFound " << nTotOrphans << " orphan halos on  " << totTask << " tasks. " << endl;
+				cout << "\nFound " << iOldOrphans << " old, " << nLocOrphans << " new, " << iFixOrphans << 
+					" fixed orphan halos. Total " << nTotOld << " old, " << nTotFix << " fixed and "
+					<< nTotOrphans << " total on all tasks. " << endl;
 
 		}
 #endif		// ifdef ZOOM
