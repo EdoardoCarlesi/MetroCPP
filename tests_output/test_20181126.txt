@@ -1,0 +1,235 @@
+Each task is reading 120 halo/particle files. Total number of tasks= 6
+
+                =========================================
+                ========= FULL BOX OPERATION MODE =======
+                =========================================
+
+Running the code in mode: 0 ---> Merger tree computation only.
+
+Reading 9888 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0000.z0.000.AHF_halos
+Reading 12420 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0001.z0.000.AHF_halos
+Reading 7333 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0002.z0.000.AHF_halos
+Reading 9198 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0003.z0.000.AHF_halos
+Reading 11873 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0004.z0.000.AHF_halos
+Reading 12490 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0005.z0.000.AHF_halos
+Reading 13155 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0006.z0.000.AHF_halos
+Reading 12199 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0007.z0.000.AHF_halos
+Reading 11988 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0008.z0.000.AHF_halos
+Reading 9972 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0009.z0.000.AHF_halos
+Reading 11522 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0010.z0.000.AHF_halos
+Reading 9343 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0011.z0.000.AHF_halos
+Reading 11934 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0012.z0.000.AHF_halos
+Reading 12379 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0013.z0.000.AHF_halos
+Reading 10843 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0014.z0.000.AHF_halos
+Reading 10245 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0015.z0.000.AHF_halos
+Reading 9552 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0016.z0.000.AHF_halos
+Reading 11172 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0017.z0.000.AHF_halos
+Reading 7713 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0018.z0.000.AHF_halos
+Reading 9440 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0019.z0.000.AHF_halos
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0000.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0001.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0002.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0003.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0004.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0005.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0006.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0007.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0008.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0009.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0010.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0011.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0012.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0013.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0014.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0015.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0016.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0017.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0018.z0.000.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_054.0019.z0.000.AHF_particles
+Broadcasting node informations to all tasks for Grid[0].
+Halo positions on the grid nodes have been broadcasted to all tasks.
+Starting to loop on 4 halo and particle files.
+Reading 10006 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0000.z0.017.AHF_halos
+Reading 12390 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0001.z0.017.AHF_halos
+Reading 7421 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0002.z0.017.AHF_halos
+Reading 9480 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0003.z0.017.AHF_halos
+Reading 11789 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0004.z0.017.AHF_halos
+Reading 12523 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0005.z0.017.AHF_halos
+Reading 13172 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0006.z0.017.AHF_halos
+Reading 12094 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0007.z0.017.AHF_halos
+Reading 12122 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0008.z0.017.AHF_halos
+Reading 10006 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0009.z0.017.AHF_halos
+Reading 11466 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0010.z0.017.AHF_halos
+Reading 9471 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0011.z0.017.AHF_halos
+Reading 11783 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0012.z0.017.AHF_halos
+Reading 12506 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0013.z0.017.AHF_halos
+Reading 11069 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0014.z0.017.AHF_halos
+Reading 10297 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0015.z0.017.AHF_halos
+Reading 9727 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0016.z0.017.AHF_halos
+Reading 11233 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0017.z0.017.AHF_halos
+Reading 7717 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0018.z0.017.AHF_halos
+Reading 9437 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0019.z0.017.AHF_halos
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0000.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0001.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0002.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0003.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0004.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0005.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0006.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0007.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0008.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0009.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0010.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0011.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0012.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0013.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0014.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0015.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0016.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0017.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0018.z0.017.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_053.0019.z0.017.AHF_particles
+Broadcasting node informations to all tasks for Grid[1].
+Halo positions on the grid nodes have been broadcasted to all tasks.
+Exchanging buffer among tasks... 
+Done.
+Exchanging halos in the buffer region across all tasks...
+Allocating particle send buffer... 
+Allocating particle recv buffer...
+Gathered halo and particle buffers. 
+Finding halo progentors, forwards.....................................................
+Found 5724 orphan halos on  6 tasks. 
+
+Done in 2816.96s. 
+
+Finding halo progentors, backwards...
+Done in 0s. 
+Cleaning memory for catalog 0
+Shifting halos, particles and grid from 1 to 0...
+Grid, halo and particle data has been cleaned and copied 1 ---> 0.
+Cleaning memory for catalog 1
+Reading 10065 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0000.z0.036.AHF_halos
+Reading 12405 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0001.z0.036.AHF_halos
+Reading 7399 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0002.z0.036.AHF_halos
+Reading 9592 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0003.z0.036.AHF_halos
+Reading 11826 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0004.z0.036.AHF_halos
+Reading 12516 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0005.z0.036.AHF_halos
+Reading 13267 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0006.z0.036.AHF_halos
+Reading 12246 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0007.z0.036.AHF_halos
+Reading 12139 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0008.z0.036.AHF_halos
+Reading 10035 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0009.z0.036.AHF_halos
+Reading 11326 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0010.z0.036.AHF_halos
+Reading 9783 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0011.z0.036.AHF_halos
+Reading 11838 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0012.z0.036.AHF_halos
+Reading 12680 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0013.z0.036.AHF_halos
+Reading 11090 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0014.z0.036.AHF_halos
+Reading 10262 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0015.z0.036.AHF_halos
+Reading 9882 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0016.z0.036.AHF_halos
+Reading 11210 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0017.z0.036.AHF_halos
+Reading 7840 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0018.z0.036.AHF_halos
+Reading 9457 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0019.z0.036.AHF_halos
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0000.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0001.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0002.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0003.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0004.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0005.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0006.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0007.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0008.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0009.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0010.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0011.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0012.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0013.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0014.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0015.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0016.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0017.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0018.z0.036.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_052.0019.z0.036.AHF_particles
+Broadcasting node informations to all tasks for Grid[1].
+Halo positions on the grid nodes have been broadcasted to all tasks.
+Exchanging buffer among tasks... 
+Done.
+Exchanging halos in the buffer region across all tasks...
+Allocating particle send buffer... 
+Allocating particle recv buffer...
+Gathered halo and particle buffers. 
+Finding halo progentors, forwards.....................................................
+Found 8451 orphan halos on  6 tasks. 
+
+Done in 2809.39s. 
+
+Finding halo progentors, backwards...
+Done in 0s. 
+Cleaning memory for catalog 0
+Shifting halos, particles and grid from 1 to 0...
+Grid, halo and particle data has been cleaned and copied 1 ---> 0.
+Cleaning memory for catalog 1
+Reading 10065 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0000.z0.054.AHF_halos
+Reading 12391 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0001.z0.054.AHF_halos
+Reading 7453 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0002.z0.054.AHF_halos
+Reading 9628 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0003.z0.054.AHF_halos
+Reading 11909 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0004.z0.054.AHF_halos
+Reading 12481 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0005.z0.054.AHF_halos
+Reading 13215 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0006.z0.054.AHF_halos
+Reading 12169 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0007.z0.054.AHF_halos
+Reading 12262 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0008.z0.054.AHF_halos
+Reading 10280 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0009.z0.054.AHF_halos
+Reading 11265 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0010.z0.054.AHF_halos
+Reading 10085 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0011.z0.054.AHF_halos
+Reading 11886 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0012.z0.054.AHF_halos
+Reading 12828 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0013.z0.054.AHF_halos
+Reading 11220 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0014.z0.054.AHF_halos
+Reading 10270 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0015.z0.054.AHF_halos
+Reading 9824 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0016.z0.054.AHF_halos
+Reading 11255 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0017.z0.054.AHF_halos
+Reading 7900 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0018.z0.054.AHF_halos
+Reading 9535 halos from file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0019.z0.054.AHF_halos
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0000.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0001.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0002.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0003.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0004.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0005.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0006.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0007.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0008.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0009.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0010.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0011.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0012.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0013.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0014.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0015.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0016.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0017.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0018.z0.054.AHF_particles
+Reading particle file: /home/eduardo/ll1701/FullBoxAHF/00/snapshot_051.0019.z0.054.AHF_particles
+Broadcasting node informations to all tasks for Grid[1].
+Halo positions on the grid nodes have been broadcasted to all tasks.
+Exchanging buffer among tasks... 
+Done.
+Exchanging halos in the buffer region across all tasks...
+Allocating particle send buffer... 
+Allocating particle recv buffer...
+Gathered halo and particle buffers. 
+Finding halo progentors, forwards......................................................
+Found 14491 orphan halos on  6 tasks. 
+
+Done in 2634.82s. 
+
+Finding halo progentors, backwards...
+Done in 0s. 
+Cleaning memory for catalog 0
+Shifting halos, particles and grid from 1 to 0...
+Grid, halo and particle data has been cleaned and copied 1 ---> 0.
+Cleaning memory for catalog 1
+The loop on halo and particle catalogs has finished.
+Printing trees to file /home/eduardo/CLUES/MetroCPP/output/fullbox_00_000.0.mtree
+Printing trees to file /home/eduardo/CLUES/MetroCPP/output/fullbox_00_001.0.mtree
+Printing trees to file /home/eduardo/CLUES/MetroCPP/output/fullbox_00_002.0.mtree
+Cleaning memory for catalog 0
+MPI finalized, memory cleaned. Exiting the program.
+
