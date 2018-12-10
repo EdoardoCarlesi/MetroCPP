@@ -35,7 +35,7 @@ void Communication::BroadcastAndGatherGrid()
 	
 	if (locTask == 0)
 		//cout << "Broadcasting node information to all tasks for Grid[" << iUseCat << "]." << endl;
-		cout << "Broadcasting node information to all tasks... << endl;
+		cout << "Broadcasting node information to all tasks..." << endl;
 
 	if (locTask == 0)
 		tmpTaskOnGridNode.resize(totTask * gridSize);
