@@ -2,6 +2,9 @@ TO DO NEXT:
 
 - Make the output .tmp files with all the halo lists selectable from the .cfg file
 
+- speedup the comparison: for each compared halo (with 0 particles in common) see what the related / unrelated variables 
+(distances, separations, angles)
+
 - Improve the load balancing scheme, after reading in the halos optimize the assignment to different tasks
 
 - Cosmology class (to compute the expansion factor of the universe) 

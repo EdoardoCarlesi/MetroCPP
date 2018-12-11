@@ -391,7 +391,8 @@ void FindProgenitors(int iOne, int iTwo)
 
 		for (int iL = 0; iL < nLoopHalos; iL++)
 		{
-			int iH = 0; 
+			int iH = 0;
+			totCmp = 0; totSkip = 0; 
 			Halo thisHalo;
 
 			if (iL < nLocHalos[iOne])
@@ -441,7 +442,7 @@ void FindProgenitors(int iOne, int iTwo)
 				if (compCondition)
 				{	
 					int totComm = 0;
-
+		
 					// These two indexes should NEVER be negative at the same time. We only have one buffer
 					if (kH < 0 && iH < 0)  
 						cout << "ERROR. Two negative indexes on task=" << locTask << " kH= " << kH 
@@ -456,6 +457,9 @@ void FindProgenitors(int iOne, int iTwo)
 						thisNCommon = CommonParticles(locBuffParts[-iH-1], locParts[iTwo][kH]);
 
 					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
+						
+					if (totComm > 0)
+						totCmp++;
 
 					/* This is very important: we keep track of the merging history ONLY if the number 
 					 * of common particles is above a given threshold */
@@ -477,10 +481,12 @@ void FindProgenitors(int iOne, int iTwo)
 							if (thisHalo.isToken)
 								iFixOrphans++;
 					
-						totCmp++;
 					} else {
 						totSkip++;
 					}
+
+					//cout << "Halo " << kH << " total comparisons " << totCmp << " total skip " << totSkip << 
+					//	" tot halos " << indexes.size() << endl;
 				} 	// if Halo Comparison
 			}	// for j, k = index(j)
 
