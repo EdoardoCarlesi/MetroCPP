@@ -8,4 +8,4 @@ rm ../tmp/*.tmp
 
 #$mpiexec -n 4 ../bin/MetroCPP ../config/fullbox_1024.cfg	# Neruda
 #$mpiexec -n 4 ../bin/MetroCPP ../config/fullbox_laptop.cfg	# Laptop setting
-$mpiexec -n 12 ../bin/MetroCPP ../config/fullbox_leibniz.cfg	# Leibniz cluster
+$mpiexec -n 4 ../bin/MetroCPP ../config/fullbox_leibniz.cfg	# Leibniz cluster
