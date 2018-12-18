@@ -1,11 +1,15 @@
 TO DO NEXT:
 
-Make the output .tmp files with all the halo lists selectable from the .cfg file
+- Make the output .tmp files with all the halo lists selectable from the .cfg file
 
+- speedup the comparison: for each compared halo (with 0 particles in common) see what the related / unrelated variables 
+(distances, separations, angles)
 
-Expand: 
-Cosmology class (to compute the expansion factor of the universe) 
-Gravity class (to compute the gravitational field at each point due to the neighbouring objects). 
+- Improve the load balancing scheme, after reading in the halos optimize the assignment to different tasks
+
+- Cosmology class (to compute the expansion factor of the universe) 
+
+- Gravity class (to compute the gravitational field at each point due to the neighbouring objects). 
 Make it simple at first, use it only for objects with no progenitor to guess the position at the previous step and 
 put a placeholder
 

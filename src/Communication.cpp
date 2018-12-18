@@ -523,7 +523,7 @@ void Communication::BufferSendRecv()
 			<< buffSendSizeParts/1024/1024 << "MB particle send buffer. " << endl;
 #else
 		if (locTask == 0 && iT == 0)
-			cout << "Allocating " << buffSendSizeParts/1024/1024 << " MB for the particle send buffer. " << endl;
+			cout << "Allocating " << buffSendSizeParts/1024/1024 << "MB for the particle send buffer. " << endl;
 #endif
 
 		/* MPI_Pack variables - for some reason if defined at the beginning MPI_Pack crashes... */
