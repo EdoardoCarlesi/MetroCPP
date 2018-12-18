@@ -100,8 +100,8 @@ void MergerTree::SortByMerit()
 				nComm += nCommon[iC][iM];
 
 		merit = ((float) nComm * nComm) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
-		merit *= merit * (1.0 + 0.001 * ( (int) (iM * 1.33) / float(iM)));	// We change the merit slightly, 
-										// just in case some halos have the same particle numbers
+		merit *= merit * (1.0 + 0.000001 * iM);	// We change the merit slightly, 
+							// just in case some halos have the same particle numbers
 
 		allMerit.push_back(merit);
 	}
@@ -720,7 +720,8 @@ void CleanTrees(int iStep)
 				if(locMTrees[1][kTree + nLocHalos[1]].idProgenitor.size() == 0)
 				{
 					cout << "ERROR OnTask:" <<  locTask << ", jTree:" <<  jTree 
-						<< ", nHalos:" << nLocHalos[1] << ", locTrees:" << locMTrees[1][kTree+nLocHalos[1]].progHalos.size() << endl;
+						<< ", nHalos:" << nLocHalos[1] << ", locTrees:" 
+							<< locMTrees[1][kTree+nLocHalos[1]].progHalos.size() << endl;
 	
 					progHalo.Info();
 					mergerTree.mainHalo.Info();
@@ -734,9 +735,11 @@ void CleanTrees(int iStep)
 				}
 		
 			} else {
-			
+				
+				// Sanity check
 				if (jTree > locMTrees[1].size())
-					cout << "ERROR in CleanTrees(). MTree size: " << locMTrees[1].size() << ", indexj: " << jTree << endl;
+					cout << "ERROR in CleanTrees(). MTree size: " << locMTrees[1].size() 
+						<< ", indexj: " << jTree << endl;
 						
 				if (locMTrees[1][jTree].idProgenitor.size() > 0)
 				{

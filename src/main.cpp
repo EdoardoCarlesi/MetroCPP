@@ -192,6 +192,7 @@ int main(int argv, char **argc)
 			
 		}	/* Finish: the trees have now been built for this step */
 
+		//SettingsIO.WriteTrees(); 	// TODO write trees at each step
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
 	
