@@ -22,13 +22,11 @@ public:
 	float A2Sec(float, float);
 	float Rho0(float, int);
 	float RhoC(float, int);
-		
+	
+	float H2t(float);
+	
 	/* This function computes the gravitational acceleration due to the neighbouring halos for a token halo */
 	void GravAcc(int, float, float);
-
-	/* Splines used for interpolation */
-	tk::spline pk;
-	tk::spline a;
 
 	/* Cosmological parameters */
 	float omegaL;
@@ -36,6 +34,14 @@ public:
 	float omegaDM;
 	float omegaB;
 	float h; 
+
+	/* Splines used for interpolation */
+	tk::spline pk;
+	tk::spline a;
+
+private:
+
+	float InitH2t();
 
 	/* Useful units */
 	float Mpc2km = 3.085e+19;

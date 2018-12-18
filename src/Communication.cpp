@@ -439,8 +439,10 @@ void Communication::BufferSendRecv()
 		/* At this step, locTask will send nBuffSendHalos to sendTask */
 		nBuffSendHalos = buffIndexSendHalo[sendTask].size();
 
+#ifdef VERBOSE
 		if (nBuffSendHalos == 0)
 			cout << "Task=" << locTask << " has zero send buffer to " << sendTask << endl;  
+#endif
 
 		for (int iP = 0; iP < nBuffSendHalos; iP ++)
 		{

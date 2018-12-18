@@ -1,0 +1,4 @@
+COMPARISON METHOD	N FILES		N TASKS		TIME(s)
+comp = false		16		4		12 
+comp = normal		16		4		59		
+comp = true		16		4		245

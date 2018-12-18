@@ -192,6 +192,27 @@ void spline::set_boundary(spline::bd_type left, double left_value,
 }
 
 
+spline spline::derivative(){
+	spline deriv;
+	float m_1, m_2, d_f;
+	std::vector<float> n_x, n_y;
+
+	// Default: 4th order accurracy
+	for (int ix = 2; ix < m_x.size()-2; ix++)
+	{	
+		m_1 = (m_y[ix-1] - m_y[ix+1]) / (2.0 * (m_x[ix+1] - m_x[ix-1]));
+		m_2 = (m_y[ix-2] - m_y[ix+2]) / (4.0 * (m_x[ix+2] - m_x[ix-2]));
+		d_f = 4.0/3.0 * m_1 + 1.0/3.0 * m_2;
+		n_x.push_back(m_x[ix]);
+		n_y.push_back(d_f)
+	}
+
+	deriv.set_points(n_x, n_y);
+
+	return deriv;
+};
+
+
 void spline::set_points(const std::vector<double>& x,
                         const std::vector<double>& y, bool cubic_spline)
 {

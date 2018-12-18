@@ -9,6 +9,9 @@ TO DO NEXT:
 
 - Improve the load balancing scheme, after reading in the halos optimize the assignment to different tasks
 
+- Linear-order n particle comparison: just store all the particle IDs into a map, <ull int, int> where the second int 
+is the index to a vector storing all the halo IDs/indexes (there can be more halos for a single particle ID)
+
 - Cosmology class (to compute the expansion factor of the universe) 
 
 - Gravity class (to compute the gravitational field at each point due to the neighbouring objects). 
