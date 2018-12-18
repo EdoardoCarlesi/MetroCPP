@@ -100,6 +100,7 @@ public:
     }
 
     spline derivative();
+    double integral(double, double);
 
     // optional, but if called it has to come be before set_points()
     void set_boundary(bd_type left, double left_value,

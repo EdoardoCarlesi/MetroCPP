@@ -41,6 +41,9 @@ public:
 
 private:
 
+	float Kick();
+	float Drift();
+
 	float InitH2t();
 
 	/* Useful units */

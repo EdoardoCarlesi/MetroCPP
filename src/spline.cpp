@@ -191,6 +191,28 @@ void spline::set_boundary(spline::bd_type left, double left_value,
     m_force_linear_extrapolation=force_linear_extrapolation;
 }
 
+double spline::integral(double x0, double x1)
+{
+	// Default: trapezoid integration
+	int nSteps = 1000;
+	double dx = abs(x1 - x0) / float (nSteps);
+	double integral_value = 0.0;
+
+	for (int ix = 0; ix < nSteps; ix++)
+	{
+		//double ax = dx * ix + x0;
+		//double bx = ax + dx;
+		//double f_a = this.operator(ax);
+		//double f_b = this->operator(bx);
+		//double value = (dx) * (f_a + f_b) * 0.5;
+	
+
+	}
+
+	return integral_value;
+
+};
+
 
 spline spline::derivative(){
 	spline deriv;
