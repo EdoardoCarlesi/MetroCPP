@@ -98,6 +98,14 @@ void Cosmology::GravAcc(int haloIndex, float a0, float a1)
 
 
 
+float Cosmology::InitH2t()
+{};
+
+
+float Cosmology::H2t(float t)
+{};
+
+
 float Cosmology::A2Sec(float a0, float a1)
 {
 	float time;

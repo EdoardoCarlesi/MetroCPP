@@ -144,7 +144,7 @@ int main(int argv, char **argc)
 
 			/* Now exchange the halos in the requested buffer zones among the different tasks.
 			 * In zoom mode we send ALL halos to ALL tasks */
-			CommTasks.BufferSendRecv();
+			//CommTasks.BufferSendRecv();
 
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;
@@ -192,6 +192,7 @@ int main(int argv, char **argc)
 			
 		}	/* Finish: the trees have now been built for this step */
 
+		//SettingsIO.WriteTrees(); 	// TODO write trees at each step
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
 	

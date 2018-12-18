@@ -613,6 +613,8 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
+//#ifdef 
+
 
 				tmpParts[partType].push_back(partID);
 				iTmpParts++;

@@ -191,6 +191,49 @@ void spline::set_boundary(spline::bd_type left, double left_value,
     m_force_linear_extrapolation=force_linear_extrapolation;
 }
 
+double spline::integral(double x0, double x1)
+{
+	// Default: trapezoid integration
+	int nSteps = 1000;
+	double dx = abs(x1 - x0) / float (nSteps);
+	double integral_value = 0.0;
+
+	for (int ix = 0; ix < nSteps; ix++)
+	{
+		//double ax = dx * ix + x0;
+		//double bx = ax + dx;
+		//double f_a = this.operator(ax);
+		//double f_b = this->operator(bx);
+		//double value = (dx) * (f_a + f_b) * 0.5;
+	
+
+	}
+
+	return integral_value;
+
+};
+
+
+spline spline::derivative(){
+	spline deriv;
+	double m_1, m_2, d_f;
+	std::vector<double> n_x, n_y;
+
+	// Default: 4th order accurracy
+	for (int ix = 2; ix < m_x.size()-2; ix++)
+	{	
+		m_1 = (m_y[ix-1] - m_y[ix+1]) / (2.0 * (m_x[ix+1] - m_x[ix-1]));
+		m_2 = (m_y[ix-2] - m_y[ix+2]) / (4.0 * (m_x[ix+2] - m_x[ix-2]));
+		d_f = 4.0/3.0 * m_1 + 1.0/3.0 * m_2;
+		n_x.push_back(m_x[ix]);
+		n_y.push_back(d_f);
+	}
+
+	deriv.set_points(n_x, n_y);
+
+	return deriv;
+};
+
 
 void spline::set_points(const std::vector<double>& x,
                         const std::vector<double>& y, bool cubic_spline)
