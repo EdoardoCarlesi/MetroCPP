@@ -96,24 +96,24 @@ void MergerTree::SortByMerit()
 		int nComm = 0;
 		double ratioM = 0;
 
-		for(int iC = 0; iC < nPTypes; iC++)
-				nComm += nCommon[iC][iM];
+		//for(int iC = 0; iC < nPTypes; iC++)
+		//		nComm += nCommon[iC][iM];
 
-		//ratioM = mainHalo.nPart[1] / progHalos[iM].nPart[1];
+		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
 	
-		//if (ratioM < 1.0) ratioM = 1.0 / ratioM;
+		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
-		merit = nCommon[1][iM] / (ratioM - 1.0);
+		merit = nCommon[1][iM] / (ratioM*1.0001 - 1.0);
 		//merit = ((float) nComm) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
-		merit = ((float) nCommon[1][iM]) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
-		merit *= (1.0 + 0.000001 * iM);	// We change the merit slightly, 
+		//merit = ((float) nCommon[1][iM]) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
+		merit *= (1.0 + 0.00001 * iM);	// We change the merit slightly, 
 		//merit *= merit * (1.0 + 0.000001 * iM);	// We change the merit slightly, 
 							// just in case some halos have the same particle numbers
 
 		//if (locTask == 0 && idProgenitor.size() > 100)
 		//if (locTask == 0) // && idProgenitor.size() > 100)
-		//	cout << merit << " " << " " << progHalos[iM].nPart[1] << " " << endl;
-		//cout << merit << " " << nCommon[1][iM] << " " << ratioM << " " << progHalos[iM].nPart[1] << " " << endl;
+			//cout << merit << " " << " " << progHalos[iM].nPart[1] << " " << endl;
+		//	cout << merit << " " << nCommon[1][iM] << " " << ratioM << " " << progHalos[iM].nPart[1] << " " << endl;
 
 		allMerit.push_back(merit);
 	}
@@ -510,6 +510,9 @@ void FindProgenitors(int iOne, int iTwo)
 
 				//cout << "Halo " << iL << " total comparisons " << totCmp << " total skip " << totSkip << 
 				//	" tot halos " << indexes.size() << endl;
+
+			if (!thisHalo.isToken)
+				locMTrees[iOne][iH].SortByMerit();
 	
 
 		/* Very important check! Check for orphans only in the fwd loop to avoid segfaults */
@@ -546,8 +549,8 @@ void FindProgenitors(int iOne, int iTwo)
 					nLocOrphans++;
 				} else {
 					locMTrees[iOne][iH].isOrphan = false;
-					locMTrees[iOne][iH].SortByMerit();
 				}
+
 		} // for i halo, the main one
 
 		//MPI_Barrier(MPI_COMM_WORLD);
@@ -686,9 +689,9 @@ void CleanTrees(int iStep)
 			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
 			unsigned long long int descID;
 
-			if (locTask == 0)
-				cout << iProg << " " << locMTrees[0][iTree].mainHalo.ID << " " << progID 
-					<< " " << locMTrees[0][iTree].nCommon[1][iProg] << endl;
+		//	if (locTask == 0)
+		//		cout << iProg << " " << locMTrees[0][iTree].mainHalo.ID << " " << progID 
+		//			<< " " << locMTrees[0][iTree].nCommon[1][iProg] << endl;
 
 #ifndef ZOOM 		
 			if (jTree < 0) 
