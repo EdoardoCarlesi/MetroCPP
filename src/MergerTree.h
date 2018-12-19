@@ -72,10 +72,6 @@ void FindProgenitors(int, int);
 bool CompareHalos(int, int, int, int);
 
 // Given two (sorted) vectors, compare their content and return the number of common elements
-#ifdef CMP_MAP
-vector<int> CommonParticles(vector<map<unsigned long long int, int>>, vector<vector<unsigned long long int>>);
-#else
 vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);
-#endif
 
 #endif

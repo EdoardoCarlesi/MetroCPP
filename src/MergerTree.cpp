@@ -423,21 +423,6 @@ void FindProgenitors(int iOne, int iTwo)
 			locMTrees[iOne][iL].mainHalo = thisHalo; 
 			locMTrees[iOne][iL].nCommon.resize(nPTypes);
 
-#ifdef CMP_MAP
-			vector<map<unsigned long long int, int>> thisHaloPartsIDs;
-			thisHaloPartsIDs.resize(nPTypes);
-
-			for (int iT = 0; iT < nPTypes; iT++)
-			{
-				for (int iP = 0; iP < locParts[iOne][iH][iT].size(); iP++)
-				{
-					unsigned long long int thisID = locParts[iOne][iH][iT][iP];
-					thisHaloPartsIDs[iT][thisID] = iP;
-				}
-			}
-						//thisNCommon = CommonParticles(locParts[iOne][iH], locParts[iTwo][kH]);
-#endif
-
 			//if (thisHalo.isToken)
 			//{
 			//	cout << iL << " iOne: "<< iOne << ", Token n steps = " << thisHalo.nOrphanSteps << endl; 
@@ -479,20 +464,13 @@ void FindProgenitors(int iOne, int iTwo)
 						cout << "ERROR. Two negative indexes on task=" << locTask << " kH= " << kH 
 							<< " iH = " << iH << ". Only one negative index allowed. "  
 							<< " buffer size=" << locBuffParts.size() << endl;
-#ifdef CMP_MAP
-					if (kH > -1 && iH > -1)
-						thisNCommon = CommonParticles(thisHaloPartsIDs, locParts[iTwo][kH]);
-					else if (kH < 0)
-						thisNCommon = CommonParticles(thisHaloPartsIDs, locBuffParts[-kH-1]);
-
-#else
 					if (kH > -1 && iH > -1)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locParts[iTwo][kH]);
 					else if (kH < 0)
 						thisNCommon = CommonParticles(locParts[iOne][iH], locBuffParts[-kH-1]);
 					else if (iH < 0)
 						thisNCommon = CommonParticles(locBuffParts[-iH-1], locParts[iTwo][kH]);
-#endif
+
 					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
 						
 					if (totComm > 0)
@@ -595,13 +573,8 @@ void FindProgenitors(int iOne, int iTwo)
 
 
 /* Given a pair of haloes, determine the number of common particles */
-#ifdef CMP_MAP
-vector<int> CommonParticles(vector<map<unsigned long long int, int>> partsHaloOne, 
-	vector<vector<unsigned long long int>> partsHaloTwo)
-#else
 vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne, 
 	vector<vector<unsigned long long int>> partsHaloTwo)
-#endif
 {
 	vector<int> nCommon; 
 	vector<unsigned long long int>::iterator iter;
@@ -611,30 +584,12 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 
 	for (int iT = 0; iT < nPTypes; iT++)
 	{
-#ifndef	CMP_MAP
 		int oneSize = partsHaloOne[iT].size();
-#endif
 		int twoSize = partsHaloTwo[iT].size();
 
 		if (twoSize > 0)
 		//if (oneSize > 0 && twoSize > 0)
 		{
-#ifdef CMP_MAP
-			unsigned long long int thisPartID = 0;
-
-  			//for (int iP = 0; iP < oneSize; iP++)
-			//{
-			//	thisPartID = partsHaloOne[iT][iP];
-			//	thisHaloParts[thisPartID] = iP;
-			//}
-
-  			for (int iP = 0; iP < twoSize; iP++)
-			{
-				thisPartID = partsHaloTwo[iT][iP];
-				if (partsHaloOne[iT][thisPartID])
-					nCommon[iT]++;
-			}
-#else
 			// This is the maximum possible number of common particles
 			thisCommon.resize(twoSize);
 	
@@ -647,7 +602,7 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 
 			// Now compute how many particles in common are there
 			nCommon[iT] = thisCommon.size();
-#endif
+
 			// Clear the vector and free all the allocated memory
 			thisCommon.clear();
 	 		thisCommon.shrink_to_fit();
