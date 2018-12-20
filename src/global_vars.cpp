@@ -1,3 +1,4 @@
+#include <map>
 #include <mpi.h>
 #include <vector>
 
@@ -37,6 +38,12 @@ vector<vector<vector<unsigned long long int>>> locOrphParts;
 vector<vector<vector<unsigned long long int>>> locBuffParts;
 #else
 vector<int> locTreeIndex;
+#endif
+
+#ifdef CMP_MAP
+typedef struct Particle Particle;
+vector<map <unsigned long long int, vector<Particle>>> locMapParts;
+map<unsigned long long int, vector<Particle>> locBuffMapParts;
 #endif
 
 size_t locHalosSize[2];

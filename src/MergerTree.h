@@ -1,6 +1,7 @@
 #ifndef MERGERTREE_H
 #define MERGERTREE_H
 
+#include <map>
 #include <string>
 
 #include "Halo.h"
@@ -23,6 +24,11 @@ public:
 	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
 	vector<int> indexProgenitor;			// local array index of progenitors
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
+
+#ifdef CMP_MAP
+	map<unsigned long long int, vector<int>> indexCommon; 	
+	void AssignMap(void);
+#endif
 
 	void SortByMerit(void);				// Once possible progenitors have been found, compare
 	void Clean(void);
@@ -63,7 +69,6 @@ void DebugTrees(void);
 
 void AssignDescendant(void);
 void AssignProgenitor(void);
-
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);

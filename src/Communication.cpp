@@ -582,9 +582,8 @@ void Communication::BufferSendRecv()
 		/* Particles have been sent, free the buffer */
 		free(buffSendParts);
 
-		int posRecvPart = 0;
-
 		//cout << "UNPACKING " << nBuffRecvHalos << " on Task " << locTask << endl;  
+		int posRecvPart = 0;
 
 		/* Unpack the particle buffer */
 		for (int iH = 0; iH < nBuffRecvHalos; iH++)
@@ -602,6 +601,18 @@ void Communication::BufferSendRecv()
 	
 					MPI_Unpack(buffRecvParts, buffRecvSizeParts, &posRecvPart, &locBuffParts[iBuffTotHalo][iT][0], 
 							nTmpPart * sizePart, MPI_BYTE, MPI_COMM_WORLD);
+#ifdef CMP_MAP
+					for (int iP = 0; iP < nTmpPart; iP++)
+					{
+				       		Particle thisParticle;
+						unsigned long long int partID;
+ 						partID = locBuffParts[iBuffTotHalo][iT][iP];
+   	                      	        	thisParticle.haloID = locBuffHalos[iBuffTotHalo].ID;
+        	                        	thisParticle.type   = iT;
+                	                	locBuffMapParts[partID].push_back(thisParticle);
+
+					}
+#endif
 				}
 			}
 			

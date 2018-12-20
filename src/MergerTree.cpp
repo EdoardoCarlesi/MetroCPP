@@ -80,6 +80,41 @@ MergerTree::~MergerTree()
 };
 
 
+#ifdef CMP_MAP
+void MergerTree::AssignMap()
+{
+	int nProgs = indexCommon.size();
+	int nCommTot = 0, iP = 0;
+	map<unsigned long long int, vector<int>>::iterator thisMap;
+	
+	idProgenitor.resize(nProgs);
+	indexProgenitor.resize(nProgs);
+	nCommon.resize(nPTypes);
+	
+	for (int iC = 0; iC < nPTypes; iC++)
+		nCommon[iC].resize(nProgs);
+
+	for (thisMap = indexCommon.begin(); thisMap != indexCommon.end(); thisMap++)
+	{
+		unsigned long long int thisHaloID = thisMap->first;
+		vector<int> thisCommon = thisMap->second;
+		
+		idProgenitor[iP] = thisHaloID;
+
+		for (int iT = 0; iT < nPTypes; iT++)
+		{
+			nCommon[iT][iP] = thisCommon[iT];
+			nCommTot += thisCommon[iT];
+		}
+		
+		nCommon[nPTypes-1][iP] = nCommTot;
+		iP++;
+	}
+
+};
+#endif
+
+
 /* This sorting algorithm might be very inefficient but it's straightforward to implement, 
  * plus we will rarely deal with halos with more than 10^3 progenitors */
 void MergerTree::SortByMerit()
@@ -241,10 +276,130 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 	
 };
 
+#ifdef CMP_MAP	// 
+void FindProgenitors(int iOne, int iTwo)
+{
+	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0;
+	map <unsigned long long int, int> thisMapTrees;
+	map <unsigned long long int, int> nextMapTrees;
+
+	/* Loop also on the buffer halos, in the backward loop only! */
+	if (iOne == 1)
+	{
+		nLoopHalos[iOne] = nLocHalos[iOne] + locBuffHalos.size();
+		nLoopHalos[iTwo] = nLocHalos[iTwo]; 
+	} else {
+		nLoopHalos[iOne] = nLocHalos[iOne];
+		nLoopHalos[iTwo] = nLocHalos[iTwo] + locBuffHalos.size();
+	}
+
+	locMTrees[iOne].clear();
+	locMTrees[iOne].shrink_to_fit();
+	locMTrees[iOne].resize(nLoopHalos[iOne]);
+
+	Halo thisHalo;
+
+	if (locTask == 0)
+	{
+		//cout << iOne << ", Loop, " << nLocHalos[iOne] << ",  iTwo " << iTwo << " " << nLocHalos[iTwo] << endl;
+		//cout << iOne << ", Loc , " << nLoopHalos[iOne] << ",  iTwo " << iTwo << " " << nLoopHalos[iTwo] << endl;
+	}
+
+	/* Here we initialize (again, for safety and because it's cheap) the maps of halo indexes within the locHalos vectors
+	 * and their IDs for faster identification in the loop on the particles */
+	for (int iL = 0; iL < nLoopHalos[iOne]; iL++)
+	{
+		int iH = 0;
+
+		if (iL < nLocHalos[iOne])
+		{	
+			iH = iL;
+			thisHalo = locHalos[iOne][iH];
+		} else {
+			iH = nLocHalos[iOne]-iL-1;
+			thisHalo = locBuffHalos[-iH-1];
+		}
+
+		thisMapTrees[thisHalo.ID] = iL;
+
+		locMTrees[iOne][iL].mainHalo = thisHalo; 
+		//locMTrees[iOne][iL].nCommon.resize(nPTypes);
+	}
+
+	for (int iL = 0; iL < nLoopHalos[iTwo]; iL++)
+	{
+		int iH = 0;
+
+		if (iL < nLocHalos[iTwo])
+		{	
+			iH = iL;
+			thisHalo = locHalos[iTwo][iH];
+		} else {
+			iH = nLocHalos[iTwo]-iL-1;
+			thisHalo = locBuffHalos[-iH-1];
+		}
+
+		nextMapTrees[thisHalo.ID] = iL;
+	}
+
+
+	map <unsigned long long int, vector<Particle>>::iterator thisMap;
+	
+	vector<int> dummyVec; dummyVec.resize(nPTypes); for (int i = 0; i < nPTypes; i++) dummyVec[i] = 0;
+	//cout << "OnTask = " << locTask << ", nPart = " << locMapParts[iTwo].size() << endl;
+	//cout << "Type   = " << nextMapTrees[thisHalo.ID] << endl;
+
+	/* Here we loop on all the particles. Each particles keeps track of the Halos it belongs to 
+	 * */
+	for (thisMap = locMapParts[iOne].begin(); thisMap != locMapParts[iOne].end(); thisMap++)
+	{
+		unsigned long long int thisID = thisMap->first;
+		vector<Particle> thisParticle = thisMap->second;
+
+		//cout << thisID << " " << endl; //thisParticle[0].haloID << " " << thisParticle[0].type << endl;
+
+		for (int iH = 0; iH < thisParticle.size(); iH++)
+		{
+			vector<Particle> nextParticle = locMapParts[iTwo][thisID];
+			int thisTreeIndex = thisMapTrees[thisParticle[iH].haloID];
+
+			for (int iN = 0; iN < nextParticle.size(); iN++)
+			{
+				unsigned long long int nextHaloID = nextParticle[iH].haloID;
+				int partType = nextParticle[iN].type;
+
+				/* If this ID is not in the list of progenitor IDs, then initialize the indexCommon 
+				   map and initialize the number of common particles */
+				if (locMTrees[iOne][thisTreeIndex].indexCommon.find(nextHaloID) == 
+					locMTrees[iOne][thisTreeIndex].indexCommon.end())
+				{
+					locMTrees[iOne][thisTreeIndex].indexCommon[nextHaloID].resize(nPTypes);
+					locMTrees[iOne][thisTreeIndex].indexCommon[nextHaloID][nextParticle[iN].type] = 1;
+				} else {	/* If the Halo ID is already in the index of the halos with common particles,
+						   then add ++ to the particle type shared */ 
+					locMTrees[iOne][thisTreeIndex].indexCommon[nextHaloID][nextParticle[iN].type]++;
+				}
+			} // Loop on the halos in the iTwo particles
+		} // Loop on the halos in the iOne particles  
+	} // Loop on all the iOne particles
+
+	/* Now clean and reconstruct the local merger trees */
+	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
+	{
+			locMTrees[iOne][iM].AssignMap();
+
+			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
+				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
+			{};
+	}
+};
+
+#else
 
 /* Find all the progenitors (descendants) of the halos in catalog iOne (iTwo) */
 void FindProgenitors(int iOne, int iTwo)
 {
+
 	vector<int> thisNCommon, indexes, totNCommon;
 	float rSearch = 0, facRSearch = 40.0, radiusSearchMax = 5000.0;		//TODO find a better way to implement facRSearch
 	int nStepsCounter = floor(nLocHalos[iUseCat] / 50.);
@@ -573,6 +728,7 @@ void FindProgenitors(int iOne, int iTwo)
 		}
 #endif		// ifdef ZOOM
 };
+#endif		// ifdef CMP_MAP
 
 
 /* Given a pair of haloes, determine the number of common particles */

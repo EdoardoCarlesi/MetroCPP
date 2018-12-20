@@ -29,6 +29,10 @@ void InitLocVariables(void)
 	locHalos.resize(2);
 	locMTrees.resize(2);
 
+#ifdef CMP_MAP
+	locMapParts.resize(2);
+#endif
+
 #ifndef ZOOM
 	GlobalGrid[0].Init(nGrid, boxSize);
 	GlobalGrid[1].Init(nGrid, boxSize);
