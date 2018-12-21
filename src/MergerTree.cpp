@@ -73,8 +73,6 @@ MergerTree::MergerTree()
 {
 };
 
-
-
 MergerTree::~MergerTree()
 {
 };
@@ -83,12 +81,9 @@ MergerTree::~MergerTree()
 #ifdef CMP_MAP
 void MergerTree::AssignMap()
 {
-	int nProgs = indexCommon.size();
-	int nCommTot = 0, iP = 0;
+	int nProgs = 0, nCommTot = 0, iP = 0;
 	map<unsigned long long int, vector<int>>::iterator thisMap;
 	
-	idProgenitor.resize(nProgs);
-	indexProgenitor.resize(nProgs);
 	nCommon.resize(nPTypes);
 	
 	for (int iC = 0; iC < nPTypes; iC++)
@@ -98,19 +93,22 @@ void MergerTree::AssignMap()
 	{
 		unsigned long long int thisHaloID = thisMap->first;
 		vector<int> thisCommon = thisMap->second;
-		
-		idProgenitor[iP] = thisHaloID;
 
 		for (int iT = 0; iT < nPTypes; iT++)
 		{
-			nCommon[iT][iP] = thisCommon[iT];
-			nCommTot += thisCommon[iT];
+			if (thisCommon[iT] > minPartCmp)
+			{	
+				nCommon[iT].push_back(thisCommon[iT]);
+				idProgenitor.push_back(thisHaloID);
+				nProgs++;
+			}
 		}
-		
-		nCommon[nPTypes-1][iP] = nCommTot;
+	
 		iP++;
 	}
 
+	indexProgenitor.resize(nProgs);
+	progHalos.resize(nProgs);
 };
 #endif
 
@@ -279,7 +277,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 #ifdef CMP_MAP	// 
 void FindProgenitors(int iOne, int iTwo)
 {
-	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0;
+	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0; 
 	map <unsigned long long int, int> thisMapTrees;
 	map <unsigned long long int, int> nextMapTrees;
 
@@ -383,18 +381,83 @@ void FindProgenitors(int iOne, int iTwo)
 		} // Loop on the halos in the iOne particles  
 	} // Loop on all the iOne particles
 
+	int iOrph = 0;
+
 	/* Now clean and reconstruct the local merger trees */
 	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
 	{
-			locMTrees[iOne][iM].AssignMap();
+		/* This moves all the data stored in the map to the "standard" structures */
+		locMTrees[iOne][iM].AssignMap();
 
+		int nProgs = locMTrees[iOne][iM].idProgenitor.size();
+		int thisHaloIndex = 0;
+		unsigned long long int thisHaloID;
+
+		for (int iP = 0; iP < nProgs; iP++)
+		{
+			thisHaloID = locMTrees[iOne][iM].idProgenitor[iP];
+			thisHaloIndex = nextMapTrees[thisHaloID];			
+			locMTrees[iOne][iM].indexProgenitor[iP] = thisHaloIndex;
+				locMTrees[iOne][iM].progHalos[iP] = locHalos[iOne][thisHaloIndex];
+		}
+
+		/* Orphan halos are identified in the forward search only */
+		if (iOne == 0)
+		{
 			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo && iOne < iTwo)
-			{};
+			{
+
+				Halo thisHalo = locHalos[iOne][iM];
+				thisHalo.isToken = true;
+				thisHalo.nOrphanSteps++;
+
+				if (thisHalo.nOrphanSteps > 1)
+					iOldOrphans++;
+
+				/* Update the container of local orphan halos */
+				locOrphIndex.push_back(iM);
+				locOrphHalos.push_back(thisHalo);
+
+				/* Update the local mtree with a copy of itself */
+				locMTrees[iOne][iM].isOrphan = true;
+				locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
+
+				/* Update the particle content */
+				locOrphParts.push_back(locParts[iOne][iM]);
+				locOrphParts[nLocOrphans].resize(nPTypes);
+
+				for (int iP = 0; iP < nPTypes; iP++)
+					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].begin(), 
+						back_inserter(locOrphParts[nLocOrphans][iP]));
+
+				nLocOrphans++;
+			} else {
+				//locMTrees[iOne][iM].isOrphan = false;
+			}
+		} // if iOne == 0
 	}
+
+	if (iOne == 0)
+	{
+		nLocOrphans = locOrphHalos.size();
+		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0; 
+
+		//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
+		MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+		if (locTask == 0)
+			cout << "\nFound " << iOldOrphans << " old, " << nLocOrphans << " new, " << iFixOrphans << 
+				" fixed orphan halos. Total " << nTotOld << " old, " << nTotFix << " fixed and "
+				<< nTotOrphans << " total on all tasks. " << endl;
+
+	}
+
 };
 
-#else
+#else	/* This is using the standard implementation of the CMP */
 
 /* Find all the progenitors (descendants) of the halos in catalog iOne (iTwo) */
 void FindProgenitors(int iOne, int iTwo)
@@ -519,7 +582,6 @@ void FindProgenitors(int iOne, int iTwo)
 							locTreeIndex.push_back(jH);
 							if (thisHalo.isToken)
 								iFixOrphans++;
-						}
 
 						totCmp++;
 					}
