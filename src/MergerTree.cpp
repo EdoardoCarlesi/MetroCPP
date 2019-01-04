@@ -92,6 +92,8 @@ void MergerTree::AssignMap()
 		unsigned long long int thisHaloID = thisMap->first;
 		vector<int> thisCommon = thisMap->second;
 
+		nCommTot = 0;
+
 		for (int iT = 0; iT < nPTypes; iT++)
 			nCommTot += thisCommon[iT];
 
@@ -99,14 +101,23 @@ void MergerTree::AssignMap()
 		{
 			for (int iT = 0; iT < nPTypes; iT++)
 				nCommon[iT].push_back(thisCommon[iT]);
-				
+			
+			//if (nCommTot > 1000 && nCommTot < 2000 && locTask == 0)
+			//if (mainHalo.nPart[1] > 100000 && locTask == 0)
+			//if (nCommTot > 100000 && locTask == 0)
+			//	cout << mainHalo.ID << ", " << thisHaloID << ", " << thisCommon[1] << endl;
+			//		<< " " << thisCommon[0] << " " << thisCommon[2]
+			//		<< " " << thisCommon[3] << " " << thisCommon[4] 
+			//		<< " " << thisCommon[5] << " " << endl;
+	
 			idProgenitor.push_back(thisHaloID);
 			nProgs++;
 		}
 
 		iP++;
 	}
-
+			//if (mainHalo.nPart[1] > 100000 && locTask == 0)
+			//	cout << "Size ID Prog: " << idProgenitor.size() << endl;
 	if (nProgs == 0)
 	{
 		isOrphan = true;
@@ -289,7 +300,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 void FindProgenitors(int iOne, int iTwo)
 {
 	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0; 
-	map <unsigned long long int, vector<Particle>>::iterator thisMap;
+//	map <unsigned long long int, vector<Particle>>::iterator thisMap;
 	map <unsigned long long int, int> thisMapTrees;
 	map <unsigned long long int, int> nextMapTrees;
 
@@ -309,11 +320,11 @@ void FindProgenitors(int iOne, int iTwo)
 
 	Halo thisHalo;
 
-	if (locTask == 0)
+	/*if (locTask == 0)
 	{
-		//cout << iOne << ", Loop, " << nLocHalos[iOne] << ",  iTwo " << iTwo << " " << nLocHalos[iTwo] << endl;
-		//cout << iOne << ", Loc , " << nLoopHalos[iOne] << ",  iTwo " << iTwo << " " << nLoopHalos[iTwo] << endl;
-	}
+		cout << iOne << ", Loop, " << nLocHalos[iOne] << ",  iTwo " << iTwo << " " << nLocHalos[iTwo] << endl;
+		cout << iOne << ", Loc , " << nLoopHalos[iOne] << ",  iTwo " << iTwo << " " << nLoopHalos[iTwo] << endl;
+	}*/
 
 	/* Here we initialize (again, for safety and because it's cheap) the maps of halo indexes within the locHalos vectors
 	 * and their IDs for faster identification in the loop on the particles */
@@ -337,6 +348,7 @@ void FindProgenitors(int iOne, int iTwo)
 		locMTrees[iOne][iL].nCommon.resize(nPTypes);
 	}
 
+	/* Map the iTwo halo IDs to their indexes */
 	for (int iL = 0; iL < nLoopHalos[iTwo]; iL++)
 	{
 		int iH = 0;
@@ -354,15 +366,21 @@ void FindProgenitors(int iOne, int iTwo)
 		nextMapTrees[thisHalo.ID] = iL;
 	}
 
-	vector<int> dummyVec; dummyVec.resize(nPTypes); for (int i = 0; i < nPTypes; i++) dummyVec[i] = 0;
-
 	/* Here we loop on all the particles, each particle keeps track of the Halos it belongs to. 
 	 * We match particle IDs in iOne with particle IDs in iTwo, and count the total number of 
 	 * particles shared by their two host halos. */
-	for (thisMap = locMapParts[iOne].begin(); thisMap != locMapParts[iOne].end(); thisMap++)
+	//for (thisMap = locMapParts[iOne].begin(); thisMap != locMapParts[iOne].end(); thisMap++)
+	
+	//for (int iHalo = 0; iHalo < locHalos[iOne].size(); iHalo++)
+	//for (int iPart = 0; iPart < locParts[iOne][iHalo][1].size(); iPart++)
+	for (auto const& thisMap : locMapParts[iOne]) //[iOne].begin(); thisMap != locMapParts[iOne].end(); thisMap++)
 	{
-		unsigned long long int thisID = thisMap->first;		// This particle ID
-		vector<Particle> thisParticle = thisMap->second;	// How many halos (halo IDs) share this particle
+		//unsigned long long int thisID = locParts[iOne][iHalo][1][iPart];
+		//vector<Particle> thisParticle = locMapParts[iOne][thisID];
+		//unsigned long long int thisID = thisMap->first;		// This particle ID
+		//vector<Particle> thisParticle = thisMap->second;	// How many halos (halo IDs) share this particle
+		unsigned long long int thisID = thisMap.first;		// This particle ID
+		vector<Particle> thisParticle = thisMap.second;	// How many halos (halo IDs) share this particle
 
 		/* Loop on the halos on iOne to which this particle belongs */
 		for (int iH = 0; iH < thisParticle.size(); iH++)
@@ -373,8 +391,7 @@ void FindProgenitors(int iOne, int iTwo)
 			/* This same particle on iTwo is also shared by some halos: do the match with the haloIDs on iOne. */
 			for (int iN = 0; iN < nextParticle.size(); iN++)
 			{
-				unsigned long long int nextHaloID = nextParticle[iH].haloID;
-				int partType = nextParticle[iN].type;
+				unsigned long long int nextHaloID = nextParticle[iN].haloID;
 
 				/* If this ID is not in the list of progenitor IDs, then initialize the indexCommon 
 				   map and initialize the number of common particles */
@@ -396,7 +413,9 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Once the first loop on the particles is done, we need to fix ALL merger trees
 	   moving all the data stored in the map to the "standard" index & id vectors */
 	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
+	{
 		locMTrees[iOne][iM].AssignMap();
+	}
 
 	/* Now clean and reconstruct the local merger trees */
 	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
@@ -416,8 +435,10 @@ void FindProgenitors(int iOne, int iTwo)
 
 			/* Here we fill the indexProgenitor & progHalos */
 			locMTrees[iOne][iM].indexProgenitor[iP] = thisHaloIndex;
-			locMTrees[iOne][iM].progHalos[iP] = locHalos[iOne][thisHaloIndex];
+			locMTrees[iOne][iM].progHalos[iP] = locHalos[iTwo][thisHaloIndex];
 		}
+
+		locMTrees[iOne][iM].SortByMerit();
 
 		/* Orphan halos are identified in the forward search only */
 		if (iOne == 0)
@@ -456,6 +477,7 @@ void FindProgenitors(int iOne, int iTwo)
 		} // if iOne == 0
 	}
 
+	/* Trace the orphans in the forward loop */
 	if (iOne == 0)
 	{
 		nLocOrphans = locOrphHalos.size();
@@ -469,8 +491,7 @@ void FindProgenitors(int iOne, int iTwo)
 		if (locTask == 0)
 			cout << "\nFound " << iOldOrphans << " old, " << nLocOrphans << " new, " << iFixOrphans << 
 				" fixed orphan halos. Total " << nTotOld << " old, " << nTotFix << " fixed and "
-				<< nTotOrphans << " total on all tasks. " << endl;
-
+					<< nTotOrphans << " total on all tasks. " << endl;
 	}
 
 };
@@ -990,10 +1011,7 @@ void CleanTrees(int iStep)
 				mergerTree.progHalos.push_back(progHalo);
 
 				for(int iT = 0; iT < nPTypes; iT++)
-					mergerTree.nCommon[iT].push_back(20);
-					//mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
-#ifdef TEST
-#endif
+					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 			}	// mainID = descID
 		}	// iProg for loop
 

@@ -622,10 +622,17 @@ void IOSettings::ReadParticles(void)
 				//	cout << "ERROR part ID: " << partID << " type:" << partType << endl;
 
 				locMapParts[iUseCat][partID].push_back(thisParticle);
-
+		
 				if (locMapParts[iUseCat][partID].size() > 1)
 					iPartMulti++;
-			
+
+				/*	if (locMapParts[iUseCat][partID].size() == 0)
+				{
+					locMapParts[iUseCat][partID].resize(1);
+					locMapParts[iUseCat][partID][0] = thisParticle;
+				} else {
+					iPartMulti++;
+				}*/
 #endif
 
 				tmpParts[partType].push_back(partID);
@@ -701,7 +708,7 @@ void IOSettings::ReadParticles(void)
 #ifdef VERBOSE
 #ifdef CMP_MAP
 	cout << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
-		<< " total: " << locMapParts[iUseCat].size() + iPartMulti << endl;
+		<< " total: " << locMapParts[iUseCat].size() + i;PartMulti << endl;
 #endif	
 
 	cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;

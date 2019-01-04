@@ -72,11 +72,8 @@ struct Particle {
 	unsigned long long int haloID;
 };
 
-
-//extern map<unsigned long long int, vector<unsigned long long int>> locMapParts;
 extern vector<map<unsigned long long int, vector<Particle>>> locMapParts;
 extern map<unsigned long long int, vector<Particle>> locBuffMapParts;
-
 #endif
 
 

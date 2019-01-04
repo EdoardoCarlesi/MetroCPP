@@ -44,6 +44,8 @@ vector<int> locTreeIndex;
 typedef struct Particle Particle;
 vector<map <unsigned long long int, vector<Particle>>> locMapParts;
 map<unsigned long long int, vector<Particle>> locBuffMapParts;
+//vector<unordered_map <unsigned long long int, vector<Particle>>> locMapParts;
+//unordered_map<unsigned long long int, vector<Particle>> locBuffMapParts;
 #endif
 
 size_t locHalosSize[2];
