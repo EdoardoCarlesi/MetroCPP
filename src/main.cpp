@@ -143,7 +143,7 @@ int main(int argv, char **argc)
 
 			/* Now exchange the halos in the requested buffer zones among the different tasks.
 			 * In zoom mode we send ALL halos to ALL tasks */
-			//CommTasks.BufferSendRecv();
+			CommTasks.BufferSendRecv();
 
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;

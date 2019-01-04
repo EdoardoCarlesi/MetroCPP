@@ -477,19 +477,6 @@ void Communication::BufferSendRecv()
 		MPI_Sendrecv(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, 
 			     &buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
 
-		/* Non-blocking communication, avoids deadlocks */
-		/*
-		//if (nBuffSendHalos > 0)
-		//	MPI_Isend(&buffSendHalos[0], buffSendSizeHalos, MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &request_send);
-		//if (nBuffRecvHalos > 0)
-		//	MPI_Irecv(&buffRecvHalos[0], buffRecvSizeHalos, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &request_recv);
-		try {
-		} catch (MPI::Exception e) {
-			cout << "MPI ERROR EXCEPTION ON Task: " << locTask << ", send: " << sendTask 
-				<< " recv: " << recvTask << ", sizeS: " << buffSendSizeHalos << ", sizeR: " << buffRecvSizeHalos << endl;
-		}
-		*/
-
 		/* Add the halos to the local buffer AND a local grid node which is now part of the buffer grid */
 		for (int iH = 0; iH < nBuffRecvHalos; iH++)
 			locBuffHalos.push_back(buffRecvHalos[iH]);
@@ -550,9 +537,6 @@ void Communication::BufferSendRecv()
 		MPI_Sendrecv(&buffSendSizeParts, sizeof(size_t), MPI_BYTE, sendTask, 0, 
 			     &buffRecvSizeParts, sizeof(size_t), MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
 
-		//MPI_Isend(&buffSendSizeParts, sizeof(size_t), MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &request_send);
-		//MPI_Irecv(&buffRecvSizeParts, sizeof(size_t), MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &request_recv);
-
 		/* Check that the receiving buffer is a null pointer before allocating it */
 		if (buffRecvParts != nullptr)
 		{
@@ -573,11 +557,6 @@ void Communication::BufferSendRecv()
 		/* Send and recv the MPI_Pack-ed buffers */
 		MPI_Sendrecv(buffSendParts, buffSendSizeParts, MPI_BYTE, sendTask, 0, 
 			     buffRecvParts, buffRecvSizeParts, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
-
-		//if (nBuffSendHalos > 0)
-		//	MPI_Isend(buffSendParts, buffSendSizeParts, MPI_BYTE, sendTask, 0, MPI_COMM_WORLD, &request_send);
-		//if (nBuffRecvHalos > 0)
-		//	MPI_Irecv(buffRecvParts, buffRecvSizeParts, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &request_recv);
 
 		/* Particles have been sent, free the buffer */
 		free(buffSendParts);
@@ -609,8 +588,7 @@ void Communication::BufferSendRecv()
  						partID = locBuffParts[iBuffTotHalo][iT][iP];
    	                      	        	thisParticle.haloID = locBuffHalos[iBuffTotHalo].ID;
         	                        	thisParticle.type   = iT;
-                	                	locBuffMapParts[partID].push_back(thisParticle);
-
+                	                	locMapParts[iUseCat][partID].push_back(thisParticle);
 					}
 #endif
 				}

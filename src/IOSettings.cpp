@@ -765,9 +765,7 @@ void IOSettings::ReadHalos()
 #ifndef ZOOM
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
-				//cout << " ASSIGN HALO TO GRID " << endl;
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
-				//cout << " DONE - ASSIGN HALO TO GRID " << endl;
 
 				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
 				 * will be initialized on each task when communicating the full halo list */

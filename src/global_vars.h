@@ -73,7 +73,6 @@ struct Particle {
 };
 
 extern vector<map<unsigned long long int, vector<Particle>>> locMapParts;
-extern map<unsigned long long int, vector<Particle>> locBuffMapParts;
 #endif
 
 
