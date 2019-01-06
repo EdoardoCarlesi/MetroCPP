@@ -3,14 +3,16 @@ TO DO NEXT:
 - Make the output .tmp files with all the halo lists selectable from the .cfg file
 
 - speedup the comparison: for each compared halo (with 0 particles in common) see what the related / unrelated variables 
-(distances, separations, angles)
+(distances, separations, angles): DEPRECATED, not needed 
+
+- Need to fix the Buffer halos in the new scheme
 
 - Keep track of the compared halos in the fwd loop and loop only on them in the backward
 
 - Improve the load balancing scheme, after reading in the halos optimize the assignment to different tasks
 
 - Linear-order n particle comparison: just store all the particle IDs into a map, <ull int, int> where the second int 
-is the index to a vector storing all the halo IDs/indexes (there can be more halos for a single particle ID)
+is the index to a vector storing all the halo IDs/indexes (there can be more halos for a single particle ID
 
 - Cosmology class (to compute the expansion factor of the universe) 
 

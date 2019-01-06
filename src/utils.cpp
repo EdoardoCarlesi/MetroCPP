@@ -29,6 +29,10 @@ void InitLocVariables(void)
 	locHalos.resize(2);
 	locMTrees.resize(2);
 
+#ifdef CMP_MAP
+	locMapParts.resize(2);
+#endif
+
 #ifndef ZOOM
 	GlobalGrid[0].Init(nGrid, boxSize);
 	GlobalGrid[1].Init(nGrid, boxSize);
@@ -102,6 +106,12 @@ void CleanMemory(int iCat)
 		locParts[iCat].shrink_to_fit();
 	}
 
+#ifdef CMP_MAP
+	nextMapTrees.clear();
+	thisMapTrees.clear();
+	locMapParts[iCat].clear();
+#endif
+
 #ifndef ZOOM		
 	GlobalGrid[iCat].Clean();
 #endif
@@ -174,7 +184,20 @@ void ShiftHalosPartsGrids()
 			locParts[0][iH].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT++)
+			{
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
+#ifdef CMP_MAP
+				for (int iP = 0; iP < locParts[0][iH][iT].size(); iP++)
+				{
+					unsigned long long int partID = locParts[0][iH][iT][iP];
+					Particle thisParticle;
+ 	                	        thisParticle.haloID = locHalos[0][iH].ID;
+                                	thisParticle.type   = iT; 
+                                	locMapParts[0][partID].push_back(thisParticle);
+				}
+#endif
+
+			}
 		}
 
 #ifdef ZOOM
@@ -186,7 +209,19 @@ void ShiftHalosPartsGrids()
 			locParts[0][nLocHalos[0]+iO].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT++)
+			{
 				locParts[0][nLocHalos[0]+iO][iT].swap(locOrphParts[iO][iT]);
+#ifdef CMP_MAP
+				for (int iP = 0; iP < locParts[0][nLocHalos[0]+iO][iT].size(); iP++)
+				{
+					unsigned long long int partID = locParts[0][nLocHalos[0]+iO][iT][iP];
+					Particle thisParticle;
+ 	                	        thisParticle.haloID = locOrphHalos[iO].ID;
+                                	thisParticle.type   = iT;
+                                	locMapParts[0][partID].push_back(thisParticle);
+				}
+#endif
+			}
 		}	
 	}	// runMode 0 or 2
 		
