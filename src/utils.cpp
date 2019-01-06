@@ -217,6 +217,8 @@ void ShiftHalosPartsGrids()
 					unsigned long long int partID = locParts[0][nLocHalos[0]+iO][iT][iP];
 					Particle thisParticle;
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
+
+					//cout << iP << " " << locOrphHalos[iO].ID << endl;
                                 	thisParticle.type   = iT;
                                 	locMapParts[0][partID].push_back(thisParticle);
 				}

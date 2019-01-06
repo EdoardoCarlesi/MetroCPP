@@ -482,7 +482,7 @@ void Communication::SyncMergerTreeBuffer()
 	int recvTask = 0, sendTask = 0;
 
 	/* These buffers hold the number of halos to be sent/recvd to/from multiple tasks */
-	int iBuffTotHaloIDs = 0, nBuffSendHaloIDs = 0, nBuffRecvHaloIDs = 0, buffIndexHaloIDs = 0;
+	int iBuffTotHaloIDs = 0, nBuffSendHaloIDs = 0, nBuffRecvHaloIDs = 0, buffIndexHaloIDs = 0, nTotBuffHaloIDs = 0;
 	
 	size_t buffSendSizeHaloIDs = 0, buffRecvSizeHaloIDs = 0;
 
@@ -504,6 +504,10 @@ void Communication::SyncMergerTreeBuffer()
 	if (locTask == 0)
 		cout << "Synchronizing merger trees in the buffer regions..." << endl; 
 
+	//for (int iT = 0; iT < totTask-1; iT++)
+	//	cout << iT << " on Task " << locTask << " send: " << sendTasks[iT] << " recv: " << recvTasks[iT] << endl;  
+
+
 	/* Loop on all the tasks except the local one */
 	for (int iT = 0; iT < totTask-1; iT++)
 	{
@@ -514,22 +518,24 @@ void Communication::SyncMergerTreeBuffer()
 		nBuffSendHaloIDs = buffIndexSendHalo[sendTask].size();
 
 #ifdef VERBOSE
-		if (nBuffSendHalos == 0)
+		if (nBuffSendHaloIDs == 0)
 			cout << "Task=" << locTask << " has zero send buffer to " << sendTask << endl;  
 #endif
+
+		buffSendHaloIDs.resize(2 * nBuffSendHaloIDs);
 
 		for (int iP = 0; iP < nBuffSendHaloIDs; iP ++)
 		{
 			int iH = buffIndexSendHalo[sendTask][iP];
 			
 			/* i-th and i+1-th IDs in the vector are a descendant/progenitor pair */
-			buffSendHaloIDs.push_back(locMTrees[iUseCat][iH].mainHalo.ID);
+			buffSendHaloIDs[2 * iP] = locMTrees[iUseCat][iH].mainHalo.ID;
 
 			/* If the halo on the buffer is orphan, then we assign it its own ID as progenitor */
 			if (locMTrees[iUseCat][iH].isOrphan == true)
-				buffSendHaloIDs.push_back(locMTrees[1][iH].mainHalo.ID);
+				buffSendHaloIDs[2 * iP + 1] = locMTrees[1][iH].mainHalo.ID;
 			else
-				buffSendHaloIDs.push_back(locMTrees[1][iH].idProgenitor[0]);
+				buffSendHaloIDs[2 * iP + 1] = locMTrees[1][iH].idProgenitor[0];
 			
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
 				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). " 
@@ -549,6 +555,8 @@ void Communication::SyncMergerTreeBuffer()
 		buffSendSizeHaloIDs = 2 * nBuffSendHaloIDs * sizeof(unsigned long long int);
 		buffRecvSizeHaloIDs = 2 * nBuffRecvHaloIDs * sizeof(unsigned long long int);
 
+		nTotBuffHaloIDs += nBuffRecvHaloIDs;
+
 		buffRecvHaloIDs.resize(2 * nBuffRecvHaloIDs);	
 
 #ifdef VERBOSE
@@ -560,7 +568,7 @@ void Communication::SyncMergerTreeBuffer()
 
 		/* Append halo ids to the total recv buffer */
 		for (int iH = 0; iH < 2 * nBuffRecvHaloIDs; iH++)
-			totBuffRecvHaloIDs.push_back(buffSendHaloIDs[iH]);
+			totBuffRecvHaloIDs.push_back(buffRecvHaloIDs[iH]);
 
 		/* Clean the recv halo buffer */
 		if (buffRecvHaloIDs.size() > 0)
@@ -578,10 +586,13 @@ void Communication::SyncMergerTreeBuffer()
 
 	}	// Loop on the send/recv tasks
 
-	int iMT = 0;
+	// TODO fix this map trees in non CMP mode
 
+#ifdef CMP_MAP
 	/* Now synchronize the connections of the halos on the buffer */
-	for (int iH = 0; iH < totBuffRecvHaloIDs.size()/2; iH++)
+	//for (int iH = 0; iH < totBuffRecvHaloIDs.size()/2; iH++)
+	//for (int iH = 0; iH < nTotBuffHaloIDs; iH++)
+	for (int iH = 0; iH < locBuffHalos.size(); iH++)
 	{	
 		unsigned long long int descID = totBuffRecvHaloIDs[2 * iH];
 		unsigned long long int progID = totBuffRecvHaloIDs[2 * iH + 1];
@@ -591,16 +602,14 @@ void Communication::SyncMergerTreeBuffer()
 		/* Check whether the most likely descendant of the halo in the buffer is the same as the one found in its "original" task. */
 		if (locMTrees[1][thisTreeIndex].mainHalo.ID == descID && locMTrees[1][thisTreeIndex].idProgenitor.size() > 0)
 		{
+
 			/* If the progenitor with the highest merit is not on this task, replace the (local) highest merit ID with this one.
 			 * In this way, this halo now knows that its most likely descendant is not located on this task, and when cleaning the 
 			 * connection will not be taken among the progenitors of the old highest merit ID-halo.	*/
-			if (locMTrees[1][thisTreeIndex].idProgenitor[0]  != progID)
+			if (locMTrees[1][thisTreeIndex].idProgenitor[0] != progID)
 				locMTrees[1][thisTreeIndex].idProgenitor[0] = progID;
 		}
 	}
-
-#ifdef TEST
-		
 #endif
 }
 

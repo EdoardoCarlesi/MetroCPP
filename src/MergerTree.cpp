@@ -465,10 +465,16 @@ void FindProgenitors(int iOne, int iTwo)
 
 				nLocOrphans++;
 			} else {
+
+				if (locHalos[iOne][iM].isToken)
+					iFixOrphans++;
+
 				locMTrees[iOne][iM].isOrphan = false;
 			}
 		} // if iOne == 0
 	}
+
+
 
 	/* Trace the orphans in the forward loop */
 	if (iOne == 0)
