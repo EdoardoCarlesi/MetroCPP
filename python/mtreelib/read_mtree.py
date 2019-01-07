@@ -10,6 +10,7 @@ class ReadSettings:
 	nSteps = 0
 	treeFiles = []
 	allTrees = []
+	treeIDz0 = []
 
 	def __init__(self, baseFile, suffFile, nChunk, nSteps):
 		print('ReadSettings, initialize with baseFile, suffFile, nChunk, nSteps')
@@ -17,6 +18,9 @@ class ReadSettings:
 		self.nSteps = nSteps
 		self.baseFile = baseFile
 		self.suffFile = suffFile
+		self.treeFiles = []
+		self.allTrees = []
+		self.treeIDz0 = []
 
 		self.gen_file_list()	
 
@@ -86,7 +90,7 @@ class ReadSettings:
 
 				# print("The new OldIndex has %d elements." % (len(allOldIndex)))
 
-		return self.allTrees		
+		return [self. , self.allTrees]		
 			
 
 
