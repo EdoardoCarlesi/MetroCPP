@@ -168,8 +168,15 @@ void ShiftHalosPartsGrids()
 	/* Keep track of the orphan halos at the next step */
 	for (int iO = 0; iO < locOrphHalos.size(); iO++)
 	{
-		if (!locOrphHalos[iO].isToken || locOrphHalos[iO].nOrphanSteps == 0)
-			cout << "Bad assignment of token status to halo " << iO << " on task " << locTask << endl;
+		//if (!locOrphHalos[iO].isToken || locOrphHalos[iO].nOrphanSteps == 0)	// FIXME nOrphanSteps == 0 first, why?
+		//	cout << "Bad assignment of token status to halo " << iO << " on task " << locTask << endl;
+
+		if (!locOrphHalos[iO].isToken) 
+			locOrphHalos[iO].isToken = true;
+
+		if (locOrphHalos[iO].nOrphanSteps == 0)	
+			locOrphHalos[iO].isToken += 1;
+
 		locHalos[0].push_back(locOrphHalos[iO]);
 	}
 #endif
