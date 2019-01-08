@@ -1,3 +1,26 @@
+/*
+ *   METROC++: MErger TRees On C++, a scalable code for the computation of merger trees in cosmological simulations.
+ *   Copyright (C) Edoardo Carlesi 2018-2019
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
+/*
+ * Halo.cpp defines the basic Halo class, with some very simple properties.
+ * For the ease of communication, it is better to avoid dynamically allocated data, so that it is easier to 
+ * MPI_Sendrecv Halo-type arrays in the buffers.
+ */
+
 #include <math.h>
 #include <malloc.h>
 #include <iostream>

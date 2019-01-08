@@ -19,16 +19,23 @@ cosmological simulations}}
 \section{Introduction}
 \texttt{METROC++} is an acronym that stands for \textbf{ME}rger\textbf{TR}ees \textbf{O}n \textbf{C++}, and refers to the 
 infamous \textbf{Metro C} subway line in Rome, where the author of the code grew up and lived for more than 20 years.
-This legendary piece of infrastructure (which is still - in 2018 - largely under construction, though a shorter section of 
+This legendary piece of infrastructure (which is still - in 2019 - largely under construction, though a shorter section of 
 it is already operating) took something of the order of a few Giga-Years to be build, a time span which can be compared to the
 formation time of most dark matter halos.\\
 
-The code has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization.
+The code is distributed under the GPL 
 
-In addition to the source code, a number of \texttt{bash} and \texttt{python} scripts are provided to ease the 
+The code has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization; 
+implementing \texttt{C++11} and \texttt{C++14} directives - in particular, regarding the manipulation
+of (ordered) maps, so that the source needs to be compiled with a non-prehistoric version of the compiler.
+A series of python and \texttt{bash} scripts for the post processing, analysis and visualization of the merger trees are also provided 
+together with the sources, inside the \texttt{scripts/} and \texttt{python/} subfolders.
 
-The properties of the algorithms used by the code are described in the \href{https://arxiv.org/abs/1612.07053}{code paper} (Carlesi, MNRAS, 2018).
+The structure of the algorithms of the code as well as its performance, cosmological applications and 
+physical modelling are described in the:
+\href{https://arxiv.org/abs/1612.07053}{code paper} (Carlesi, MNRAS, 2018).
 
+In this user's guide, we provide the basics for the setup and running of \texttt{METROC++}
 
 
 \section{Basic usage}
@@ -37,14 +44,26 @@ The properties of the algorithms used by the code are described in the \href{htt
 The main folder contains a \texttt{Makefile.config} file 
 
 \begin{itemize}
-\item {-DZOOM}
-\item {-DVERBOSE}
+\item {-DCMP_MAP}: This flag controls the core algorithm for the comparison of the particle content of the different halos.
+It is strongly advised to use this flag unless there is a severe shortage of memory. When this flag is switched on, the particles
+on each task are stored in a C++11 map-type object, which speeds up the comparison by (at least) a factor of 5, up to a factor of
+20 for very large data. 
+However, maps come with a substantial amount of overhead, and the total memory required on each task is around three times the 
+memory required for the "standard" algorithm, which is based on the pairwise comparison of particle contents of nearby halos.
+
+\item {-DZOOM}: When this flag is switched on, the comparison algorithm is optimized for the comparison of the 
+particle content of halos in zoom-in simulations. This means that only one particle type will be
+
+\item {-DVERBOSE}: This flag controls the output of the program - when enabled, the code will dump a lot more of 
+(boring) information at runtime, on inter-task communication, buffer sizes, number of particles and halos exchanged and so on.
+
 \item {-DNPTYPES=}
-\item {-DCMP_MAP}
+
 \end{itemize}
 
 \subsection{Code operation modes}
 
+The code has two basic modes of operation: \emph{tree-building} and \emph{post-processing}.
 
 \subsection{Configuration file}
 \subsection{Temporary files}

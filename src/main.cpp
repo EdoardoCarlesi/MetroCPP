@@ -1,4 +1,24 @@
-/* The main file is a wrapper for all the functions that need to be invoked to 
+/*
+ *   METROC++: MErger TRees On C++, a scalable code for the computation of merger trees in cosmological simulations.
+ *   Copyright (C) Edoardo Carlesi 2018-2019
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
+
+/* 
+ * main.cpp:
+ * The main file is a wrapper for all the functions that need to be invoked to 
  * compute the merger trees. 
  * First, we read an input file containing the necessary settings.
  * Then halo/particle files are distributed and read in by the tasks.
@@ -59,9 +79,9 @@ int main(int argv, char **argc)
 		cout << endl;
 		cout << "\t\t=========================================" << endl;
 #ifdef ZOOM
-		cout << "\t\t=========== ZOOM OPERATION MODE =========" << endl;
+		cout << "\t\t===========  ZOOM OPTIMIZATION  =========" << endl;
 #else
-		cout << "\t\t========= FULL BOX OPERATION MODE =======" << endl;
+		cout << "\t\t========= FULL BOX OPTIMIZATION  =======" << endl;
 #endif
 		cout << "\t\t=========================================" << endl;
 		cout << endl;
@@ -71,9 +91,9 @@ int main(int argv, char **argc)
 	}
 
 	if (runMode == 0)
-		strRunMode = " ---> Merger tree computation only.\n";
+		strRunMode = " ---> Merger tree computation.\n";
 	else if (runMode == 1)	
-		strRunMode = " ---> Post processing the trees only.\n";
+		strRunMode = " ---> Post processing.\n";
 	else if (runMode == 2)
 		strRunMode = " ---> Merger tree computation and post processing.\n";
 	else {
@@ -126,7 +146,6 @@ int main(int argv, char **argc)
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
-		
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
 			SettingsIO.ReadParticles();	
@@ -191,11 +210,10 @@ int main(int argv, char **argc)
 			CommTasks.CleanBuffer();
 #endif
 			ShiftHalosPartsGrids();
-			SettingsIO.WriteTree(iNumCat); 	// TODO write trees at each step
+			SettingsIO.WriteTree(iNumCat); 	
 			
 		}	/* Finish: the trees have now been built for this step */
 
-		//SettingsIO.WriteTrees(); 	// TODO write trees at each step
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
 	
