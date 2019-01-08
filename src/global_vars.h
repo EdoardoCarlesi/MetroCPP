@@ -64,8 +64,20 @@ extern vector<vector<vector<unsigned long long int>>> locOrphParts;
 /* This variable keeps track of the halos that should be used on each task for the backward comparison, 
  * to avoid looping on all the halos */
 extern vector<int> locTreeIndex;	
-
 #endif
+
+#ifdef CMP_MAP	// The key is the particle ID, the result is a vector of Halo IDs it belongs to
+struct Particle {
+	int type;
+	unsigned long long int haloID;
+};
+
+extern vector<map<unsigned long long int, vector<Particle>>> locMapParts;
+
+extern map <unsigned long long int, int> thisMapTrees;
+extern map <unsigned long long int, int> nextMapTrees;
+#endif
+
 
 extern size_t locHalosSize[2];
 

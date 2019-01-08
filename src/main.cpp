@@ -128,7 +128,6 @@ int main(int argv, char **argc)
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
 		{
-			clock_t iniTime = clock();
 		
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
@@ -148,6 +147,8 @@ int main(int argv, char **argc)
 
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;
+
+			clock_t iniTime = clock();
 		
 			/* Forward halo connections
 			 * This function also allocates the MergerTrees */
@@ -180,6 +181,10 @@ int main(int argv, char **argc)
 	
 			if (locTask == 0)
 				cout << "\nDone in " << elapsed << "s. " << endl;
+#ifndef ZOOM
+			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			
+			CommTasks.SyncMergerTreeBuffer();
+#endif
 
 			CleanTrees(iNumCat);
 

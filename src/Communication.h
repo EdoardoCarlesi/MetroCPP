@@ -15,10 +15,11 @@ public:
 #else 
 	void SyncIndex(void);
 	void BroadcastAndGatherGrid(void);
+	void SyncMergerTreeBuffer(void);
 #endif
 
 	void BufferSendRecv(void);	
-
+	
 	void CleanBuffer(void);
 
 private:

@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
+#include <map>
 
 #include "Cosmology.h"
 #include "IOSettings.h"
@@ -547,8 +548,7 @@ void IOSettings::ReadParticles(void)
 	//unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
-	int partType = 0;
-	//int partType = 0, iTmpParts = 0;
+	int partType = 0, iPartMulti = 0;
 
 #ifdef VERBOSE
 	cout << "onTask=" << locTask << " part size: " << locParts[iUseCat].size() << endl;
@@ -613,6 +613,27 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
+#ifdef CMP_MAP
+				Particle thisParticle;
+				thisParticle.haloID = locHaloID;
+				thisParticle.type   = partType;
+
+				//if (partType > 6 || partType < 1)
+				//	cout << "ERROR part ID: " << partID << " type:" << partType << endl;
+
+				locMapParts[iUseCat][partID].push_back(thisParticle);
+		
+				if (locMapParts[iUseCat][partID].size() > 1)
+					iPartMulti++;
+
+				/*	if (locMapParts[iUseCat][partID].size() == 0)
+				{
+					locMapParts[iUseCat][partID].resize(1);
+					locMapParts[iUseCat][partID][0] = thisParticle;
+				} else {
+					iPartMulti++;
+				}*/
+#endif
 
 				tmpParts[partType].push_back(partID);
 				iTmpParts++;
@@ -655,8 +676,6 @@ void IOSettings::ReadParticles(void)
 #endif
 						iLocHalos++;
 
-					iLocParts++;
-
 					// Set/reset some counters
 					iTmpParts = 0;
 					iTmpHalos++;
@@ -684,8 +703,14 @@ void IOSettings::ReadParticles(void)
 	}	
 #endif
 
-	
+//cout << iUseCat << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
+//		<< " total: " << locMapParts[iUseCat].size() + iPartMulti << endl;
 #ifdef VERBOSE
+#ifdef CMP_MAP
+	cout << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
+		<< " total: " << locMapParts[iUseCat].size() + i;PartMulti << endl;
+#endif	
+
 	cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;
 #endif
 };
@@ -740,9 +765,7 @@ void IOSettings::ReadHalos()
 #ifndef ZOOM
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
-				//cout << " ASSIGN HALO TO GRID " << endl;
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
-				//cout << " DONE - ASSIGN HALO TO GRID " << endl;
 
 				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
 				 * will be initialized on each task when communicating the full halo list */

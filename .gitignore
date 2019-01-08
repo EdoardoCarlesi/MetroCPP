@@ -9,12 +9,14 @@
 *.toc
 *.tmp.*
 *.mtree
+*.pyc
 output.txt
 test_settings.txt
 MetroCPP
 bin/MetroCPP
 bin/test
 test
+python/mtreelib/__pycache__/*.pyc
 old_code/*.cpp
 old_code/*.h
 output/*.dat
