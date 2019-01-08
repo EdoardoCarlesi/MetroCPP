@@ -10,6 +10,7 @@
 *.tmp.*
 *.mtree
 *.pyc
+clean.sh
 metro_cpp.*
 mcpp_*
 output.txt
