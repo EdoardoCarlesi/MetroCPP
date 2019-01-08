@@ -452,8 +452,8 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	nLocChunks = int (nChunks / totTask);
 	nLocRemind = nChunks % totTask;		//FIXME check this setting
 
-	if (locTask == 0)
-		cout << "Each task is reading " << nLocChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
+	//if (locTask == 0)
+	//	cout << "Each task is reading " << nLocChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
 #endif
 
 	haloFiles.resize(nSnaps);

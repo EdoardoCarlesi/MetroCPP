@@ -40,11 +40,6 @@ int main(int argv, char **argc)
 	MPI_Init(&argv, &argc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &locTask);
  	MPI_Comm_size(MPI_COMM_WORLD, &totTask);
-                
-	/* Error handler */
-	//MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN); 
-	//MPI::COMM_WORLD.Set_errhandler ( MPI::ERRORS_THROW_EXCEPTIONS );
-	//MPI::COMM_WORLD.Set_errhandler ( MPI::ERRORS_RETURN);
 
 	/* These are the local variables and I/O settings that are defined for each task*/
 	InitLocVariables();
@@ -70,6 +65,9 @@ int main(int argv, char **argc)
 #endif
 		cout << "\t\t=========================================" << endl;
 		cout << endl;
+
+		cout << "Reading " << nLocChunks << " files per task on " << totTask << " MPI tasks." << endl;
+	
 	}
 
 	if (runMode == 0)

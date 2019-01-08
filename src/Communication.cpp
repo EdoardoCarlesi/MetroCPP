@@ -280,7 +280,7 @@ void Communication::BufferSendRecv()
 	ExchangeBuffers();
 
 	if (locTask == 0)
-		cout << "Sending and receiving halos in the buffer regions..." << endl; 
+		cout << "Sending and receiving halos in the buffer regions..."; //<< endl; 
 
 	/*
 	 * 		FIRST EXCHANGE HALO BUFFERS
@@ -625,8 +625,7 @@ void Communication::BroadcastAndGatherGrid()
 	int nNonZero = 0, thisTask = 0, thisNode = 0;
 	
 	if (locTask == 0)
-		//cout << "Broadcasting node information to all tasks for Grid[" << iUseCat << "]." << endl;
-		cout << "Broadcasting node information to all tasks..." << endl;
+		cout << "Exchanging node information among tasks..." << endl;
 
 	if (locTask == 0)
 		tmpTaskOnGridNode.resize(totTask * gridSize);
@@ -760,7 +759,7 @@ void Communication::ExchangeBuffers()
 
 	/* Now every task knows what to send and what to receive from/to every other task */
 	if (locTask == 0)
-		cout << "Done." << endl;
+		cout << " done." << endl;
 
 };
 

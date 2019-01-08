@@ -33,15 +33,11 @@ OBJS  =  $(SOURCE:.cpp=.o)
 
 .PHONY: all clean
 
-all : 	MetroCPP test
+all : 	MetroCPP
 
 MetroCPP : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OPT) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
 	mv $(EXEC) ../bin/
-
-test : $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OPT) -o $(EXEC_T) test.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)
-	mv $(EXEC_T) ../bin/
 
 # Check if file format *.o exists before cleaning
 ifneq ("$(wildcard *.o)","")
