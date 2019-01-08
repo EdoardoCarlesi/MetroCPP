@@ -2,10 +2,9 @@
 
 ###PBS -q debugn
 #PBS -q long40
-###PBS -q test
 #PBS -r n
-#PBS -l nodes=5:ppn=12
-#PBS -l walltime=01:45:00
+#PBS -l nodes=3:ppn=8
+#PBS -l walltime=04:45:00
 #PBS -u eduardo
 #PBS -m abe
 #PBS -N metro_cpp
@@ -22,4 +21,4 @@ cfgf=config/fullbox_leibniz.cfg
 module load compilers/gcc/6.1.0
 
 echo mpirun ./$mcpp $cfgf
-mpirun ./$mcpp $cfgf	&> output_metrocpp.out
+mpirun ./$mcpp $cfgf &> mcpp_${PBS_JOBID}.out
