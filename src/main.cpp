@@ -77,13 +77,23 @@ int main(int argv, char **argc)
 	if (locTask == 0)
 	{
 		cout << endl;
-		cout << "\t\t=========================================" << endl;
+		cout << "\t\t**************************************************" << endl;
+		cout << "\t\t*       METROC++ (MErger TRees On C++) v0.1      *" << endl;
+		cout << "\t\t*    Copyright (C) Edoardo Carlesi, 2018-2019    *" << endl;
+		cout << "\t\t* This program comes with ABSOLUTELY NO WARRANTY *" << endl;
+	        cout << "\t\t* This is free software, and you are welcome to  *" << endl;
+  		cout << "\t\t* redistribute it under certain conditions.      *" << endl;
+		cout << "\t\t**************************************************" << endl;
+		cout << endl;
+
+		cout << endl;
+		cout << "\t\t    =========================================" << endl;
 #ifdef ZOOM
-		cout << "\t\t===========  ZOOM OPTIMIZATION  =========" << endl;
+		cout << "\t\t    ===========  ZOOM OPERATION MODE ========" << endl;
 #else
-		cout << "\t\t========= FULL BOX OPTIMIZATION  =======" << endl;
+		cout << "\t\t    ========= FULL BOX OPERATION MODE =======" << endl;
 #endif
-		cout << "\t\t=========================================" << endl;
+		cout << "\t\t    =========================================" << endl;
 		cout << endl;
 
 		cout << "Reading " << nLocChunks << " files per task on " << totTask << " MPI tasks." << endl;
