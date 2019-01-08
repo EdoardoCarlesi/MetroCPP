@@ -1,3 +1,26 @@
+/*
+ *   METROC++: MErger TRees On C++, a scalable code for the computation of merger trees in cosmological simulations.
+ *   Copyright (C) Edoardo Carlesi 2018-2019
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
+/*
+ * MergerTree.cpp:
+ * This file holds the core routines and defines the classes that are required to consistently compute 
+ * the merger trees.
+ */
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -292,7 +315,7 @@ bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
 #ifdef CMP_MAP	
 void FindProgenitors(int iOne, int iTwo)
 {
-	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0; 
+	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0; 
 
 	/* Loop also on the buffer halos, in the backward loop only! */
 	if (iOne == 1)
@@ -470,6 +493,7 @@ void FindProgenitors(int iOne, int iTwo)
 					iFixOrphans++;
 
 				locMTrees[iOne][iM].isOrphan = false;
+				nLocTrees++;
 			}
 		} // if iOne == 0
 	}
@@ -480,17 +504,29 @@ void FindProgenitors(int iOne, int iTwo)
 	if (iOne == 0)
 	{
 		nLocOrphans = locOrphHalos.size();
-		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0; 
+		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0, nTotTrees = 0; 
 
 		//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
+		MPI_Reduce(&nTotTrees, &nLocTrees, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 		if (locTask == 0)
-			cout << "\nFound " << iOldOrphans << " old, " << nLocOrphans << " new, " << iFixOrphans << 
-				" fixed orphan halos. Total " << nTotOld << " old, " << nTotFix << " fixed and "
-					<< nTotOrphans << " total on all tasks. " << endl;
+		{	
+			cout << endl;
+			cout << "  Tracking a total of " << nTotTrees << " on " << totTask << " tasks. "  << endl;
+			cout << "  On all tasks, there are: " << endl;
+			cout << "     ---> " << nTotOrphans << " total orphan halos." << endl;
+			cout << "     ---> " << nTotOrphans - nTotOld << " new orphan halos." << endl;
+			cout << "     ---> " << nTotOld << " orphans since more than one step." << endl;
+			cout << "     ---> " << nTotFix << " orphans that have been reconnected to their descendants.  " << endl;
+			cout << "  On the master task there are " << nLocTrees << " as well as: " << endl;
+			cout << "     ---> " << nLocOrphans << " total orphan halos." << endl;
+			cout << "     ---> " << nLocOrphans - iOldOrphans << " new orphan halos." << endl;
+			cout << "     ---> " << iOldOrphans << " orphans since more than one step." << endl;
+			cout << "     ---> " << iFixOrphans << " orphans that have been reconnected to their descendants.  " << endl;
+		}
 	}
 
 };

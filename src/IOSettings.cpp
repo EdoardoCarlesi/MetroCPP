@@ -1,5 +1,25 @@
-/* This class takes care of input and output files, where they are located, how they are distributed across tasks and so on.
- * It uses absolute paths to input files and relies on some bash scripts to locate effectively the input catalogs and particle lists. */
+/*
+ *   METROC++: MErger TRees On C++, a scalable code for the computation of merger trees in cosmological simulations.
+ *   Copyright (C) Edoardo Carlesi 2018-2019
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+
+/* 
+ * IOSettings.cpp:
+ * This class takes care of input and output files, where they are located, how they are distributed across tasks and so on.
+ * It uses absolute paths to input files and relies on some bash scripts to locate effectively the input catalogs and particle lists. 
+ */
 
 #include <string>
 #include <sstream>

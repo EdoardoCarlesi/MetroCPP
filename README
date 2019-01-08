@@ -3,41 +3,27 @@
 	A C++/MPI code to generate MergerTrees 
 	    from cosmological simulations.
 
-		Edoardo Carlesi 2018
+	      Edoardo Carlesi 2018/2019
+	  	  ecarlesi@aip.de
 ==================================================
 
-C++ / MPI program to compute the halo merger trees 
+C++14, MPI-parallel program to compute the halo merger trees in cosmological simulations.
 
-TODO:
+Official repository:
+https://github.com/EdoardoCarlesi/MetroCPP
 
+Distributed under the terms of the GNU General Public License (GPL).
 
-- Fix the P-Mtree code and / or port the python code to MPI:
-	use the P-Mtree code for the basic DM tree:
-		- create a distributed grid among all the tasks	........ DONE!
-		- add hash function / tables for particle comparison between halos BETTER - USING SORTED ARRAYS
-		- PM grid computed at each step for ALL halos, approximate halo-induced gravity at each step on each gridpoint
-		- For subhalos think of something else:
-		- the grid should also retain informations about all the halos in each cell: DONE 
-                ---> make border cells also buffer zones for easier communication DONE
-		- improve the dependence of search-radius on redshift
-		- eliminate the need for communication between processors to swap the halos: simply swap a few buffer halos. DONE!
-			each processor must know which volume has been assigned to each other processor.
-			there might be duplicate halo trees in the buffer zone ----> clean them during the post processing with python
-		- in the output there should be information on: dm, gas and star particles shared between halos
-	
-	clean the P-Mtree using a python code that:
-		- removes duplicate trees in the bufferzone
-		- takes into account the missing subhalos at some steps
-		- takes into account subhalos leaving Rvir at some point
-		- make it mpi4py compatible so that it can read write analyze several files at the same time
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-Assign halo IDs at each grid cell. Each grid cell holds a list of IDs (that is created at file-read in time) DONE
-
-How to compute the buffer: take the maximum halo velocity in the box times the delta_time in the time step TODO, using a fixed grid size
-
-TEST the P-MTree using:
-
-- LGF DM only runs
-- HESTIA: implications of DM vs. gas vs. star particle tracing for disk stability (for example) and use as case study
-- Full box DM simulations

@@ -7,7 +7,7 @@
 \pagenumbering{Roman}
 \pagenumbering{arabic}
 \title{\textbf{METROC++} \\
-\emph{A parallel, object-oriented code for the computation of merger trees in 
+\emph{A parallel code for the computation of merger trees in 
 cosmological simulations}}
 \author{Edoardo Carlesi\\ Leibniz Institut f\"ur Astrophysik\\ Potsdam, Germany\\ ecarlesi@aip.de}
 
@@ -19,34 +19,63 @@ cosmological simulations}}
 \section{Introduction}
 \texttt{METROC++} is an acronym that stands for \textbf{ME}rger\textbf{TR}ees \textbf{O}n \textbf{C++}, and refers to the 
 infamous \textbf{Metro C} subway line in Rome, where the author of the code grew up and lived for more than 20 years.
-This legendary piece of infrastructure (which is still - in 2018 - largely under construction, though a shorter section of 
-it is already operating) took something of the order of a few Giga-Years to be build, a time span which can be compared to the
-formation time of most dark matter halos.\\
 
-The code has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization.
+This legendary piece of infrastructure (which is still - in 2019 - largely under construction, though a shorter section of 
+it is already operating) took something of the order of a few Giga-Years to be built, a time span which can be compared to the
+formation time of most dark matter halos. The name of the code is a tribute to this mythological pillar of the Roman public
+transportation system, which connects through space different points of the city just like a merger tree connects a Halo 
+through different points in time.\\
 
-In addition to the source code, a number of \texttt{bash} and \texttt{python} scripts are provided to ease the 
+The code is distributed under the terms of the GNU Public License, and can be freely downloaded from 
+\href{https://github.com/EdoardoCarlesi/MetroCPP}{this \texttt{GitHub} repository}.
 
-The properties of the algorithms used by the code are described in the \href{https://arxiv.org/abs/1612.07053}{code paper} (Carlesi, MNRAS, 2018).
+\texttt{METROC++} has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization.
+
+Since \texttt{C++14}-style syntax is used at some points, in particular for the manipulation
+of (ordered) maps, the source code needs to be compiled with a non-prehistoric version of the compiler.
+A series of python and \texttt{bash} scripts for the post processing, analysis and visualization of the merger trees are also provided 
+together with the sources, inside the \texttt{scripts/} and \texttt{python/} subfolders.
+
+The structure of the algorithms of the code as well as its performance, cosmological applications and 
+physical modelling are described in the:
+\href{https://arxiv.org/abs/1612.07053}{code paper} (Carlesi, MNRAS, 2018).
+
+In this user's guide, we explain the basics for the setup and running of \texttt{METROC++}
 
 
+\section{Basic setup}
 
-\section{Basic usage}
 \subsection{Compiling the code}
 
 The main folder contains a \texttt{Makefile.config} file 
 
-\begin{itemize}
-\item {-DZOOM}
-\item {-DVERBOSE}
-\item {-DNPTYPES=}
-\item {-DCMP_MAP}
-\end{itemize}
+\noindent
+\texttt{-DCMP\_MAP}: This flag controls the core algorithm for the comparison of the particle content of the different halos.
+\textbf{It is recommended to always use this flag} unless you have very strong reasons for limiting the memory usage at the 
+expense of speed and performance. 
+When this flag is switched on, the particles on each task are stored in a C++ map, 
+speeding up the comparison process by (at least) a factor of 5, reaching up to a factor of
+20 for very large datasets. Hash functions can do miracles sometimes. 
+However, maps come with a substantial amount of overhead, and the total memory required on each task is around three times the 
+memory required when running the standard, slow and boring algorithm.
+
+\noindent
+\texttt{-DZOOM}: When this flag is switched on, the comparison algorithm is optimized for the comparison of the 
+particle content of halos in zoom-in simulations. This means that only one particle type will be
+
+\noindent
+\texttt{-DVERBOSE}: This flag controls the output of the program - when enabled, the code will dump a lot more of 
+(boring) information at runtime, on inter-task communication, buffer sizes, number of particles and halos exchanged and so on.
+
+\noindent
+\texttt{-DNPTYPES=N}
 
 \subsection{Code operation modes}
 
+The code has two basic modes of operation: \emph{tree-building} and \emph{post-processing}.
 
 \subsection{Configuration file}
+
 \subsection{Temporary files}
 
 The code produces a number of temporary files (\texttt{.tmp} format extension, located in the \texttt{tmp/} folder).
@@ -55,7 +84,7 @@ They can be produced manually or using the scripts (\texttt{find\_z.sh}, \texttt
 and contain the list of files on which the halo finder will run on.
 This can be the full list of snapshots in one simulation, or can be edited to be only a subset of it.
 
-\section{Editing the code}
+\section{Advanced features}
 \subsection{Code structure}
 
 \begin{itemize}
@@ -63,15 +92,17 @@ This can be the full list of snapshots in one simulation, or can be edited to be
 \item{\texttt{utils.cpp}} General functions and utilities are implemented here
 \item{\texttt{spline.cpp}} The spline class is used for interpolation 
 \item{\texttt{global\_vars.cpp}} A list of global variables accessible throughout the whole program
-\item{\texttt{MergerTree.cpp}} This file contains the merger tree class, that tracks the merging of the halos, and series of functions (FindProgenitors) that compute the trees themselves
+\item{\texttt{MergerTree.cpp}} This file contains the merger tree class, that tracks the merging of the halos, 
+and series of functions (FindProgenitors) that compute the trees themselves.
 \item{\texttt{IOSetting.cpp}} Input/Output settings
-\item{\texttt{Cosmology.cpp}} Everything related to cosmological calculations
+\item{\texttt{Cosmology.cpp}} Everything related to cosmological calculations, gravity solver to reconstruct the orphan halo 
+positions and velocities 
 \item{\texttt{Communication.cpp}} Handles most of the communication among tasks - sending / receiving buffers and so on
 \item{\texttt{Grid.cpp}} This handles the grid on which halos are placed and the buffers
 \item{\texttt{Halo.cpp}} The halo class contains the main halo properties
 \end{itemize}
 
-\subsection{Other halo finders}
+\subsection{Compatibility with other halo finders}
 
 Although \texttt{METROC++} was conceived and mainly tested using the \texttt{AHF} halo finder, it can be easily extended to 
 support other software as well, as long as:
@@ -82,8 +113,6 @@ support other software as well, as long as:
 \end{itemize}
 
 To add 
-
-\subsection{Improving the algorithms}
 
 \section{Examples}
 

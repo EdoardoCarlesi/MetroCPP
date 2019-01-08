@@ -1,4 +1,21 @@
-/* MPI communication routines that take care of broadcasting, swapping, packing and send/recv of messages */
+/*
+ *   METROC++: MErger TRees On C++, a scalable code for the computation of merger trees in cosmological simulations.
+ *   Copyright (C) Edoardo Carlesi 2018-2019
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/* Communication.cpp : 
+   MPI communication routines that take care of broadcasting, swapping, packing and send/recv of messages */
 
 #include <mpi.h>
 #include <iostream>
@@ -280,7 +297,7 @@ void Communication::BufferSendRecv()
 	ExchangeBuffers();
 
 	if (locTask == 0)
-		cout << "Sending and receiving halos in the buffer regions..."; //<< endl; 
+		cout << "Sending and receiving halos in the buffer regions..." << endl; 
 
 	/*
 	 * 		FIRST EXCHANGE HALO BUFFERS
@@ -695,7 +712,7 @@ void Communication::ExchangeBuffers()
 	vector<int> allIndex;
 	
 	if (locTask == 0)
-		cout << "Gathering buffer information... " << endl;
+		cout << "Gathering buffer information..." << flush;
 
 	/* Make sure the buffers are clean */
 	if (buffIndexNodeHalo.size() > 0)
@@ -759,7 +776,7 @@ void Communication::ExchangeBuffers()
 
 	/* Now every task knows what to send and what to receive from/to every other task */
 	if (locTask == 0)
-		cout << " done." << endl;
+		cout << "done." << endl;
 
 };
 
