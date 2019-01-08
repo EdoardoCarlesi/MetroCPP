@@ -584,7 +584,7 @@ void IOSettings::ReadParticles(void)
 			cout << "ERROR: File " << tmpUrlPart << " not found on task=" << locTask << endl;
 			exit(0);
 		} else {
-			if (locTask == 0)
+			if (locTask == 0 && iChunk == 0)
 	        		cout << "Reading particle file: " << tmpUrlPart << endl;
 		}
 
@@ -750,7 +750,7 @@ void IOSettings::ReadHalos()
 			cout << "File: " << tmpUrlHalo << " not found on task=" << locTask << endl;
 			exit(0);
 		} else { 
-			if (locTask == 0)
+			if (locTask == 0 && iChunk == 0)
 	       			cout << "Reading " << nTmpHalos << " halos from file: " << tmpUrlHalo << endl;
 		}
 

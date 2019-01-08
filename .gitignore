@@ -10,6 +10,8 @@
 *.tmp.*
 *.mtree
 *.pyc
+metro_cpp.*
+mcpp_*
 output.txt
 test_settings.txt
 MetroCPP
