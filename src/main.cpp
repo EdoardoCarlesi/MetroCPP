@@ -244,7 +244,9 @@ int main(int argv, char **argc)
 #endif
 			ShiftHalosPartsGrids();
 			SettingsIO.WriteTree(iNumCat); 	
+
 			endTime = clock();
+			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 
 			if (locTask == 0)
 				cout << "Memory cleared and Merger Trees written in " << elapsed << "s. " << endl;
