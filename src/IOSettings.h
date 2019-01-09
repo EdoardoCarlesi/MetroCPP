@@ -20,6 +20,8 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
+#include <fstream>
 #include "spline.h"
 #include "Halo.h"
 #include "Cosmology.h"
@@ -86,11 +88,11 @@ public:
 	void WriteSmoothTrees();
 
 private:
-	/* Log file properties and settings */
+	/* Log file properties */
 	int iLogStep;
-	vector<float> logTime;
 	string outLogName;
 	ofstream fileLogOut;
+	vector<float> logTime;
 
 	void InitFromCfgFile(vector<string>);
 

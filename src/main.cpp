@@ -208,6 +208,7 @@ int main(int argv, char **argc)
 			MPI_Barrier(MPI_COMM_WORLD);
 
 			endTime = clock();
+			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 
 			if (locTask == 0)
 			{
@@ -277,6 +278,8 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 			cout << "The loop on halo and particle catalogs has finished." << endl;
 	
+		/* Sending the signal to close the log file */
+		SettingsIO.WriteLog(-1, 0.0);
 		CleanMemory(0);
 
 	}	/* If running the tree and / or post processing mode only */

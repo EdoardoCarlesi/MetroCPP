@@ -1078,16 +1078,31 @@ void IOSettings::WriteTree(int iThisCat)
 
 void IOSettings::WriteLog(int iNum, float time)
 {
+	/* Number of times stored in the log file */
 	int nLogStep = 6;
 
 	if (iNum == 0)
 	{
         	string strCpu = to_string(totTask);
-		outLogName = pathOutput + "timing_" + "n" + strCpu + ".log"
-		fileLogOut.open(outName);
-		fileLogOut << "# " << endl;
-	} else {
-
+		outLogName = pathOutput + "timing_" + "n" + strCpu + ".log";
+		fileLogOut.open(outLogName);
+		fileLogOut << "# ReadFile (1) Communication (2) ForwardTree (3)  BackwardTree (4)  SyncBuffer(5) Memory (6)" << endl;
+	} else if (iNum > 0) {
+		logTime.push_back(time);
+	
+		if (logTime.size() == nLogStep) 
+		{
+			//for (int iS = 0; iS < logTime.size(); iS++)
+			for (auto const& thisTime : logTime)
+				fileLogOut << thisTime << "    ";
+				//fileLogOut << logTime[iS] << "\t";
+			
+			/* End and clean the line */
+			fileLogOut << endl;
+			logTime.clear();
+		}
+	} else if (iNum == -1) {
+		fileLogOut.close();
 	}
 };
 
