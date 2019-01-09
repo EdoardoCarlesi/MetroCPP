@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#mpiexec='mpiexec'		# Laptop test
-mpiexec='/z/eduardo/CLUES/libs/bin/mpiexec'
+mpiexec='mpiexec'		# Laptop test
+#mpiexec='/z/eduardo/CLUES/libs/bin/mpiexec'
 
 cd ..; make; cd -
 rm ../tmp/*.tmp
