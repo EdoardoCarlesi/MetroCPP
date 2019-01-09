@@ -487,7 +487,8 @@ void FindProgenitors(int iOne, int iTwo)
 						back_inserter(locOrphParts[nLocOrphans][iP]));
 
 				nLocOrphans++;
-			} else {
+			} else { // This halo has a progenitor
+		
 
 				if (locHalos[iOne][iM].isToken)
 					iFixOrphans++;
@@ -495,7 +496,8 @@ void FindProgenitors(int iOne, int iTwo)
 				locMTrees[iOne][iM].isOrphan = false;
 				nLocTrees++;
 			}
-		} // if iOne == 0
+		} 
+
 	}
 
 
@@ -507,7 +509,7 @@ void FindProgenitors(int iOne, int iTwo)
 		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0, nTotTrees = 0; 
 
 		//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
-		MPI_Reduce(&nTotTrees, &nLocTrees, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&nLocTrees,   &nTotTrees, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
