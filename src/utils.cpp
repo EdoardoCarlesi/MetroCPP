@@ -102,7 +102,6 @@ void CleanMemory(int iCat)
 	if (locTask ==0)
 		cout << "Cleaning memory for catalog " << iCat << endl;	
 
-	if (locHalos[iCat].size() > 0)
 	{
 		locHalos[iCat].clear();
 		locHalos[iCat].shrink_to_fit();
@@ -113,7 +112,7 @@ void CleanMemory(int iCat)
 	/* Clean the particles if not running in post processing mode only */
 	if (runMode == 0 || runMode == 2)
 	{
-		for (int iH = 0; iH < nLocHalos[iCat]; iH++)
+		for (int iH = 0; iH < locParts[iCat].size(); iH++)
 		{
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
@@ -132,7 +131,6 @@ void CleanMemory(int iCat)
 #ifdef CMP_MAP
 	nextMapTrees.clear();
 	thisMapTrees.clear();
-	locMapParts[iCat].clear();
 #endif
 
 #ifndef ZOOM		
@@ -214,20 +212,7 @@ void ShiftHalosPartsGrids()
 			locParts[0][iH].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT++)
-			{
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
-#ifdef CMP_MAP
-				for (int iP = 0; iP < locParts[0][iH][iT].size(); iP++)
-				{
-					unsigned long long int partID = locParts[0][iH][iT][iP];
-					Particle thisParticle;
- 	                	        thisParticle.haloID = locHalos[0][iH].ID;
-                                	thisParticle.type   = iT; 
-                                	locMapParts[0][partID].push_back(thisParticle);
-				}
-#endif
-
-			}
 		}
 
 #ifdef ZOOM
@@ -239,21 +224,7 @@ void ShiftHalosPartsGrids()
 			locParts[0][nLocHalos[0]+iO].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT++)
-			{
 				locParts[0][nLocHalos[0]+iO][iT].swap(locOrphParts[iO][iT]);
-#ifdef CMP_MAP
-				for (int iP = 0; iP < locParts[0][nLocHalos[0]+iO][iT].size(); iP++)
-				{
-					unsigned long long int partID = locParts[0][nLocHalos[0]+iO][iT][iP];
-					Particle thisParticle;
- 	                	        thisParticle.haloID = locOrphHalos[iO].ID;
-
-					//cout << iP << " " << locOrphHalos[iO].ID << endl;
-                                	thisParticle.type   = iT;
-                                	locMapParts[0][partID].push_back(thisParticle);
-				}
-#endif
-			}
 		}	
 	}	// runMode 0 or 2
 		
@@ -272,27 +243,43 @@ void ShiftHalosPartsGrids()
 		GlobalGrid[0].AssignToGrid(locHalos[0][iH].X, iH);
 
 	/* Now clean the halo & particle buffers */
-	locBuffHalos.clear();
-	locBuffHalos.shrink_to_fit();
-	
 	if (runMode == 0 || runMode == 2)
 	{
 
-		for (int iP = 0; iP < locBuffParts.size(); iP++)
+#ifdef CMP_MAP			
+		locMapParts[0].swap(locMapParts[1]);
+		locMapParts[1].clear();
+#endif
+
+		for (int iH = 0; iH < locBuffParts.size(); iH++)
 		{
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
-				locBuffParts[iP][iT].clear();
-				locBuffParts[iP][iT].shrink_to_fit();
+#ifdef CMP_MAP			
+				/* Erase the particles in the buffer from locMap[0] */
+				for (int iP = 0; iP < locBuffParts[iH][iT].size(); iP++)
+				{
+					unsigned long long int partID = locBuffParts[iH][iT][iP];
+					Particle thisParticle;
+                 	       		thisParticle.haloID = locBuffHalos[iH].ID;
+                               		thisParticle.type   = iT; 
+                               		locMapParts[0].erase(partID); 
+				}
+#endif
+				locBuffParts[iH][iT].clear();
+				locBuffParts[iH][iT].shrink_to_fit();
 			}
 	
-			locBuffParts[iP].clear();
-			locBuffParts[iP].shrink_to_fit();
+			locBuffParts[iH].clear();
+			locBuffParts[iH].shrink_to_fit();
 		}
 	
 		locBuffParts.clear();
 		locBuffParts.shrink_to_fit();
 	}
+
+	locBuffHalos.clear();
+	locBuffHalos.shrink_to_fit();
 	
 #endif	// ZOOM mode
 	

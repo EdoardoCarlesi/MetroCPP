@@ -151,7 +151,11 @@ int main(int argv, char **argc)
 #endif
 
 		if (locTask == 0)
+		{
+			/* Initialize the log time output */
+			SettingsIO.WriteLog(0, 0.0);
 			cout << "Starting to loop on " << nSnapsUse << " halo and particle files." << endl;
+		}
 
 		/* Loop on halo and particle catalogs */
 		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
@@ -165,7 +169,10 @@ int main(int argv, char **argc)
 			double elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 	
 			if (locTask == 0)
+			{
 				cout << "Files read in " << elapsed << "s. " << endl;
+				SettingsIO.WriteLog(iNumCat, elapsed);
+			}
 
 			iniTime = clock();
 #ifndef ZOOM
@@ -185,9 +192,11 @@ int main(int argv, char **argc)
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 	
 			if (locTask == 0)
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Buffer exchanged in " << elapsed << "s. " << endl;
-
-
+			}
+	
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;
 
@@ -201,8 +210,10 @@ int main(int argv, char **argc)
 			endTime = clock();
 
 			if (locTask == 0)
-				cout << "Done in " << elapsed << "s. " << endl;
-		
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
+				cout << "Forward tree building done in " << elapsed << "s. " << endl;
+			}
 #ifdef ZOOM  
 			/* Orphan halo candidates need to be communicated in zoom mode only. 
 			 * In fullbox mode they are taken care of in the FindProgenitors function */
@@ -222,18 +233,24 @@ int main(int argv, char **argc)
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 	
 			if (locTask == 0)
-				cout << "Done in " << elapsed << "s. " << endl;
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
+				cout << "done in " << elapsed << "s. " << endl;
+			}
 #ifndef ZOOM
 			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			
 			iniTime = clock();
 			CommTasks.SyncMergerTreeBuffer();
+			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 	
 			if (locTask == 0)
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Merger Tree buffer synchronized in " << elapsed << "s. " << endl;
-
+			}
 #endif
 			iniTime = clock();
 			CleanTrees(iNumCat);
@@ -244,13 +261,17 @@ int main(int argv, char **argc)
 #endif
 			ShiftHalosPartsGrids();
 			SettingsIO.WriteTree(iNumCat); 	
+			MPI_Barrier(MPI_COMM_WORLD);
 
 			endTime = clock();
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
 
 			if (locTask == 0)
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Memory cleared and Merger Trees written in " << elapsed << "s. " << endl;
-			
+			}
+
 		}	/* Finish: the trees have now been built for this step */
 
 		if (locTask == 0)

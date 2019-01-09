@@ -517,13 +517,13 @@ void FindProgenitors(int iOne, int iTwo)
 		if (locTask == 0)
 		{	
 			cout << endl;
-			cout << "  Tracking a total of " << nTotTrees << " on " << totTask << " tasks. "  << endl;
+			cout << "  Tracking a total of " << nTotTrees << " halos on " << totTask << " tasks. "  << endl;
 			cout << "  On all tasks, there are: " << endl;
 			cout << "     ---> " << nTotOrphans << " total orphan halos." << endl;
 			cout << "     ---> " << nTotOrphans - nTotOld << " new orphan halos." << endl;
 			cout << "     ---> " << nTotOld << " orphans since more than one step." << endl;
 			cout << "     ---> " << nTotFix << " orphans that have been reconnected to their descendants.  " << endl;
-			cout << "  On the master task there are " << nLocTrees << " as well as: " << endl;
+			cout << "  On the master task there are " << nLocTrees << " halos as well as: " << endl;
 			cout << "     ---> " << nLocOrphans << " total orphan halos." << endl;
 			cout << "     ---> " << nLocOrphans - iOldOrphans << " new orphan halos." << endl;
 			cout << "     ---> " << iOldOrphans << " orphans since more than one step." << endl;

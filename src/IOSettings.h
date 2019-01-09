@@ -80,11 +80,18 @@ public:
 	void ReadTrees();
 
 	/* Write output */
+	void WriteLog(int, float);
 	void WriteTree(int);
 	void WriteTrees();
 	void WriteSmoothTrees();
 
 private:
+	/* Log file properties and settings */
+	int iLogStep;
+	vector<float> logTime;
+	string outLogName;
+	ofstream fileLogOut;
+
 	void InitFromCfgFile(vector<string>);
 
 	/* These functions read and interpolate from the right cosmological functions */

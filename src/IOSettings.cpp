@@ -789,7 +789,7 @@ void IOSettings::ReadHalos()
 
 				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
 				 * will be initialized on each task when communicating the full halo list */
-				//locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
+				locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
 #endif
 				iLocHalos++;
 				iTmpHalos++;
@@ -980,11 +980,27 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	nGas = 0; nStar = 0;
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
-	halo->nPart[2] = 0;
-	halo->nPart[3] = nStar;
-	halo->nPart[4] = 0;
-	halo->nPart[5] = 0;
-	halo->nPart[6] = tmpNpart;
+	halo->nPart[nPTypes] = tmpNpart;
+
+	if (nPTypes > 2)
+	{
+		halo->nPart[2] = 0;
+		
+		if (nPTypes > 3)
+		{
+			halo->nPart[3] = nStar;
+		
+			if (nPTypes > 4)
+			{
+				halo->nPart[4] = 0;
+					
+					if (nPTypes > 5)
+					{
+						halo->nPart[5] = 0;
+					}
+			}
+		}
+	}
 
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);
@@ -1057,6 +1073,22 @@ void IOSettings::WriteTree(int iThisCat)
                 //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
 		fileOut.close();
         }
+};
+
+
+void IOSettings::WriteLog(int iNum, float time)
+{
+	int nLogStep = 6;
+
+	if (iNum == 0)
+	{
+        	string strCpu = to_string(totTask);
+		outLogName = pathOutput + "timing_" + "n" + strCpu + ".log"
+		fileLogOut.open(outName);
+		fileLogOut << "# " << endl;
+	} else {
+
+	}
 };
 
 
