@@ -102,10 +102,6 @@ void Communication::SyncOrphanHalos()
 				locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
 
 				locParts[1].push_back(locParts[0][thisIndex]);
-
-				/* Remember to loop also over this halo at the next step 
-				 * locTreeIndex keeps track of all the halos to be used on each task in the backward comparison */
-				locTreeIndex.push_back(nLocHalos[1]);
 			}
 
 			/* The orphan (token) halo is stored in memory for the next step */

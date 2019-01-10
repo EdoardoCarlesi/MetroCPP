@@ -302,7 +302,9 @@ int main(int argv, char **argc)
 		{
 			/* Initialize descendant halos */
 			iUseCat = 0;			
+#ifndef ZOOM
 			CommTasks.SyncIndex();
+#endif 
 			SettingsIO.ReadTrees();
 			AssignDescendant();
 

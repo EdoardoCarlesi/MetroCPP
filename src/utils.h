@@ -36,6 +36,8 @@ float VectorModule(float *);
 
 float* UnitVector(float *);
 
+void CheckPath(string);
+
 void InitLocVariables(void);
 
 void CleanMemory(int);

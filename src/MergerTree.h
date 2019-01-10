@@ -82,6 +82,7 @@ void InitTrees(int);
 void CleanTrees(int);
 void DebugTrees(void);
 
+/* These functions are used in mode 1, when reading in a raw set of merger tree files */
 void AssignDescendant(void);
 void AssignProgenitor(void);
 

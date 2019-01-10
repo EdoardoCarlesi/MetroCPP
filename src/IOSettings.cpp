@@ -104,6 +104,7 @@ void IOSettings::FindCatID()
 	string boolZoom = "false";
 #endif
 
+
 	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
 
 	outputTmp = pathMetroCpp + tmpIdOut;
@@ -252,6 +253,16 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 			exit(0);
 		}
 #endif
+
+	/* Sanity check: do the specified folders exist? */
+	if (arg[0] == "pathInput" && locTask == 0)
+		CheckPath(pathInput);
+
+	if (arg[0] == "pathMetroCpp" && locTask == 0)
+		CheckPath(pathMetroCpp);
+	
+	if (arg[0] == "pathOutput" && locTask == 0)
+		CheckPath(pathOutput);
 
 	if (arg[0] == "nChunks" && locTask == 0)
 		if (nChunks < 1)
@@ -467,7 +478,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	nLocChunks = nChunks;
 
 	if (locTask == 0)
-		cout << "Reading halo/particle files on Task=0. Total number of tasks= " << totTask << endl; 
+		cout << "Reading halo and particle files on Task=0. Total number of tasks= " << totTask << endl; 
 #else
 	nLocChunks = int (nChunks / totTask);
 	nLocRemind = nChunks % totTask;		//FIXME check this setting
@@ -503,7 +514,11 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 					ifstream haloExists(haloFiles[iF][jF]);
 						if (haloExists.fail())
-							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << haloFiles[iF][jF] << endl;
+						{
+							cout << "ERROR on task =" << locTask 
+								<< " AHF_halos file not found. " << haloFiles[iF][0] << endl;
+							exit(0);		
+						}
 				}
 
 				partFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".z" + charZ + "." + partSuffix;
@@ -770,10 +785,6 @@ void IOSettings::ReadHalos()
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
-
-				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
-				 * will be initialized on each task when communicating the full halo list */
-				locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
 #endif
 				iLocHalos++;
 				iTmpHalos++;
