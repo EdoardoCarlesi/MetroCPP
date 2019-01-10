@@ -54,21 +54,22 @@ vector<vector<vector<vector<unsigned long long int>>>> locParts;
 
 #ifndef ZOOM
 vector<Halo> locBuffHalos;
+vector<vector<vector<unsigned long long int>>> locBuffParts;
+#endif
+
+
 vector<Halo> locOrphHalos;
 vector<int> locOrphIndex;
 vector<vector<vector<unsigned long long int>>> locOrphParts;
-vector<vector<vector<unsigned long long int>>> locBuffParts;
-#else
-vector<int> locTreeIndex;
-#endif
 
-#ifdef CMP_MAP
 typedef struct Particle Particle;
 vector<map <unsigned long long int, vector<Particle>>> locMapParts;
 
+/* This map keeps track of the halo ids when reading from old mtree files */
+map <unsigned long long int, int> id2Index;
+
 map <unsigned long long int, int> thisMapTrees;
 map <unsigned long long int, int> nextMapTrees;
-#endif
 
 size_t locHalosSize[2];
 
@@ -84,12 +85,6 @@ size_t sizePart;
 
 int nPTypes;
 int nLocParts[2];
-
-/* Maps that contain halo ids and a link to the locHalo index */
-#ifndef ZOOM
-map <unsigned long long int, int> locId2Index;
-#endif
-map <unsigned long long int, int> id2Index;
 
 /* Factors and variables */
 float dMaxFactor;

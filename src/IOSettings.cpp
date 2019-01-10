@@ -104,6 +104,7 @@ void IOSettings::FindCatID()
 	string boolZoom = "false";
 #endif
 
+
 	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
 
 	outputTmp = pathMetroCpp + tmpIdOut;
@@ -252,6 +253,16 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 			exit(0);
 		}
 #endif
+
+	/* Sanity check: do the specified folders exist? */
+	if (arg[0] == "pathInput" && locTask == 0)
+		CheckPath(pathInput);
+
+	if (arg[0] == "pathMetroCpp" && locTask == 0)
+		CheckPath(pathMetroCpp);
+	
+	if (arg[0] == "pathOutput" && locTask == 0)
+		CheckPath(pathOutput);
 
 	if (arg[0] == "nChunks" && locTask == 0)
 		if (nChunks < 1)
@@ -467,7 +478,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	nLocChunks = nChunks;
 
 	if (locTask == 0)
-		cout << "Reading halo/particle files on Task=0. Total number of tasks= " << totTask << endl; 
+		cout << "Reading halo and particle files on Task=0. Total number of tasks= " << totTask << endl; 
 #else
 	nLocChunks = int (nChunks / totTask);
 	nLocRemind = nChunks % totTask;		//FIXME check this setting
@@ -503,7 +514,11 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 					ifstream haloExists(haloFiles[iF][jF]);
 						if (haloExists.fail())
-							cout << "WARNING: on task =" << locTask << " AHF_halos found as " << haloFiles[iF][jF] << endl;
+						{
+							cout << "ERROR on task =" << locTask 
+								<< " AHF_halos file not found. " << haloFiles[iF][0] << endl;
+							exit(0);		
+						}
 				}
 
 				partFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".z" + charZ + "." + partSuffix;
@@ -633,27 +648,15 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
-#ifdef CMP_MAP
-				Particle thisParticle;
-				thisParticle.haloID = locHaloID;
-				thisParticle.type   = partType;
 
-				//if (partType > 6 || partType < 1)
-				//	cout << "ERROR part ID: " << partID << " type:" << partType << endl;
+					Particle thisParticle;
+					thisParticle.haloID = locHaloID;
+					thisParticle.type   = partType;
 
 				locMapParts[iUseCat][partID].push_back(thisParticle);
 		
 				if (locMapParts[iUseCat][partID].size() > 1)
 					iPartMulti++;
-
-				/*	if (locMapParts[iUseCat][partID].size() == 0)
-				{
-					locMapParts[iUseCat][partID].resize(1);
-					locMapParts[iUseCat][partID][0] = thisParticle;
-				} else {
-					iPartMulti++;
-				}*/
-#endif
 
 				tmpParts[partType].push_back(partID);
 				iTmpParts++;
@@ -726,12 +729,8 @@ void IOSettings::ReadParticles(void)
 //cout << iUseCat << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
 //		<< " total: " << locMapParts[iUseCat].size() + iPartMulti << endl;
 #ifdef VERBOSE
-#ifdef CMP_MAP
 	cout << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
 		<< " total: " << locMapParts[iUseCat].size() + i;PartMulti << endl;
-#endif	
-
-	cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;
 #endif
 };
  
@@ -786,10 +785,6 @@ void IOSettings::ReadHalos()
 				// Assign halo to its nearest grid point - assign the absolute local index number
 				// Halos on the local chunk have POSITIVE index, halos on the buffer NEGATIVE 
 				GlobalGrid[iUseCat].AssignToGrid(tmpHalos[iTmpHalos].X, iLocHalos);
-
-				/* The ID to Index map is allocated while reading only in non-zoom mode. In zoom mode this
-				 * will be initialized on each task when communicating the full halo list */
-				//locId2Index[tmpHalos[iTmpHalos].ID] = iLocHalos;	// FIXME
 #endif
 				iLocHalos++;
 				iTmpHalos++;
@@ -980,11 +975,27 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	nGas = 0; nStar = 0;
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
-	halo->nPart[2] = 0;
-	halo->nPart[3] = nStar;
-	halo->nPart[4] = 0;
-	halo->nPart[5] = 0;
-	halo->nPart[6] = tmpNpart;
+	halo->nPart[nPTypes] = tmpNpart;
+
+	if (nPTypes > 2)
+	{
+		halo->nPart[2] = 0;
+		
+		if (nPTypes > 3)
+		{
+			halo->nPart[3] = nStar;
+		
+			if (nPTypes > 4)
+			{
+				halo->nPart[4] = 0;
+					
+					if (nPTypes > 5)
+					{
+						halo->nPart[5] = 0;
+					}
+			}
+		}
+	}
 
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);
@@ -1057,6 +1068,40 @@ void IOSettings::WriteTree(int iThisCat)
                 //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
 		fileOut.close();
         }
+};
+
+
+void IOSettings::WriteLog(int iNum, float time)
+{
+	/* Number of times stored in the log file */
+	int nLogStep = 6;
+
+	if (iNum == 0)
+	{
+        	string strCpu = to_string(totTask);
+		string strChu = to_string(nChunks);
+		strChu += ".nomap";
+
+		outLogName = pathOutput + "timing_" + "n" + strCpu + "." + strChu + ".log";
+		fileLogOut.open(outLogName);
+		fileLogOut << "# ReadFile (1) Communication (2) ForwardTree (3)  BackwardTree (4)  SyncBuffer(5) Memory (6)" << endl;
+	} else if (iNum > 0) {
+		logTime.push_back(time);
+	
+		if (logTime.size() == nLogStep) 
+		{
+			//for (int iS = 0; iS < logTime.size(); iS++)
+			for (auto const& thisTime : logTime)
+				fileLogOut << thisTime << "    ";
+				//fileLogOut << logTime[iS] << "\t";
+			
+			/* End and clean the line */
+			fileLogOut << endl;
+			logTime.clear();
+		}
+	} else if (iNum == -1) {
+		fileLogOut.close();
+	}
 };
 
 

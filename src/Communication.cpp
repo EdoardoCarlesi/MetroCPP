@@ -102,10 +102,6 @@ void Communication::SyncOrphanHalos()
 				locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
 
 				locParts[1].push_back(locParts[0][thisIndex]);
-
-				/* Remember to loop also over this halo at the next step 
-				 * locTreeIndex keeps track of all the halos to be used on each task in the backward comparison */
-				locTreeIndex.push_back(nLocHalos[1]);
 			}
 
 			/* The orphan (token) halo is stored in memory for the next step */
@@ -455,7 +451,7 @@ void Communication::BufferSendRecv()
 	
 					MPI_Unpack(buffRecvParts, buffRecvSizeParts, &posRecvPart, &locBuffParts[iBuffTotHalo][iT][0], 
 							nTmpPart * sizePart, MPI_BYTE, MPI_COMM_WORLD);
-#ifdef CMP_MAP
+
 					for (int iP = 0; iP < nTmpPart; iP++)
 					{
 				       		Particle thisParticle;
@@ -465,7 +461,6 @@ void Communication::BufferSendRecv()
         	                        	thisParticle.type   = iT;
                 	                	locMapParts[iUseCat][partID].push_back(thisParticle);
 					}
-#endif
 				}
 			}
 			
@@ -605,10 +600,7 @@ void Communication::SyncMergerTreeBuffer()
 
 	// TODO fix this map trees in non CMP mode
 
-#ifdef CMP_MAP
 	/* Now synchronize the connections of the halos on the buffer */
-	//for (int iH = 0; iH < totBuffRecvHaloIDs.size()/2; iH++)
-	//for (int iH = 0; iH < nTotBuffHaloIDs; iH++)
 	for (int iH = 0; iH < locBuffHalos.size(); iH++)
 	{	
 		unsigned long long int descID = totBuffRecvHaloIDs[2 * iH];
@@ -627,7 +619,6 @@ void Communication::SyncMergerTreeBuffer()
 				locMTrees[1][thisTreeIndex].idProgenitor[0] = progID;
 		}
 	}
-#endif
 }
 
 

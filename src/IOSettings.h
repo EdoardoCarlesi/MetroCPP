@@ -20,6 +20,8 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
+#include <fstream>
 #include "spline.h"
 #include "Halo.h"
 #include "Cosmology.h"
@@ -80,11 +82,18 @@ public:
 	void ReadTrees();
 
 	/* Write output */
+	void WriteLog(int, float);
 	void WriteTree(int);
 	void WriteTrees();
 	void WriteSmoothTrees();
 
 private:
+	/* Log file properties */
+	int iLogStep;
+	string outLogName;
+	ofstream fileLogOut;
+	vector<float> logTime;
+
 	void InitFromCfgFile(vector<string>);
 
 	/* These functions read and interpolate from the right cosmological functions */

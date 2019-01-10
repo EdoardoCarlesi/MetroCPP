@@ -30,6 +30,9 @@
 #include <cctype>
 #include <map>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "global_vars.h"
 #include "utils.h"
 
@@ -52,9 +55,7 @@ void InitLocVariables(void)
 	locHalos.resize(2);
 	locMTrees.resize(2);
 
-#ifdef CMP_MAP
 	locMapParts.resize(2);
-#endif
 
 #ifndef ZOOM
 	GlobalGrid[0].Init(nGrid, boxSize);
@@ -64,6 +65,22 @@ void InitLocVariables(void)
 	sizeHalo = sizeof(Halo);
 	sizePart = sizeof(unsigned long long int);
 };
+
+
+void CheckPath(string pathName)
+{
+	struct stat info;
+
+	if (stat(pathName.c_str(), &info) != 0)
+	{
+		cout << pathName << " not found. " << endl;
+		exit(0);
+
+	} else if (info.st_mode & S_IFDIR) {
+		cout << pathName << " found. " << endl;
+	}
+}
+
 
 
 unsigned int NumLines(const char * fileName)
@@ -129,11 +146,9 @@ void CleanMemory(int iCat)
 		locParts[iCat].shrink_to_fit();
 	}
 
-#ifdef CMP_MAP
 	nextMapTrees.clear();
 	thisMapTrees.clear();
 	locMapParts[iCat].clear();
-#endif
 
 #ifndef ZOOM		
 	GlobalGrid[iCat].Clean();
@@ -187,7 +202,6 @@ void ShiftHalosPartsGrids()
 
 	//cout << locTask << " Orphan: " << locOrphHalos.size() << endl;
 
-#ifndef ZOOM
 	/* Keep track of the orphan halos at the next step */
 	for (int iO = 0; iO < locOrphHalos.size(); iO++)
 	{
@@ -202,7 +216,6 @@ void ShiftHalosPartsGrids()
 
 		locHalos[0].push_back(locOrphHalos[iO]);
 	}
-#endif
 
 	if (runMode == 0 || runMode == 2)
 	{ 
@@ -216,23 +229,18 @@ void ShiftHalosPartsGrids()
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
-#ifdef CMP_MAP
-				for (int iP = 0; iP < locParts[0][iH][iT].size(); iP++)
+
+				for (auto const partID : locParts[0][iH][iT])
 				{
-					unsigned long long int partID = locParts[0][iH][iT][iP];
 					Particle thisParticle;
  	                	        thisParticle.haloID = locHalos[0][iH].ID;
                                 	thisParticle.type   = iT; 
                                 	locMapParts[0][partID].push_back(thisParticle);
 				}
-#endif
 
 			}
 		}
 
-#ifdef ZOOM
-	}	
-#else
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
 			locParts[0].push_back(locOrphParts[iO]);
@@ -241,18 +249,14 @@ void ShiftHalosPartsGrids()
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
 				locParts[0][nLocHalos[0]+iO][iT].swap(locOrphParts[iO][iT]);
-#ifdef CMP_MAP
-				for (int iP = 0; iP < locParts[0][nLocHalos[0]+iO][iT].size(); iP++)
+				for (auto const & partID : locParts[0][nLocHalos[0]+iO][iT])
 				{
-					unsigned long long int partID = locParts[0][nLocHalos[0]+iO][iT][iP];
 					Particle thisParticle;
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
 
-					//cout << iP << " " << locOrphHalos[iO].ID << endl;
                                 	thisParticle.type   = iT;
                                 	locMapParts[0][partID].push_back(thisParticle);
 				}
-#endif
 			}
 		}	
 	}	// runMode 0 or 2
@@ -261,6 +265,8 @@ void ShiftHalosPartsGrids()
 	nLocHalos[0] += locOrphHalos.size();
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
+
+#ifndef ZOOM	/* In ZOOM mode, there is no GRID and buffer communication, so we do not need to clean this stuff up. */
 
 	/* Re assign the halos to the locNodes on GlobalGrid[0] 
 	 * DO NOT COPY IT FROM GlobalGrid[1] - this contains also the buffer nodes in locNodes, it is difficult 
@@ -294,10 +300,9 @@ void ShiftHalosPartsGrids()
 		locBuffParts.shrink_to_fit();
 	}
 	
-#endif	// ZOOM mode
-	
 	if (locTask == 0)
 		cout << "Grid, halo and particle data has been cleaned and copied 1 ---> 0." << endl;
+#endif
 
 	CleanMemory(1);
 

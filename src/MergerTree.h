@@ -42,10 +42,8 @@ public:
 	vector<int> indexProgenitor;			// local array index of progenitors
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 
-#ifdef CMP_MAP
 	map<unsigned long long int, vector<int>> indexCommon; 	
 	void AssignMap(void);
-#endif
 
 	void SortByMerit(void);				// Once possible progenitors have been found, compare
 	void Clean(void);
@@ -84,16 +82,19 @@ void InitTrees(int);
 void CleanTrees(int);
 void DebugTrees(void);
 
+/* These functions are used in mode 1, when reading in a raw set of merger tree files */
 void AssignDescendant(void);
 void AssignProgenitor(void);
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);
 
+#ifdef ZOOM
 // Decide whether to compare two halos
 bool CompareHalos(int, int, int, int);
 
 // Given two (sorted) vectors, compare their content and return the number of common elements
 vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);
+#endif
 
 #endif
