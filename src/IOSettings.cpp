@@ -633,27 +633,15 @@ void IOSettings::ReadParticles(void)
 
 				if (inputFormat == "AHF")
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
-#ifdef CMP_MAP
-				Particle thisParticle;
-				thisParticle.haloID = locHaloID;
-				thisParticle.type   = partType;
 
-				//if (partType > 6 || partType < 1)
-				//	cout << "ERROR part ID: " << partID << " type:" << partType << endl;
+					Particle thisParticle;
+					thisParticle.haloID = locHaloID;
+					thisParticle.type   = partType;
 
 				locMapParts[iUseCat][partID].push_back(thisParticle);
 		
 				if (locMapParts[iUseCat][partID].size() > 1)
 					iPartMulti++;
-
-				/*	if (locMapParts[iUseCat][partID].size() == 0)
-				{
-					locMapParts[iUseCat][partID].resize(1);
-					locMapParts[iUseCat][partID][0] = thisParticle;
-				} else {
-					iPartMulti++;
-				}*/
-#endif
 
 				tmpParts[partType].push_back(partID);
 				iTmpParts++;
@@ -726,12 +714,8 @@ void IOSettings::ReadParticles(void)
 //cout << iUseCat << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
 //		<< " total: " << locMapParts[iUseCat].size() + iPartMulti << endl;
 #ifdef VERBOSE
-#ifdef CMP_MAP
 	cout << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
 		<< " total: " << locMapParts[iUseCat].size() + i;PartMulti << endl;
-#endif	
-
-	cout << "All particle files for " << iLocHalos << " halos have been read read on task " << locTask << endl;
 #endif
 };
  
@@ -1084,7 +1068,10 @@ void IOSettings::WriteLog(int iNum, float time)
 	if (iNum == 0)
 	{
         	string strCpu = to_string(totTask);
-		outLogName = pathOutput + "timing_" + "n" + strCpu + ".log";
+		string strChu = to_string(nChunks);
+		strChu += ".nomap";
+
+		outLogName = pathOutput + "timing_" + "n" + strCpu + "." + strChu + ".log";
 		fileLogOut.open(outLogName);
 		fileLogOut << "# ReadFile (1) Communication (2) ForwardTree (3)  BackwardTree (4)  SyncBuffer(5) Memory (6)" << endl;
 	} else if (iNum > 0) {

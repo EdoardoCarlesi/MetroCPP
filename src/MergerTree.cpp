@@ -101,7 +101,6 @@ MergerTree::~MergerTree()
 };
 
 
-#ifdef CMP_MAP
 void MergerTree::AssignMap()
 {
 	int nProgs = 0, nCommTot = 0, iP = 0;
@@ -135,9 +134,7 @@ void MergerTree::AssignMap()
 	if (nProgs == 0)
 	{
 		isOrphan = true;
-		
-		//if (mainHalo.nPart[1] > 300)
-		//	mainHalo.Info();
+
 	} else {
 		/* We allocate these vectors here, the indexes and the halos will be copied inside later on */
 		isOrphan = false;
@@ -145,7 +142,6 @@ void MergerTree::AssignMap()
 		progHalos.resize(nProgs);
 	}
 };
-#endif
 
 
 /* This sorting algorithm might be very inefficient but it's straightforward to implement, 
@@ -159,33 +155,23 @@ void MergerTree::SortByMerit()
 	vector<Halo> tmpProgHalos;
 	float merit = 0.0;
 
-	//if (mainHalo.nPart[1] > 100000 && locTask == 0)
-	//	cout << "Size ID Prog: " << idProgenitor.size() << endl;
-
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
 		int nComm = 0;
 		double ratioM = 0;
 
-		//for(int iC = 0; iC < nPTypes; iC++)
-		//		nComm += nCommon[iC][iM];
+		for(int iC = 0; iC < nPTypes; iC++)
+			nComm += nCommon[iC][iM];
 
 		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
-		// FIXME merit is based on DM particles only!!!
-		merit = nCommon[1][iM] / (ratioM*1.0001 - 1.0);
-		//merit = ((float) nComm) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
-		//merit = ((float) nCommon[1][iM]) / (mainHalo.nPart[1] * progHalos[iM].nPart[1]);
+		merit = nComm  / (ratioM*1.0001 - 1.0);
+		//merit = nCommon[1][iM] / (ratioM*1.0001 - 1.0);
 		merit *= (1.0 + 0.00001 * iM);	// We change the merit slightly, 
-		//merit *= merit * (1.0 + 0.000001 * iM);	// We change the merit slightly, 
-		// to avoid confusion when two halos have the same number of particles and the same number of particles shared with the host halo
-
-		//if (locTask == 0 && idProgenitor.size() > 100)
-		//if (locTask == 0) // && idProgenitor.size() > 100)
-			//cout << merit << " " << " " << progHalos[iM].nPart[1] << " " << endl;
-		//	cout << merit << " " << nCommon[1][iM] << " " << ratioM << " " << progHalos[iM].nPart[1] << " " << endl;
+						// to avoid confusion when two halos have the same number of particles 
+						// and the same number of particles shared with the host halo
 
 		allMerit.push_back(merit);
 	}
@@ -232,87 +218,13 @@ void MergerTree::SortByMerit()
 	tmpProgHalos.shrink_to_fit();
 };
 
-
-       /************************************************************************* 
-	* These are general functions and are not part of the class Merger Tree *
-	*************************************************************************/
+	       /****************************************************************************
+		* These are general functions which do not belong to the class Merger Tree *
+		****************************************************************************/
 		
-/* Given two halos, decide whether to compare their particle content or not */
-bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
-{
-	bool order;
-	float fVel = 0.4e-2, fDir = 1.0;
-	float dX[3], dV[3];
-	float min = 100000.0, max = 0.0, dT = 1.0;
-	float rMax = 0.0, vMax = 0.0, vOne = 0.0, vTwo = 0.0, dNow = 0.0, dNew = 0.0;
-	Halo cmpHalo, thisHalo;
-	thisHalo = locHalos[iOne][iHalo];
-
-#ifdef ZOOM
-	cmpHalo = locHalos[iTwo][jHalo];
-
-	rMax = thisHalo.rVir + cmpHalo.rVir;
-	rMax *= 25.0;	// FIXME check why this works...
-#else
-	if (jHalo > -1)
-		cmpHalo = locHalos[iTwo][jHalo];
-	else
-		cmpHalo = locBuffHalos[-jHalo-1];	// Compensate with +1 - the indexes are shifted by -1 to avoid overlap with index 0
-#endif
-
-	vOne = VectorModule(thisHalo.V);
-	vTwo = VectorModule(cmpHalo.V);
-	dNow = thisHalo.Distance(cmpHalo.X);
-	vMax = (vOne + vTwo);
-	
-#ifdef TEST // FIXME improve the check on wether halos are moving away or getting closer
-		// Also put more constrains using physical velocity and distance...
-	/* Linearly extrapolate the distance at the next step to see if the halos are getting closer or further away */
-	for (int iX = 0; iX < 3; iX++)
-		dX[iX] = (cmpHalo.X[iX] + cmpHalo.V[iX] * dT - thisHalo.X[iX] - thisHalo.V[iX] * dT);
-
-	dNew = VectorModule(dX);
-
-	fDir = (dNew / dNow);	
-	//fDir = pow(fDir, 2.0)
-
-	/* In forward mode, iOne = 0 and iTwo = 1. We expect d(iOne) < d(iTwo; and vice versa 
-	 * If the two halos are getting away from each other, then reduce the fVel factor */
-	if (iOne == 0)
-	{
-		//cout << locTask << ", " << iHalo << ", old=" << dNow << ", new=" << dNew << " fac:" << fDir << " vmax:" << vMax << endl;
-		fVel *= fDir;	// if dNew < dNow, halos are getting closer - increase the search radius
-	} else {
-		fVel /= fDir;
-	}
-#endif	
-	
-	rMax = thisHalo.rVir + cmpHalo.rVir; 
-
-#ifdef ZOOM
-	// FIXME check why this works...
-	rMax *= 25.0;	
-#endif
-
-	rMax *= dMaxFactor * vMax * fVel; 
-
-	// If we are dealing with token halos, enlarge the search radius
-	if (thisHalo.isToken || cmpHalo.isToken)
-		rMax *= locHalos[iOne][iHalo].nOrphanSteps;
-	
-	// Only check for pairwise distance
-	if (dNow < rMax)
-	{
-		return true;
-	} else {
-		return false;
-	}
-	
-};
-
-/* This is a much faster way of comparing particles content of halos across snapshots, that relies on maps 
+#ifndef ZOOM
+/* This is a very faster way of comparing particles content of halos across snapshots, that relies on maps 
    and scales linearly with the number of particles on each task */
-#ifdef CMP_MAP	
 void FindProgenitors(int iOne, int iTwo)
 {
 	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0; 
@@ -436,10 +348,6 @@ void FindProgenitors(int iOne, int iTwo)
 		int nProgs = locMTrees[iOne][iM].idProgenitor.size();
 		int thisHaloIndex = 0;
 
-		//if (locMTrees[iOne][iM].isOrphan && locTask == 0)
-		//	cout << iM << ", " << nProgs << ", " << thisHaloIndex << ", " 
-		//		 << locMTrees[iOne][thisHaloIndex].idProgenitor.size() << ", ORPHAN." << endl; 
-
 		for (int iP = 0; iP < nProgs; iP++)
 		{
 			thisHaloID = locMTrees[iOne][iM].idProgenitor[iP];
@@ -462,7 +370,6 @@ void FindProgenitors(int iOne, int iTwo)
 			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
 			{
-
 				Halo thisHalo = locHalos[iOne][iM];
 				thisHalo.isToken = true;
 				thisHalo.nOrphanSteps++;
@@ -482,13 +389,13 @@ void FindProgenitors(int iOne, int iTwo)
 				locOrphParts.push_back(locParts[iOne][iM]);
 				locOrphParts[nLocOrphans].resize(nPTypes);
 
+				/* Copy particle blocks divided by particle type */
 				for (int iP = 0; iP < nPTypes; iP++)
 					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].begin(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
 
 				nLocOrphans++;
 			} else { // This halo has a progenitor
-		
 
 				if (locHalos[iOne][iM].isToken)
 					iFixOrphans++;
@@ -497,10 +404,7 @@ void FindProgenitors(int iOne, int iTwo)
 				nLocTrees++;
 			}
 		} 
-
 	}
-
-
 
 	/* Trace the orphans in the forward loop */
 	if (iOne == 0)
@@ -533,7 +437,11 @@ void FindProgenitors(int iOne, int iTwo)
 
 };
 
-#else	/* This is using the standard implementation of the comparison algorithm, which is much slower */
+#else
+
+			/**************************************************
+			 *	Comparison for zoom simulations           *
+			 **************************************************/
 
 /* Find all the progenitors (descendants) of the halos in catalog iOne (iTwo) */
 void FindProgenitors(int iOne, int iTwo)
@@ -547,12 +455,6 @@ void FindProgenitors(int iOne, int iTwo)
 	
 	nLoopHalos = nLocHalos[iOne];
 
-#ifndef ZOOM
-	/* Loop also on the buffer halos, in the backward loop only! */
-	if (iOne > iTwo)
-		nLoopHalos = nLocHalos[iOne] + locBuffHalos.size();
-#endif
-
 	locMTrees[iOne].clear();
 	locMTrees[iOne].shrink_to_fit();
 	locMTrees[iOne].resize(nLoopHalos);
@@ -565,13 +467,6 @@ void FindProgenitors(int iOne, int iTwo)
 	cout << "\nOnTask=" << locTask << " nHalos: " << nLocHalos[iOne] << " nHalos+nBuff: " << nLoopHalos << 
 		" locBuffSize: " << locBuffHalos.size() << " MT:" << locMTrees[iOne].size() << endl;
 #endif
-
-
-
-#ifdef ZOOM
-			/**************************************************
-			 *	Comparison for zoom simulations           *
-			 **************************************************/
 
 	vector<int> locHaloPos;
 	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
@@ -691,168 +586,7 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Sort and clean of multiple entries the locTreeIndex */
 	sort(locTreeIndex.begin(), locTreeIndex.end());
 	locTreeIndex.erase(unique(locTreeIndex.begin(), locTreeIndex.end()), locTreeIndex.end());
-
-			/**************************************************
-			 *	Comparison for fullbox simulations        *
-			 **************************************************/
-#else						
-
-		for (int iL = 0; iL < nLoopHalos; iL++)
-		{
-			int iH = 0;
-			Halo thisHalo;
-			totCmp = 0; totSkip = 0; 
-
-			if (iL < nLocHalos[iOne])
-			{	
-				iH = iL;
-				thisHalo = locHalos[iOne][iH];
-			} else {
-				iH = nLocHalos[iOne]-iL-1;
-				thisHalo = locBuffHalos[-iH-1];
-			}
-
-			locMTrees[iOne][iL].mainHalo = thisHalo; 
-			locMTrees[iOne][iL].nCommon.resize(nPTypes);
-
-			if (iL == nStepsCounter * floor(iL / nStepsCounter) && locTask == 0)
-					cout << "." << flush; 
-
-			rSearch = radiusSearchMax; 
-
-			/* We only loop on a subset of halos */
-			indexes = GlobalGrid[iTwo].ListNearbyHalos(thisHalo.X, rSearch);
-
-			// TODO this loop could be speeded up a little bit if we skip the comparisons of token halos 
-			// in the 1 --> 0 (backwards) loop, but maybe it's not even worth it...
-			/* The vector "indexes" contains the list of haloes (in the local memory & buffer) to be compared */
-			for (int jH = 0; jH < indexes.size(); jH++)
-			{
-				int kH = indexes[jH];
-				bool compCondition;
-
-				/* The comparison condition is symmetric in the two indexes, 
-				 * so invert it in the case of backward comparison to take 
-				 * into account the fact that the sign might be negative in iH */
-				if (iOne < iTwo)
-					compCondition = CompareHalos(iH, kH, iOne, iTwo);
-				else
-					compCondition = CompareHalos(kH, iH, iTwo, iOne);
-
-				/* Compare halos --> this functions checks whether the two halos are too far 
-				   or velocities are oriented on opposite directions */
-				if (compCondition)
-				{	
-					int totComm = 0;
-		
-					// These two indexes should NEVER be negative at the same time. We only have one buffer
-					if (kH < 0 && iH < 0)  
-						cout << "ERROR. Two negative indexes on task=" << locTask << " kH= " << kH 
-							<< " iH = " << iH << ". Only one negative index allowed. "  
-							<< " buffer size=" << locBuffParts.size() << endl;
-					if (kH > -1 && iH > -1)
-						thisNCommon = CommonParticles(locParts[iOne][iH], locParts[iTwo][kH]);
-					else if (kH < 0)
-						thisNCommon = CommonParticles(locParts[iOne][iH], locBuffParts[-kH-1]);
-					else if (iH < 0)
-						thisNCommon = CommonParticles(locBuffParts[-iH-1], locParts[iTwo][kH]);
-
-					totComm = thisNCommon[0] + thisNCommon[1] + thisNCommon[2];
-						
-					if (totComm > 0)
-						totCmp++;
-
-					/* This is very important: we keep track of the merging history ONLY if the number 
-					 * of common particles is above a given threshold */
-					if (totComm > minPartCmp) 
-					{		
-						//if (iL > nLocHalos[iOne])
-						//	cout << " There are " << iL << " halos on task " << locTask << endl; 
-
-						for (int iT = 0; iT < nPTypes; iT++)
-							locMTrees[iOne][iL].nCommon[iT].push_back(thisNCommon[iT]);
-	
-						// In the backward comparison kH is only on the task halos, always > 0
-						if (kH > -1)	
-						{
-							locMTrees[iOne][iL].idProgenitor.push_back(locHalos[iTwo][kH].ID);
-							locMTrees[iOne][iL].progHalos.push_back(locHalos[iTwo][kH]);
-						} else { 
-							locMTrees[iOne][iL].idProgenitor.push_back(locBuffHalos[-kH-1].ID);	
-							locMTrees[iOne][iL].progHalos.push_back(locHalos[iTwo][-kH-1]);
-						}
-
-						locMTrees[iOne][iL].indexProgenitor.push_back(kH);
-							
-							if (thisHalo.isToken)
-								iFixOrphans++;
-					
-					} else {
-						totSkip++;
-					}
-					
-				} 	// if Halo Comparison
-			}	// for j, k = index(j)
-
-		locMTrees[iOne][iL].SortByMerit();
-
-		/* Very important check! Check for orphans only in the fwd loop to avoid segfaults */
-		if (iOne == 0)
-			/* Very important: if it turns out the halo has no likely progenitor, and has a number of particles above 
-			 * minPartHalo, then we add it to the grid & the iTwo step & the iTwo grid */
-			if (locMTrees[iOne][iH].idProgenitor.size() == 0 && 
-				locMTrees[iOne][iH].mainHalo.nPart[1] > minPartHalo)
-				{
-					Halo thisHalo = locHalos[iOne][iH];
-					thisHalo.isToken = true;
-					thisHalo.nOrphanSteps++;
-
-					if (thisHalo.nOrphanSteps > 1)
-						iOldOrphans++;
-					//cout << iL << " iOne: "<< iOne << ", Token n steps = " << thisHalo.nOrphanSteps << endl; 
-
-					/* Update the container of local orphan halos */
-					locOrphIndex.push_back(iH);
-					locOrphHalos.push_back(thisHalo);
-
-					/* Update the local mtree with a copy of itself */
-					locMTrees[iOne][iH].isOrphan = true;
-					locMTrees[iOne][iH].idProgenitor.push_back(locHalos[iOne][iH].ID);
-
-					/* Update the particle content */
-					locOrphParts.push_back(locParts[iOne][iH]);
-					locOrphParts[nLocOrphans].resize(nPTypes);
-
-					for (int iP = 0; iP < nPTypes; iP++)
-						copy(locParts[iOne][iH][iP].begin(), locParts[iOne][iH][iP].begin(), 
-							back_inserter(locOrphParts[nLocOrphans][iP]));
-
-					nLocOrphans++;
-				} else {
-					locMTrees[iOne][iH].isOrphan = false;
-				}
-
-		} // for i halo, the main one
-
-		if (iOne == 0)
-		{
-			nLocOrphans = locOrphHalos.size();
-			int nTotOrphans = 0, nTotFix = 0, nTotOld = 0; 
-
-			//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
-			MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-			MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-			MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-			if (locTask == 0)
-				cout << "\nFound " << iOldOrphans << " old, " << nLocOrphans << " new, " << iFixOrphans << 
-					" fixed orphan halos. Total " << nTotOld << " old, " << nTotFix << " fixed and "
-					<< nTotOrphans << " total on all tasks. " << endl;
-
-		}
-#endif		// ifdef ZOOM
 };
-#endif		// ifdef CMP_MAP
 
 
 /* Given a pair of haloes, determine the number of common particles */
@@ -897,6 +631,69 @@ vector<int> CommonParticles(vector<vector<unsigned long long int>> partsHaloOne,
 };
 
 
+/* Given two halos, decide whether to compare their particle content or not */
+bool CompareHalos(int iHalo, int jHalo, int iOne, int iTwo)
+{
+	bool order;
+	float fVel = 0.4e-2, fDir = 1.0;
+	float dX[3], dV[3];
+	float min = 100000.0, max = 0.0, dT = 1.0;
+	float rMax = 0.0, vMax = 0.0, vOne = 0.0, vTwo = 0.0, dNow = 0.0, dNew = 0.0;
+	Halo cmpHalo, thisHalo;
+	thisHalo = locHalos[iOne][iHalo];
+
+	cmpHalo = locHalos[iTwo][jHalo];
+
+	rMax = thisHalo.rVir + cmpHalo.rVir;
+	rMax *= 25.0;	// FIXME check why this works...
+
+	vOne = VectorModule(thisHalo.V);
+	vTwo = VectorModule(cmpHalo.V);
+	dNow = thisHalo.Distance(cmpHalo.X);
+	vMax = (vOne + vTwo);
+	
+#ifdef TEST // FIXME improve the check on wether halos are moving away or getting closer
+		// Also put more constrains using physical velocity and distance...
+	/* Linearly extrapolate the distance at the next step to see if the halos are getting closer or further away */
+	for (int iX = 0; iX < 3; iX++)
+		dX[iX] = (cmpHalo.X[iX] + cmpHalo.V[iX] * dT - thisHalo.X[iX] - thisHalo.V[iX] * dT);
+
+	dNew = VectorModule(dX);
+
+	fDir = (dNew / dNow);	
+	//fDir = pow(fDir, 2.0)
+
+	/* In forward mode, iOne = 0 and iTwo = 1. We expect d(iOne) < d(iTwo; and vice versa 
+	 * If the two halos are getting away from each other, then reduce the fVel factor */
+	if (iOne == 0)
+	{
+		//cout << locTask << ", " << iHalo << ", old=" << dNow << ", new=" << dNew << " fac:" << fDir << " vmax:" << vMax << endl;
+		fVel *= fDir;	// if dNew < dNow, halos are getting closer - increase the search radius
+	} else {
+		fVel /= fDir;
+	}
+#endif
+
+	// FIXME check why this works...
+	rMax *= 25.0;	
+
+	rMax *= dMaxFactor * vMax * fVel; 
+
+	// If we are dealing with token halos, enlarge the search radius
+	if (thisHalo.isToken || cmpHalo.isToken)
+		rMax *= locHalos[iOne][iHalo].nOrphanSteps;
+	
+	// Only check for pairwise distance
+	if (dNow < rMax)
+	{
+		return true;
+	} else {
+		return false;
+	}
+	
+};
+#endif		// ifndef ZOOM
+
 
 void InitTrees(int nUseCat)
 {
@@ -904,9 +701,7 @@ void InitTrees(int nUseCat)
 };
 
 
-/* This function compares the forward/backward connections to determine the unique descendant of each halo
- * TODO in full box mode, add the possibility to check the halos in the buffer and remove overlapping objects 
- * TODO Need to establish a criterion to determine to which task the halo should belong to */
+/* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
 	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
@@ -918,11 +713,11 @@ void CleanTrees(int iStep)
 	if (locTask < halosRemaind)
 		halosPerTask += 1;
 #else
-	halosPerTask = nLocHalos[0]; //locMTrees[0].size();
+	halosPerTask = nLocHalos[0]; 
 #endif
 
 	if (locTask == 0)
-		cout << "Cleaning Merger Tree connections, back and forth, for " << halosPerTask << " halos." << endl;
+		cout << "Cleaning Merger Tree connections for " << halosPerTask << " halos." << endl;
 
 #ifdef VERBOSE
 	if (locTask == 0)
@@ -987,8 +782,6 @@ void CleanTrees(int iStep)
 					mergerTree.mainHalo.Info();
 					locMTrees[1][kTree + nLocHalos[1]+1].mainHalo.Info();
 
-					//cout << "index: " << locMTrees[1][nLocHalos[1]-jTree].indexProgenitor.size() <<
-					//" id: " << locMTrees[1][nLocHalos[1]-jTree].idProgenitor.size() << endl;	
 				} else {
 					progHalo = locMTrees[1][nLocHalos[1]+kTree].mainHalo;	
 					descID = locMTrees[1][nLocHalos[1]+kTree].idProgenitor[0];	
@@ -1042,8 +835,6 @@ void CleanTrees(int iStep)
 		mergerTree.Clean();
 	}	// kTree for loop
 	
-	//cout << "OnTask = " << locTask << " n errors = " << nErr << endl;
-
 #ifdef ZOOM
 	locTreeIndex.clear();
 	locTreeIndex.shrink_to_fit();

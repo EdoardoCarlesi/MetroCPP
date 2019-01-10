@@ -83,7 +83,6 @@ extern vector<vector<vector<unsigned long long int>>> locOrphParts;
 extern vector<int> locTreeIndex;	
 #endif
 
-#ifdef CMP_MAP	// The key is the particle ID, the result is a vector of Halo IDs it belongs to
 struct Particle {
 	int type;
 	unsigned long long int haloID;
@@ -93,8 +92,6 @@ extern vector<map<unsigned long long int, vector<Particle>>> locMapParts;
 
 extern map <unsigned long long int, int> thisMapTrees;
 extern map <unsigned long long int, int> nextMapTrees;
-#endif
-
 
 extern size_t locHalosSize[2];
 

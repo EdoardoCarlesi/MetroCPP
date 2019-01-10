@@ -50,16 +50,6 @@ In this user's guide, we explain the basics for the setup and running of \texttt
 The main folder contains a \texttt{Makefile.config} file 
 
 \noindent
-\texttt{-DCMP\_MAP}: This flag controls the core algorithm for the comparison of the particle content of the different halos.
-\textbf{It is recommended to always use this flag} unless you have very strong reasons for limiting the memory usage at the 
-expense of speed and performance. 
-When this flag is switched on, the particles on each task are stored in a C++ map, 
-speeding up the comparison process by (at least) a factor of 5, reaching up to a factor of
-20 for very large datasets. Hash functions can do miracles sometimes. 
-However, maps come with a substantial amount of overhead, and the total memory required on each task is around three times the 
-memory required when running the standard, slow and boring algorithm.
-
-\noindent
 \texttt{-DZOOM}: When this flag is switched on, the comparison algorithm is optimized for the comparison of the 
 particle content of halos in zoom-in simulations. This means that only one particle type will be
 
