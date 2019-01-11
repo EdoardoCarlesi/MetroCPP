@@ -11,6 +11,8 @@
 *.mtree
 *.pyc
 metro_cpp.*
+output/*
+timing*.txt
 mcpp_*
 output.txt
 test_settings.txt

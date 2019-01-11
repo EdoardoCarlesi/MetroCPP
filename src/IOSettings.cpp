@@ -26,6 +26,7 @@
 #include <fstream>
 #include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <array>
 #include <cstdio>
 #include <memory>
@@ -207,7 +208,6 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nSnapsUse")		nSnapsUse = stoi(arg[1]);
 	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
-	else if (arg[0] == "dMaxFactor")	dMaxFactor = stof(arg[1]);
 	else if (arg[0] == "facOrphanSteps")	facOrphanSteps = stoi(arg[1]);
 	else if (arg[0] == "minPartHalo")	minPartHalo = stoi(arg[1]);
 	else if (arg[0] == "minPartCmp")	minPartCmp = stoi(arg[1]);
@@ -1080,20 +1080,21 @@ void IOSettings::WriteLog(int iNum, float time)
 	{
         	string strCpu = to_string(totTask);
 		string strChu = to_string(nChunks);
-		strChu += ".nomap";
 
-		outLogName = pathOutput + "timing_" + "n" + strCpu + "." + strChu + ".log";
+#ifdef ZOOM
+		strChu += ".zoom";
+#endif
+
+		outLogName = pathOutput + "timing_log." + strCpu + "." + strChu + ".txt";
 		fileLogOut.open(outLogName);
-		fileLogOut << "# ReadFile (1) Communication (2) ForwardTree (3)  BackwardTree (4)  SyncBuffer(5) Memory (6)" << endl;
+		fileLogOut << "# ReadFile (1) Communication (2) ForwardTree (3) BackwardTree (4) SyncBuffer(5) Memory (6)" << endl;
 	} else if (iNum > 0) {
 		logTime.push_back(time);
 	
 		if (logTime.size() == nLogStep) 
 		{
-			//for (int iS = 0; iS < logTime.size(); iS++)
 			for (auto const& thisTime : logTime)
-				fileLogOut << thisTime << "    ";
-				//fileLogOut << logTime[iS] << "\t";
+				fileLogOut << setw(9) << thisTime << "\t";
 			
 			/* End and clean the line */
 			fileLogOut << endl;

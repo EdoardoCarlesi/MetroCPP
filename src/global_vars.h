@@ -112,7 +112,6 @@ extern size_t locPartsSize[2];
 extern int nLocParts[2];
 extern int nGrid;
 
-extern float dMaxFactor;
 extern float boxSize;
 extern float totVmax;
 extern float locVmax;
