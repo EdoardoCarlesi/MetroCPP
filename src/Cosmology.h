@@ -64,12 +64,12 @@ private:
 	float InitH2t();
 
 	/* Useful units */
-	float Mpc2km = 3.085e+19;
-	float G_MpcMsunS = 4.517e-48; 
-	float G_MKgS = 6.674e-11; 
-	float Myr2s = 3.153e+13;
-	float H100s = 3.241e-18;
-	float Msun2g = 1.988e+33;
+	double Mpc2km = 3.085e+19;
+	double G_MpcMsunS = 4.517e-48; 
+	double G_MKgS = 6.674e-11; 
+	double Myr2s = 3.153e+13;
+	double H100s = 3.241e-18;
+	double Msun2g = 1.988e+33;
 
 };
 #endif
