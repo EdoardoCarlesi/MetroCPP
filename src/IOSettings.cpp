@@ -579,8 +579,13 @@ void IOSettings::ReadParticles(void)
 	vector<vector<uint64_t>> tmpParts;
 	string tmpStrUrlPart, lineIn;
 	const char *tmpUrlPart;
+
+#ifdef NOPTYPE
+	//char dummyLine[256];
+	string dummyLine;
+#endif
+
 	uint64_t locHaloID = 0, partID = 0;
-	//unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
 	int partType = 0, iPartMulti = 0;
@@ -647,8 +652,12 @@ void IOSettings::ReadParticles(void)
 			} else {
 
 				if (inputFormat == "AHF")
+#ifdef NOPTYPE
+		        	        //sscanf(lineRead, "%llu %s", &partID, &dummyLine);
+		        	        sscanf(lineRead, "%llu", &partID);
+#else	
 		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
-
+#endif
 					Particle thisParticle;
 					thisParticle.haloID = locHaloID;
 					thisParticle.type   = partType;
