@@ -87,7 +87,6 @@ int nPTypes;
 int nLocParts[2];
 
 /* Factors and variables */
-float dMaxFactor;
 float totVmax;
 float locVmax;
 float maxBufferThick;

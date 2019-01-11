@@ -32,228 +32,30 @@
 using namespace std;
 
 
-#ifdef ZOOM
-		/* The communication functions differ in the zoom and non zoom modes, define the zoom mode functions first. */
-
-/* Once the forward correlations of the trees have been built, we communicate orphan halo properties across different tasks */
-void Communication::SyncOrphanHalos()
+Communication::~Communication()
 {
-	int locOrphans = orphanHaloIndex.size();
-	int totOrphans = 0;
-	int *posOrphans, *indexOrphans, *dispOrphans;
+	sendTasks.clear();
+	sendTasks.shrink_to_fit();
+	recvTasks.clear();
+	recvTasks.shrink_to_fit();
 
-	if (locTask == 0)
-		cout << "Synchronizing orphan halo information across all tasks..." << endl;
+	for (int iN = 0; iN < buffIndexNodeHalo.size(); iN++)
+		buffIndexNodeHalo.clear();
 
-	//cout << "-->Task=" << locTask << " has " << locOrphans << endl;
+	for (int iN = 0; iN < buffIndexSendHalo.size(); iN++)
+		buffIndexSendHalo.clear();
 
-	posOrphans = (int *) calloc(totTask, sizeof(int));
-	dispOrphans = (int *) calloc(totTask, sizeof(int));
-	
-	/* Get the total number of orphan halos across all tasks */
-	MPI_Allreduce(&locOrphans, &totOrphans, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-	indexOrphans = (int *) calloc(totOrphans, sizeof(int));
+	buffIndexSendHalo.clear();
+	buffIndexSendHalo.shrink_to_fit();
 
-	if (locTask == 0)
-		cout << "In total, " << totOrphans << " orphan halos have been found." << endl;
-
-	/* Let every task know how many orphan halo ids it needs to receive from each task */
-	MPI_Allgather(&locOrphans, 1, MPI_INT, posOrphans, 1, MPI_INT, MPI_COMM_WORLD);
-
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	dispOrphans[0] = 0; 
-
-	for (int iD = 0; iD < totTask-1; iD++)
-		dispOrphans[iD+1] = posOrphans[iD] + dispOrphans[iD]; 
-
-	/* Let every task know which indexes to receive */
-	MPI_Allgatherv(&orphanHaloIndex[0], orphanHaloIndex.size(), 
-		MPI_INT, indexOrphans, posOrphans, dispOrphans, MPI_INT, MPI_COMM_WORLD);
-
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	/* Now each task updates the "1" locHalo vector with orphan halos to keep track of them at the next step */
-	for (int iL = 0; iL < totOrphans; iL++)
-	{
-		int nOrphanSteps = 0;
-		int thisIndex = indexOrphans[iL];
-		unsigned long long int thisID = locHalos[0][thisIndex].ID;
-	
-		if (facOrphanSteps < 1)
-		{
-			if (locTask == 0)
-				cout << "ERROR. facOrphanSteps not set or set to zero. Check the .cfg file." << endl;  
-
-			exit(0);
-		}
-
-		nOrphanSteps = int (locHalos[0][thisIndex].nPart[nPTypes] / facOrphanSteps) + 1;	
-
-		/* Only keep track of the orphans for a number of steps smaller than maxOrphanSteps */
-		if (locHalos[0][thisIndex].nOrphanSteps < nOrphanSteps)
-		{
-
-			/* When reading the tree files, we do not use particles and locMTrees */
-			if (runMode == 0 || runMode == 2)
-			{
-				locMTrees[0][thisIndex].isOrphan = true;
-				locMTrees[0][thisIndex].idProgenitor.push_back(thisID);
-				locMTrees[0][thisIndex].indexProgenitor.push_back(nLocHalos[1]);
-
-				locParts[1].push_back(locParts[0][thisIndex]);
-			}
-
-			/* The orphan (token) halo is stored in memory for the next step */
-			locHalos[1].push_back(locHalos[0][thisIndex]);
-			locHalos[1][nLocHalos[1]].nOrphanSteps += 1;
-			locHalos[1][nLocHalos[1]].isToken = true;
-	
-			if (locTask == 0)
-				if (locHalos[1][nLocHalos[1]].nOrphanSteps > 1 && nOrphanSteps > 4)
-				cout << "Orph=" << locTask << " " << nLocHalos[1] << " " << locHalos[1][nLocHalos[1]].nOrphanSteps 
-				<< "/" << nOrphanSteps << " " << locHalos[1][nLocHalos[1]].ID 
-				<< " " << locHalos[1][nLocHalos[1]].nPart[1] << endl; 
-
-			if (runMode == 1)
-				id2Index[thisID] = nLocHalos[1];
-
-			nLocHalos[1]++;
-		}
-	}	// if < nOrphanSteps
-
-	/* Once the orphans have been found, clear this vector */
-	orphanHaloIndex.clear();
-	orphanHaloIndex.shrink_to_fit();
+	buffIndexNodeHalo.clear();
+	buffIndexNodeHalo.shrink_to_fit();
 };
 
 
+/* NOTE: In ZOOM mode there is no buffer to be communicated, as everything works on shared memory */
 
-/* In ZOOM mode we distribute both halo catalogs from task 0 across all other tasks 
- * It is assumed that halo catalogs in zoom simulations are small, and they can be stored on each task at the same time. */
-void Communication::BufferSendRecv(void)
-{
-	void *buffSendParts = nullptr; 
-	size_t buffSendSizeParts = 0; 
-
-	if (locTask == 0)
-		cout << "Broadcasting all halos from task 0..." << endl;
-
-	/* Here the master task decides how to distribute the halos across the other tasks */
-	MPI_Bcast(&nLocHalos[iUseCat], 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-	if (locTask != 0)
-	{
-		locHalos[iUseCat].resize(nLocHalos[iUseCat]);
-		locParts[iUseCat].resize(nLocHalos[iUseCat]);
-	}
-
-	MPI_Bcast(&locHalos[iUseCat][0], nLocHalos[iUseCat] * sizeHalo, MPI_BYTE, 0, MPI_COMM_WORLD);
-
-#ifdef VERBOSE
-	// Sanity check
-	if (locTask != 0)
-	{
-		cout << locTask << ") has " << locHalos[iUseCat].size() << " halos " << endl;
-		locHalos[iUseCat][0].Info();
-	}
-#endif
-
-	/* Initialize the id2Index map on each task, we are in zoom mode here */
-	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
-		id2Index[locHalos[iUseCat][iH].ID] = iH;
-
-	if (locTask == 0)
-		cout << "Done." << endl;
-	
-	/*
-	 * 		COMMUNICATE PARTICLE BUFFERS: Only in full operational mode.
-	 * 		When resuming the MTrees we do not need to read/distribute the particles files.
-	 */
-	if (runMode == 0 || runMode == 2)
-	{
-#ifdef VERBOSE
-		if (locTask == 0)
-			cout << "MPI_Packing particle packet to be broadcasted... " << endl;
-#endif
-
-
-		if (locTask == 0)
-		{
-			int posSendPart = 0;
-
-			for (int iH = 0; iH < nLocHalos[iUseCat]; iH ++)
-				for (int iT = 0; iT < nPTypes; iT ++)
-					buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
-
-			buffSendParts = (void *) malloc(buffSendSizeParts);
-		
-			/* Pack all the selected particles into a single buffer */
-			for (int iH = 0; iH < nLocHalos[iUseCat]; iH ++)
-			{
-				for (int iP = 0; iP < nPTypes; iP ++)
-				{
-					if (locHalos[iUseCat][iH].nPart[iP] > 0)
-					{
-					//	cout << iH << " " << locParts[iUseCat][iH][iP].size() << " " << 
-					//			locHalos[iUseCat][iH].nPart[iP] << " " << endl;
-
-						MPI_Pack(&locParts[iUseCat][iH][iP][0], locHalos[iUseCat][iH].nPart[iP] * sizePart, MPI_BYTE, 
-							  buffSendParts, buffSendSizeParts, &posSendPart, MPI_COMM_WORLD);
-
-					}
-				}
-			}
-
-		} // locTask == 0
-
-		/* Communicate the total number of particles */
-		MPI_Bcast(&buffSendSizeParts, sizeof(size_t), MPI_BYTE, 0, MPI_COMM_WORLD);
-
-		if (locTask != 0)
-			buffSendParts = (void *) malloc(buffSendSizeParts);
-
-		MPI_Bcast(buffSendParts, buffSendSizeParts, MPI_BYTE, 0, MPI_COMM_WORLD);
-
-		if (locTask == 0)
-			cout << "Particle buffers broadcasted, unpacking..." << endl;
-
-		if (locTask != 0)
-		{
-			int posSendPart = 0; int nTmpPart = 0;
-
-			/* Unpack the particle buffer */
-			for (int iH = 0; iH < nLocHalos[iUseCat]; iH ++)
-			{
-				locParts[iUseCat][iH].resize(nPTypes);
-
-				for (int iT = 0; iT < nPTypes; iT ++)
-				{	
-					nTmpPart = locHalos[iUseCat][iH].nPart[iT];
-
-					if (nTmpPart > 0)
-					{
-						locParts[iUseCat][iH][iT].resize(nTmpPart);
-						MPI_Unpack(buffSendParts, buffSendSizeParts, &posSendPart, &locParts[iUseCat][iH][iT][0], 
-								nTmpPart * sizePart, MPI_BYTE, MPI_COMM_WORLD);
-					}
-				}
-			}
-		}	// Unpack on tasks != 0
-
-	/* Particles have been unpacked, free the buffer */
-	free(buffSendParts);
-
-	if (locTask == 0)
-		cout << "Freed buffer, halo and particle have been broadcasted to all tasks. " << endl;
-
-	} // if runMode == 0 or == 2
-};
-
-
-#else	/* END OF ZOOM MODE BUFFER EXCHANGE. Define buffer send/recv for full box simulations */
-
-
+#ifndef ZOOM
 /* This function first determines the size of the buffers to be broadcasted, then communicates it to all the tasks.
  * Each task packs all the halos and particles that are requested by other halos for comparison into several buffers,
  * which are communicated with a call to MPI_Sendrecv. The buffers are then unpacked into the locBuffHalos and locBuffParts

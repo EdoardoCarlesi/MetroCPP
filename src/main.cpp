@@ -109,7 +109,7 @@ int main(int argv, char **argc)
 	else {
 		if (locTask == 0)
 		{
-			cout << "RunMode unknown. Choose 0, 1 or 2." << endl;
+			cout << "RunMode unknown. Choose 0, 1 or 2.\nExiting program..." << endl;
 			exit(0);
 		}
 	};
@@ -126,26 +126,25 @@ int main(int argv, char **argc)
 		/* This is a global variable */
 		iUseCat = 0;
 
-		/* Read particles and catalogs */
-#ifdef ZOOM
-		if (locTask ==0)
+#ifdef ZOOM	/* TODO: ZOOM mode could be just ran serially... but this implies lots of code re-writing. 
+		 * So let it run with only one task instead. */
+		if (totTask > 1)
 		{
-#endif
-			SettingsIO.ReadHalos();
-			SettingsIO.ReadParticles();	
-#ifdef ZOOM
+			cout << "ZOOM mode requires only one MPI task to run correctly." << endl;	
+			cout << "Please restart setting the number of tasks equal to one.\nExiting program..." << endl;
+			exit(0);
 		}
 #endif
+		/* Read particles and catalogs */
+		SettingsIO.ReadHalos();
+		SettingsIO.ReadParticles();	
 
 #ifdef VERBOSE
 		if (locTask == 0)
 			SettingsIO.CheckStatus();
 #endif
 
-#ifdef ZOOM
-		/* Broadcast all the halos on all tasks */
-		CommTasks.BufferSendRecv();
-#else
+#ifndef ZOOM
 		/* Now every task knows which subvolumes of the box belong to which task */
 		CommTasks.BroadcastAndGatherGrid();
 #endif
@@ -182,11 +181,10 @@ int main(int argv, char **argc)
 			/* After reading in the second halo catalog, each task finds out which nodes it gets from the other tasks
 			 * The nodes are located on grid 1 based on the distribution of the nodes on grid 0 */
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
-#endif
 
-			/* Now exchange the halos in the requested buffer zones among the different tasks.
-			 * In zoom mode we send ALL halos to ALL tasks */
+			/* Now exchange the halos in the requested buffer zones among the different tasks. */
 			CommTasks.BufferSendRecv();
+#endif
 
 			endTime = clock();
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -215,11 +213,6 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Forward tree building done in " << elapsed << "s. " << endl;
 			}
-#ifdef ZOOM  
-			/* Orphan halo candidates need to be communicated in zoom mode only. 
-			 * In fullbox mode they are taken care of in the FindProgenitors function */
-			CommTasks.SyncOrphanHalos();
-#endif
 
 			if (locTask == 0)
 				cout << "Finding halo progentors, backwards..." << flush ;
@@ -256,8 +249,9 @@ int main(int argv, char **argc)
 			iniTime = clock();
 			CleanTrees(iNumCat);
 
-			/* Now shift the halo catalog from 1 to 0, and clean the buffers */
 #ifndef ZOOM
+			/* Now shift the halo catalog from 1 to 0, and clean the buffers 
+			 * There are no halos on the buffer in ZOOM mode, so skip this. */
 			CommTasks.CleanBuffer();
 #endif
 			ShiftHalosPartsGrids();
@@ -291,10 +285,7 @@ int main(int argv, char **argc)
 
 		SettingsIO.ReadHalos();
 
-#ifdef ZOOM	
-		/* We need to scatter catalogs through the tasks only when in ZOOM mode	*/
-		CommTasks.BufferSendRecv();
-#else		
+#ifndef ZOOM
 		/* Communicate grid info across all tasks */
 		CommTasks.BroadcastAndGatherGrid();
 #endif
@@ -309,14 +300,14 @@ int main(int argv, char **argc)
 			AssignDescendant();
 
 			// TODO: At this point we could fix halo masses and position using some interpolation scheme
-			
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
 #ifdef ZOOM
-			CommTasks.BufferSendRecv();
-			CommTasks.SyncOrphanHalos();
+			/* In ZOOM mode, this step is very quick */
 			AssignProgenitor();
 #else
+			/* In FULLBOX mode, we need to assign halos to the grid nodes and identify
+		         * the halos on the buffer, which then need to be communicated */
 			CommTasks.BroadcastAndGatherGrid();
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 			CommTasks.BufferSendRecv();

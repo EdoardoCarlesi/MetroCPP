@@ -12,7 +12,9 @@ RunNum[1]="45_17"
 RunNum[2]="55_02"
 RunNum[3]="34_13"
 
-iniRun=3
+ncpu=1
+
+iniRun=0
 totRun=4
 
 iniSub=0
@@ -35,8 +37,8 @@ do
 
 		mkdir $MetroOut'/'$Run'/'$SubRun
 		echo 'Sub-simulation number:' $CfgTmp
-		echo mpirun -n 4 $MetroExe $CfgTmp
-		mpirun -n 4 $MetroExe $CfgTmp
+		echo mpirun -n $ncpu $MetroExe $CfgTmp
+		mpirun -n $ncpu $MetroExe $CfgTmp
 		#head $CfgTmp
 	done
 done

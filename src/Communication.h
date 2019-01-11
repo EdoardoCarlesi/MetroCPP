@@ -22,13 +22,10 @@
 class Communication {
 
 public:
-	// Empty constructor and destructor
-	Communication() { };
-	~Communication() { };	
+	Communication() {};
+	~Communication();	
 
-#ifdef ZOOM
-	void SyncOrphanHalos(void);
-#else 
+#ifndef ZOOM
 	void SyncIndex(void);
 	void BroadcastAndGatherGrid(void);
 	void SyncMergerTreeBuffer(void);
@@ -39,20 +36,17 @@ public:
 	void CleanBuffer(void);
 
 private:
-	// Determine the send and recv tasks consistently
+	/* Store the send and recv tasks consistently */
 	vector<int> sendTasks;
 	vector<int> recvTasks;
 
 #ifndef ZOOM
 	void SetSendRecvTasks(void);
 
-	// Communicate the buffers across all tasks
 	void ExchangeBuffers(void);
 #endif
-	// Buffers for halo and node communication
+	/* Which nodes lie on which tasks, and which halo they contain */
 	vector<vector<int>> buffIndexNodeHalo;
-	
-	// Here we store the full list of halo indexes
 	vector<vector<int>> buffIndexSendHalo;
 };
 #endif
