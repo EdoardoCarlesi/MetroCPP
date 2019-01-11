@@ -38,11 +38,11 @@ public:
 
 	bool isOrphan;					// If no progenitor is found, the halo is orphan and a token placeholder halo is 
 							// created with the same particle content to keep tracking it at subsequent steps
-	vector<unsigned long long int> idProgenitor;	// IDs of progenitors
+	vector<uint64_t> idProgenitor;	// IDs of progenitors
 	vector<int> indexProgenitor;			// local array index of progenitors
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 
-	map<unsigned long long int, vector<int>> indexCommon; 	
+	map<uint64_t, vector<int>> indexCommon; 	
 	void AssignMap(void);
 
 	void SortByMerit(void);				// Once possible progenitors have been found, compare
@@ -94,7 +94,7 @@ void FindProgenitors(int, int);
 bool CompareHalos(int, int, int, int);
 
 // Given two (sorted) vectors, compare their content and return the number of common elements
-vector<int> CommonParticles(vector<vector<unsigned long long int>>, vector<vector<unsigned long long int>>);
+vector<int> CommonParticles(vector<vector<uint64_t>>, vector<vector<uint64_t>>);
 #endif
 
 #endif

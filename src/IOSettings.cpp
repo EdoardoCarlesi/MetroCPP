@@ -576,10 +576,10 @@ void IOSettings::DistributeFilesAmongTasks(void)
 // TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
 void IOSettings::ReadParticles(void)
 {
-	vector<vector<unsigned long long int>> tmpParts;
+	vector<vector<uint64_t>> tmpParts;
 	string tmpStrUrlPart, lineIn;
 	const char *tmpUrlPart;
-	unsigned long long int locHaloID = 0, partID = 0;
+	uint64_t locHaloID = 0, partID = 0;
 	//unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
 	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
@@ -843,7 +843,7 @@ void IOSettings::ReadHalos()
 /* Read a set of previously computed merger trees, these will be post processed and smoothed */
 void IOSettings::ReadTrees()
 {
-	unsigned long long int hostHaloID = 0, progHaloID = 0;
+	uint64_t hostHaloID = 0, progHaloID = 0;
 	int hostPart = 0, progPart = 0, orphanHalo = 0; 
 	int iLine = 0, thisNumCat = 0, nProgHalo = 0;
 	int commPart = 0;

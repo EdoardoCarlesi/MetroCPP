@@ -117,6 +117,16 @@ int main(int argv, char **argc)
 	if (locTask == 0)
 		cout << "Running the code in mode: " << runMode << strRunMode << endl;
 
+#ifdef NOPTYPE
+	if (NPTYPES > 1 && locTask == 0)
+	{
+		cout << "\t\t==== WARNING ====" << endl;
+		cout << "The code has been compiled with NPTYPES=" << NPTYPES << " and the option NOPTYPES." << endl;
+		cout << "NPTYPES option overridden, setting the number of particles = 1." << endl;
+		cout << "\t\t=================\n" << endl;
+	}	
+#endif
+
 	/* If running in MTree only or MTree + Postprocessing */
 	if (runMode == 0 || runMode == 2)
 	{

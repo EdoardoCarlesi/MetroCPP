@@ -63,7 +63,7 @@ void InitLocVariables(void)
 #endif
 
 	sizeHalo = sizeof(Halo);
-	sizePart = sizeof(unsigned long long int);
+	sizePart = sizeof(uint64_t);
 };
 
 

@@ -49,9 +49,14 @@ public:
 	// Number of subhalos
 	int nSub;
 	
-	// Total number of particles is set to 7
+#ifdef NOPTYPE
+	int nPart[1];
+#else
+	// Total number of particles is set to normal types +1
 	int nPart[NPTYPES+1];
-	unsigned long long int ID, hostID;
+#endif
+
+	uint64_t ID, hostID;
 
 	// Compute the halo distance from a given point
 	float Distance(float *);

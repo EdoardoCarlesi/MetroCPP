@@ -15,8 +15,8 @@
  */
 
 
-#ifndef GENERAL_H
-#define GENERAL_H
+#ifndef GLOBAL_VARS_H
+#define GLOBAL_VARS_H
 
 #include <mpi.h>
 #include <map>
@@ -30,6 +30,7 @@ using namespace std;
 
 class MergerTree;
 class Halo;
+
 
 #ifndef ZOOM
 class Grid;
@@ -57,34 +58,31 @@ extern vector<vector<MergerTree>> locMTrees;
 extern vector<vector<MergerTree>> locCleanTrees;
 
 /* Helps connecting halos when rebuilidng the trees from input files */
-extern map <unsigned long long int, int> id2Index;
+extern map <uint64_t, int> id2Index;
 
 /* Particles on task, also allocated by particle type within each halo */
-extern vector<vector<vector<vector<unsigned long long int>>>> locParts;
+extern vector<vector<vector<vector<uint64_t>>>> locParts;
 
 #ifndef ZOOM
 /* Extra halos coming from the buffer nodes communicated from other tasks */
 extern vector<Halo> locBuffHalos;
-extern vector<vector<vector<unsigned long long int>>> locBuffParts;
-#else
+extern vector<vector<vector<uint64_t>>> locBuffParts;
+#endif
 
-/* In full box mode each task keeps track of its orphans locally */
+/* These vectors keep track of orphan halos for which no progenitor could be found (so far) */
 extern vector<Halo> locOrphHalos;
 extern vector<int> locOrphIndex;
-
-/* Extra particles coming from the buffer areas located on other tasks */
-extern vector<vector<vector<unsigned long long int>>> locOrphParts;
-#endif
+extern vector<vector<vector<uint64_t>>> locOrphParts;
 
 struct Particle {
 	int type;
-	unsigned long long int haloID;
+	uint64_t haloID;
 };
 
-extern vector<map<unsigned long long int, vector<Particle>>> locMapParts;
+extern vector<map<uint64_t, vector<Particle>>> locMapParts;
 
-extern map <unsigned long long int, int> thisMapTrees;
-extern map <unsigned long long int, int> nextMapTrees;
+extern map <uint64_t, int> thisMapTrees;
+extern map <uint64_t, int> nextMapTrees;
 
 extern size_t locHalosSize[2];
 
@@ -115,16 +113,24 @@ extern int nGrid;
 extern float boxSize;
 extern float totVmax;
 extern float locVmax;
-extern float maxBufferThick;
 
 extern string cosmologicalModel;
 
 /* These int values are being read from the configuration file */
 extern int runMode;
-extern int facOrphanSteps;	// Track orphan halos to a maximum of these steps
+
+// Track orphan halos to a maximum of these steps
+extern int facOrphanSteps;	
+
 extern int nSnapsUse;
 extern int nSnaps;
-extern int nTreeChunks;	// Number of MPI tasks used when writing the tree
-extern int nChunks;	// Each halo catalog / particle file is split into this number of files
-extern int nLocChunks;  // Each tast has a local number of chunks to read (it should be equal for all tasks for better load balancing, but in general it can vary)
+
+// Number of MPI tasks used when writing the tree
+extern int nTreeChunks;	
+
+// Each halo catalog / particle file is split into this number of files
+extern int nChunks;	
+
+// Each tast has a local number of chunks to read (it should be equal for all tasks for better load balancing, but in general it can vary)
+extern int nLocChunks;  
 #endif 
