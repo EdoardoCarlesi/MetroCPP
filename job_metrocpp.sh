@@ -3,7 +3,7 @@
 ###PBS -q debugn
 #PBS -q long40
 #PBS -r n
-#PBS -l nodes=3:ppn=8
+#PBS -l nodes=2:ppn=12
 #PBS -l walltime=04:45:00
 #PBS -u eduardo
 #PBS -m abe
