@@ -120,9 +120,19 @@ int main(int argv, char **argc)
 #ifdef NOPTYPE
 	if (NPTYPES > 1 && locTask == 0)
 	{
-		cout << "\t\t==== WARNING ====" << endl;
+		nPTypes = 1;
+		cout << "\t\t==== ERROR ====" << endl;
 		cout << "The code has been compiled with NPTYPES=" << NPTYPES << " and the option NOPTYPES." << endl;
-		cout << "NPTYPES option overridden, setting the number of particles = 1." << endl;
+		cout << "Please recompile the code with the option NPTYPES=1.\nExiting..." << endl;
+		cout << "\t\t=================\n" << endl;
+		exit(0);
+	}
+#else
+	if (NPTYPES < 2 && locTask == 0)
+	{
+		cout << "\t\t==== WARNING ====" << endl;
+		cout << "The code has been compiled with NPTYPES=" << NPTYPES << "." << endl;
+		cout << "Are you sure you want to run the code with Type=0 particles only?" << endl;
 		cout << "\t\t=================\n" << endl;
 	}	
 #endif

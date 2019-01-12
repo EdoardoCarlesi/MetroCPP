@@ -78,7 +78,7 @@ int iNumCat;
 /* Refers to 0 or 1 depending on the snapshot being used */
 int iUseCat; 
 
-#ifdef NOPTYPES
+#ifdef NOPTYPE
 int nTypePart = 1;
 #else
 int nTypePart = NPTYPES;

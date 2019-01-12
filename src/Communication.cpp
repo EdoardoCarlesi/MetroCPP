@@ -126,7 +126,7 @@ void Communication::BufferSendRecv()
 			
 			for (int iT = 0; iT < nPTypes; iT ++)
 				buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
-		
+
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
 				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). " 
 					<< "Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
@@ -224,7 +224,8 @@ void Communication::BufferSendRecv()
 		cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
 #else
 		if (locTask == 0 && iT == 0)
-			cout << "Allocating " << buffRecvSizeParts/1024/1024 
+			//cout << "Allocating " << buffRecvSizeParts/1024/1024 
+			cout << "Allocating " << buffRecvSizeParts/1024
 				<< "MB for the particle recv buffer. " << endl;
 #endif
 

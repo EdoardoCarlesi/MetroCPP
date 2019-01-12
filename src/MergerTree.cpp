@@ -162,7 +162,11 @@ void MergerTree::SortByMerit()
 		for(int iC = 0; iC < nPTypes; iC++)
 			nComm += nCommon[iC][iM];
 
+#ifdef NOPTYPE
+		ratioM = (float) mainHalo.nPart[0] / (float) progHalos[iM].nPart[0];
+#else
 		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
+#endif
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
@@ -368,8 +372,14 @@ void FindProgenitors(int iOne, int iTwo)
 		/* Orphan halos are identified in the forward search only */
 		if (iOne == 0)
 		{
+
+#ifdef NOPTYPE
+			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
+				locMTrees[iOne][iM].mainHalo.nPart[0] > minPartHalo)
+#else
 			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
+#endif
 			{
 				Halo thisHalo = locHalos[iOne][iM];
 				thisHalo.isToken = true;
