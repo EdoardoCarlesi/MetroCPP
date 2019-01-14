@@ -39,7 +39,7 @@
 #include "spline.h"
 #include "global_vars.h"
 
-#define FMHIRESFAC 0.90
+#define FMHIRESFAC 0.90 	// FIXME TODO fix this parameter
 
 using namespace std;
 
@@ -75,6 +75,7 @@ void IOSettings::SetCosmology(Cosmology *Cosmo)
 		Cosmo->SetPlanck();
 
 	} else {
+
 		if (locTask == 0)
 		{
 			cout << "Error. Cosmological model << " << cosmologicalModel << ">> is not implemented. " << endl; 
@@ -473,7 +474,6 @@ void IOSettings::DistributeFilesAmongTasks(void)
 	char charCpu[5], charZ[8];
 	string strZ;
 
-
 #ifdef ZOOM
 	nLocChunks = nChunks;
 
@@ -482,9 +482,6 @@ void IOSettings::DistributeFilesAmongTasks(void)
 #else
 	nLocChunks = int (nChunks / totTask);
 	nLocRemind = nChunks % totTask;		//FIXME check this setting
-
-	//if (locTask == 0)
-	//	cout << "Each task is reading " << nLocChunks << " halo/particle files. Total number of tasks= " << totTask << endl; 
 #endif
 
 	haloFiles.resize(nSnaps);
@@ -535,7 +532,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 			}
 
-#else		/* No ZOOM, distribute the files as usually */
+#else			/* No ZOOM, distribute the files as usually */
 
 			locChunk = jF + locTask * nLocChunks;
 
@@ -572,24 +569,22 @@ void IOSettings::DistributeFilesAmongTasks(void)
 };
 
 
-// Particle sizes have already been allocated in the ReadHalos() routines, do a safety check for the size
-// TODO use read(buffer,size) to read quickly blocks of particles all at the same time 
+/* Particle sizes have already been allocated in the ReadHalos() routines, do a safety check for the size */
 void IOSettings::ReadParticles(void)
 {
-	vector<vector<unsigned long long int>> tmpParts;
+	int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0, partType = 0, iPartMulti = 0;
+	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
+	uint64_t locHaloID = 0, partID = 0;
+	vector<vector<uint64_t>> tmpParts;
 	string tmpStrUrlPart, lineIn;
 	const char *tmpUrlPart;
-	unsigned long long int locHaloID = 0, partID = 0;
-	//unsigned int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
-	int iTmpParts = 0, iLocParts = 0, iLine = 0, nPartHalo = 0;
-	unsigned int nFileHalos = 0, iLocHalos = 0, iTmpHalos = 0;
-	int partType = 0, iPartMulti = 0;
 
 #ifdef VERBOSE
 	cout << "onTask=" << locTask << " part size: " << locParts[iUseCat].size() << endl;
 #endif
 
 	tmpParts.resize(nPTypes);
+
 	locParts[iUseCat].resize(nLocHalos[iUseCat]);
 	nLocChunks = haloFiles[iNumCat].size();
 
@@ -637,22 +632,25 @@ void IOSettings::ReadParticles(void)
 			} else if (iLine == 1) {
 
 				if (inputFormat == "AHF")
-		        	        sscanf(lineRead, "%u %llu", &nPartHalo, &locHaloID);
+		        	        sscanf(lineRead, "%u %lu", &nPartHalo, &locHaloID);
 #ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 #endif
 				locParts[iUseCat][iLocHalos].resize(nPTypes);
-
 				iLine++;
 			} else {
 
-				if (inputFormat == "AHF")
-		        	        sscanf(lineRead, "%llu %d", &partID, &partType);
-
+				//if (inputFormat == "AHF")
+#ifdef NOPTYPE
+		        	        sscanf(lineRead, "%lu", &partID);
+					partType = 0;
+#else	
+		        	        sscanf(lineRead, "%lu %d", &partID, &partType);
+#endif
 					Particle thisParticle;
 					thisParticle.haloID = locHaloID;
 					thisParticle.type   = partType;
-
+		
 				locMapParts[iUseCat][partID].push_back(thisParticle);
 		
 				if (locMapParts[iUseCat][partID].size() > 1)
@@ -662,15 +660,16 @@ void IOSettings::ReadParticles(void)
 				iTmpParts++;
 				iLocParts++;
 
-#ifdef ZOOM
+//#ifdef ZOOM
 				if (iTmpParts == nPartHalo)
-#else
-				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[nPTypes])
-#endif
+//#else
+//				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[0])
+//#endif
 				{	
+
 					/* Sort the ordered IDs */
 					for (int iT = 0; iT < nPTypes; iT++)
-					{	
+					{
 						if (tmpParts[iT].size() > 0)
 						{
 #ifdef ZOOM
@@ -730,7 +729,7 @@ void IOSettings::ReadParticles(void)
 //		<< " total: " << locMapParts[iUseCat].size() + iPartMulti << endl;
 #ifdef VERBOSE
 	cout << " N particles: " << locMapParts[iUseCat].size() << " iLocParts: " << iLocParts << " Duplicates: " << iPartMulti
-		<< " total: " << locMapParts[iUseCat].size() + i;PartMulti << endl;
+		<< " total: " << locMapParts[iUseCat].size() + iPartMulti << endl;
 #endif
 };
  
@@ -843,7 +842,7 @@ void IOSettings::ReadHalos()
 /* Read a set of previously computed merger trees, these will be post processed and smoothed */
 void IOSettings::ReadTrees()
 {
-	unsigned long long int hostHaloID = 0, progHaloID = 0;
+	uint64_t hostHaloID = 0, progHaloID = 0;
 	int hostPart = 0, progPart = 0, orphanHalo = 0; 
 	int iLine = 0, thisNumCat = 0, nProgHalo = 0;
 	int commPart = 0;
@@ -888,7 +887,7 @@ void IOSettings::ReadTrees()
 			{
 				if (iLine == 0)
 				{
-		        		sscanf(lineRead, "%llu  %d  %d  %d", &hostHaloID, &hostPart, &nProgHalo, &orphanHalo);
+		        		sscanf(lineRead, "%lu  %d  %d  %d", &hostHaloID, &hostPart, &nProgHalo, &orphanHalo);
 
 					mergerTree.mainHalo.ID = hostHaloID;
 					mergerTree.mainHalo.nPart[1] = hostPart;	//TODO this assumes n tot particles = n DM
@@ -915,7 +914,7 @@ void IOSettings::ReadTrees()
 				} 
 				else if (iLine > 0 && iLine < nProgHalo+1)	/* Read-in properties of progenitors */
 				{
-		        		sscanf(lineRead, "%d  %llu  %d", &commPart, &progHaloID, &progPart);
+		        		sscanf(lineRead, "%d  %lu  %d", &commPart, &progHaloID, &progPart);
 
 					mergerTree.idProgenitor[iLine-1] = progHaloID;
 					mergerTree.nCommon[1][iLine-1] = commPart;
@@ -957,7 +956,7 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	   Ebx_star(76)    Eby_star(77)    Ebz_star(78)    Ecx_star(79)    Ecy_star(80)    Ecz_star(81)    Ekin_star(82)Epot_star(83) */
 
 	/* Col:		    1   2    3  4  5  6  7  8  9 10 11 */
-	sscanf(lineRead, "%llu %llu %d %f %d \
+	sscanf(lineRead, "%lu  %lu  %d %f %d \
 			  %f   %f   %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f \
@@ -973,6 +972,10 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
+
+#ifdef NOPTYPE
+	halo->nPart[0] = tmpNpart;
+#else
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
 	halo->nPart[nPTypes] = tmpNpart;
@@ -996,6 +999,7 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 			}
 		}
 	}
+#endif
 
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);
@@ -1010,7 +1014,13 @@ void IOSettings::WriteTree(int iThisCat)
 {
 	string outName;
         string strCpu = to_string(locTask);
-	int totTrees = locCleanTrees.size(), orphan;
+	int totTrees = locCleanTrees.size(), orphan, iType = 0;
+
+#ifdef NOPTYPE
+	iType = 0;
+#else
+	iType = 1;
+#endif
 
         for (int iC = iThisCat-1; iC < iThisCat; iC++)
         {
@@ -1044,7 +1054,7 @@ void IOSettings::WriteTree(int iThisCat)
 				orphan = 0;
 
 			fileOut << thisTree.mainHalo.ID << " " 
-				<< thisTree.mainHalo.nPart[1] << " " 
+				<< thisTree.mainHalo.nPart[iType] << " " 
 				//<< thisTree.mainHalo.X[0] << " " 
 				//<< thisTree.mainHalo.X[1] << " " 
 				//<< thisTree.mainHalo.X[2] << " " 
@@ -1055,13 +1065,13 @@ void IOSettings::WriteTree(int iThisCat)
 			{
 				Halo progHalo = thisTree.progHalos[iP];
 
-				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
+				fileOut	<< thisTree.nCommon[iType][iP]	<< " " 
                                 	//<< thisTree.idProgenitor[iP] 	<< " "
                                 	<< progHalo.ID		 	<< " "
                                 	//<< progHalo.X[0]		 	<< " "
                                 	//<< progHalo.X[1]		 	<< " "
                                 	//<< progHalo.X[2]		 	<< " "
-					<< progHalo.nPart[1] << endl;
+					<< progHalo.nPart[iType] << endl;
 			}
                 }
 		
