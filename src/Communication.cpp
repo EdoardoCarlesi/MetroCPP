@@ -224,8 +224,7 @@ void Communication::BufferSendRecv()
 		cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
 #else
 		if (locTask == 0 && iT == 0)
-			//cout << "Allocating " << buffRecvSizeParts/1024/1024 
-			cout << "Allocating " << buffRecvSizeParts/1024
+			cout << "Allocating " << buffRecvSizeParts/1024/1024 
 				<< "MB for the particle recv buffer. " << endl;
 #endif
 
