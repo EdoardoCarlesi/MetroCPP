@@ -14,7 +14,7 @@ else
 	cpus='.0000.'
 fi
 
-tmp='ahf.tmp'
+tmp=`pwd`'/ahf.tmp'
 cd $path
 
 if [ -f "$tmp_out" ]

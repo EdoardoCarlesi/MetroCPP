@@ -7,7 +7,7 @@ path=$1
 format=$2
 zoom=$3
 cpus='0000'
-tmp='ahf.tmp'
+tmp=`pwd`'/ahf.tmp'
 cd $path
 
 if [ "$zoom" == "true" ]
