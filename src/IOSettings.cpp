@@ -39,7 +39,6 @@
 #include "spline.h"
 #include "global_vars.h"
 
-#define FMHIRESFAC 0.90 	// FIXME TODO fix this parameter
 
 using namespace std;
 
@@ -624,32 +623,27 @@ void IOSettings::ReadParticles(void)
 			
 			if (iLine == 0)
 			{
-				if (inputFormat == "AHF")
-		         	       sscanf(lineRead, "%d", &nFileHalos);
-
+		         	sscanf(lineRead, "%d", &nFileHalos);
 				iLine++;
 
 			} else if (iLine == 1) {
 
-				if (inputFormat == "AHF")
-		        	        sscanf(lineRead, "%u %lu", &nPartHalo, &locHaloID);
+		        	sscanf(lineRead, "%u %lu", &nPartHalo, &locHaloID);
 #ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 #endif
 				locParts[iUseCat][iLocHalos].resize(nPTypes);
 				iLine++;
 			} else {
-
-				//if (inputFormat == "AHF")
 #ifdef NOPTYPE
-		        	        sscanf(lineRead, "%lu", &partID);
-					partType = 0;
+	        	        sscanf(lineRead, "%lu", &partID);
+				partType = 1;
 #else	
-		        	        sscanf(lineRead, "%lu %d", &partID, &partType);
+	        	        sscanf(lineRead, "%lu %d", &partID, &partType);
 #endif
-					Particle thisParticle;
-					thisParticle.haloID = locHaloID;
-					thisParticle.type   = partType;
+				Particle thisParticle;
+				thisParticle.haloID = locHaloID;
+				thisParticle.type   = partType;
 		
 				locMapParts[iUseCat][partID].push_back(thisParticle);
 		
@@ -797,11 +791,8 @@ void IOSettings::ReadHalos()
 
 		for (int iH = 0; iH < tmpHalos.size(); iH++)
 		{
-			if (tmpHalos[iH].fMhires >= FMHIRESFAC)
-			{
-				locHalos[iUseCat].push_back(tmpHalos[iH]);
-				iLocHalos++;
-			}
+			locHalos[iUseCat].push_back(tmpHalos[iH]);
+			iLocHalos++;
 		}
 
 		//if (locTask == 0)
@@ -973,9 +964,6 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
 
-#ifdef NOPTYPE
-	halo->nPart[0] = tmpNpart;
-#else
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
 	halo->nPart[nPTypes] = tmpNpart;
@@ -999,7 +987,6 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 			}
 		}
 	}
-#endif
 
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);
@@ -1016,11 +1003,7 @@ void IOSettings::WriteTree(int iThisCat)
         string strCpu = to_string(locTask);
 	int totTrees = locCleanTrees.size(), orphan, iType = 0;
 
-#ifdef NOPTYPE
-	iType = 0;
-#else
 	iType = 1;
-#endif
 
         for (int iC = iThisCat-1; iC < iThisCat; iC++)
         {

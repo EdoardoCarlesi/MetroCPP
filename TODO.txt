@@ -2,11 +2,7 @@ TO DO NEXT:
 
 - Make the output .tmp files with all the halo lists selectable from the .cfg file
 
-- Particle structure: add ID particle (not halo) and particle type (need to use the Particle structure as key, not as value)
-
-- Fix the NOPTYPE option in the particle read file
-
-- Improve the load balancing scheme, after reading in the halos optimize the assignment to different tasks
+- Change the output filename numbering format (from last snapshot to first one)
 
 - Cosmology class (to compute the expansion factor of the universe) 
 

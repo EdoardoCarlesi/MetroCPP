@@ -49,12 +49,8 @@ public:
 	// Number of subhalos
 	int nSub;
 	
-#ifdef NOPTYPE
-	int nPart[1];
-#else
 	// Total number of particles is set to normal types +1
 	int nPart[NPTYPES+1];
-#endif
 
 	uint64_t ID, hostID;
 

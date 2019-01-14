@@ -117,25 +117,14 @@ int main(int argv, char **argc)
 	if (locTask == 0)
 		cout << "Running the code in mode: " << runMode << strRunMode << endl;
 
-#ifdef NOPTYPE
-	if (NPTYPES > 1 && locTask == 0)
-	{
-		nPTypes = 1;
-		cout << "\t\t==== ERROR ====" << endl;
-		cout << "The code has been compiled with NPTYPES=" << NPTYPES << " and the option NOPTYPES." << endl;
-		cout << "Please recompile the code with the option NPTYPES=1.\nExiting..." << endl;
-		cout << "\t\t=================\n" << endl;
-		exit(0);
-	}
-#else
 	if (NPTYPES < 2 && locTask == 0)
 	{
 		cout << "\t\t==== WARNING ====" << endl;
 		cout << "The code has been compiled with NPTYPES=" << NPTYPES << "." << endl;
-		cout << "Are you sure you want to run the code with Type=0 particles only?" << endl;
+		cout << "NPTYPES needs to be set > 2 for the code to function properly." << endl;
+		cout << "Exiting..." << endl;
 		cout << "\t\t=================\n" << endl;
 	}	
-#endif
 
 	/* If running in MTree only or MTree + Postprocessing */
 	if (runMode == 0 || runMode == 2)
@@ -193,8 +182,9 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 			}
 
+#ifndef ZOOM		/* No buffer exchange in zoom mode */
 			iniTime = clock();
-#ifndef ZOOM
+
 			/* Now every task knows which nodes belongs to which task */
 			CommTasks.BroadcastAndGatherGrid();
 
@@ -204,7 +194,6 @@ int main(int argv, char **argc)
 
 			/* Now exchange the halos in the requested buffer zones among the different tasks. */
 			CommTasks.BufferSendRecv();
-#endif
 
 			endTime = clock();
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -214,6 +203,7 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Buffer exchanged in " << elapsed << "s. " << endl;
 			}
+#endif
 	
 			if (locTask == 0)
 				cout << "Finding halo progentors, forwards..." << flush ;
