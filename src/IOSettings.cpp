@@ -537,6 +537,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 			if (locChunk < nChunks) // Make sure we are not looking for catalog chunks beyond the boundaries
 			{
+
 				sprintf(charCpu, "%04d", locChunk);	
 				string locHaloFile = pathInput + haloPrefix + strSnaps[iF] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
 				string locPartFile = pathInput + haloPrefix + strSnaps[iF] + "." + charCpu + ".z" + charZ + "." + partSuffix;

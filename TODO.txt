@@ -4,6 +4,8 @@ TO DO NEXT:
 
 - Change the output filename numbering format (from last snapshot to first one)
 
+- If non zoom mode is on allow for one single non mpi file to be read (.0000. string)
+
 - Cosmology class (to compute the expansion factor of the universe) 
 
 - Gravity class (to compute the gravitational field at each point due to the neighbouring objects). 
