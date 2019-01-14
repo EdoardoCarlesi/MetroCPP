@@ -50,32 +50,40 @@ vector<int> orphanHaloIndex;	// Global index
 
 vector<vector<Halo>> allHalos;
 vector<vector<Halo>> locHalos;
-vector<vector<vector<vector<unsigned long long int>>>> locParts;
+vector<vector<vector<vector<uint64_t>>>> locParts;
 
 #ifndef ZOOM
 vector<Halo> locBuffHalos;
-vector<vector<vector<unsigned long long int>>> locBuffParts;
+vector<vector<vector<uint64_t>>> locBuffParts;
 #endif
-
 
 vector<Halo> locOrphHalos;
 vector<int> locOrphIndex;
-vector<vector<vector<unsigned long long int>>> locOrphParts;
+vector<vector<vector<uint64_t>>> locOrphParts;
 
 typedef struct Particle Particle;
-vector<map <unsigned long long int, vector<Particle>>> locMapParts;
+vector<map <uint64_t, vector<Particle>>> locMapParts;
 
 /* This map keeps track of the halo ids when reading from old mtree files */
-map <unsigned long long int, int> id2Index;
+map <uint64_t, int> id2Index;
 
-map <unsigned long long int, int> thisMapTrees;
-map <unsigned long long int, int> nextMapTrees;
+map <uint64_t, int> thisMapTrees;
+map <uint64_t, int> nextMapTrees;
 
 size_t locHalosSize[2];
 
-int iNumCat; // Halo catalog number in use, from 0 to N
-int iUseCat; // Refers to 0 or 1 depending on the snapshot being used
+/* Halo catalog number in use, from 0 to N */
+int iNumCat; 
+
+/* Refers to 0 or 1 depending on the snapshot being used */
+int iUseCat; 
+
+#ifdef NOPTYPE
+int nTypePart = 1;
+#else
 int nTypePart = NPTYPES;
+#endif
+
 int nTotHalos[2];
 int nLocHalos[2];
 
@@ -89,7 +97,6 @@ int nLocParts[2];
 /* Factors and variables */
 float totVmax;
 float locVmax;
-float maxBufferThick;
 float boxSize;
 
 string cosmologicalModel;

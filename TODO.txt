@@ -4,6 +4,8 @@ TO DO NEXT:
 
 - Particle structure: add ID particle (not halo) and particle type (need to use the Particle structure as key, not as value)
 
+- Fix the NOPTYPE option in the particle read file
+
 - Improve the load balancing scheme, after reading in the halos optimize the assignment to different tasks
 
 - Cosmology class (to compute the expansion factor of the universe) 

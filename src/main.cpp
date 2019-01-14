@@ -117,6 +117,26 @@ int main(int argv, char **argc)
 	if (locTask == 0)
 		cout << "Running the code in mode: " << runMode << strRunMode << endl;
 
+#ifdef NOPTYPE
+	if (NPTYPES > 1 && locTask == 0)
+	{
+		nPTypes = 1;
+		cout << "\t\t==== ERROR ====" << endl;
+		cout << "The code has been compiled with NPTYPES=" << NPTYPES << " and the option NOPTYPES." << endl;
+		cout << "Please recompile the code with the option NPTYPES=1.\nExiting..." << endl;
+		cout << "\t\t=================\n" << endl;
+		exit(0);
+	}
+#else
+	if (NPTYPES < 2 && locTask == 0)
+	{
+		cout << "\t\t==== WARNING ====" << endl;
+		cout << "The code has been compiled with NPTYPES=" << NPTYPES << "." << endl;
+		cout << "Are you sure you want to run the code with Type=0 particles only?" << endl;
+		cout << "\t\t=================\n" << endl;
+	}	
+#endif
+
 	/* If running in MTree only or MTree + Postprocessing */
 	if (runMode == 0 || runMode == 2)
 	{

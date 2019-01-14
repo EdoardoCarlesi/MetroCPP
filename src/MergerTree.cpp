@@ -29,7 +29,6 @@
 
 #include "MergerTree.h"
 #include "Halo.h"
-
 #include "utils.h"
 #include "global_vars.h"
 
@@ -104,14 +103,14 @@ MergerTree::~MergerTree()
 void MergerTree::AssignMap()
 {
 	int nProgs = 0, nCommTot = 0, iP = 0;
-	map<unsigned long long int, vector<int>>::iterator thisMap;
+	map<uint64_t, vector<int>>::iterator thisMap;
 	
 	nCommon.resize(nPTypes);
 	
 	/* Each merger tree stores the halo ids in a map that stores the number of particles shared with each progenitor */
 	for (thisMap = indexCommon.begin(); thisMap != indexCommon.end(); thisMap++)
 	{
-		unsigned long long int thisHaloID = thisMap->first;
+		uint64_t thisHaloID = thisMap->first;
 		vector<int> thisCommon = thisMap->second;
 
 		nCommTot = 0;
@@ -148,7 +147,7 @@ void MergerTree::AssignMap()
  * plus we will rarely deal with halos with more than 10^3 progenitors */
 void MergerTree::SortByMerit()
 {
-	vector<unsigned long long int> tmpIdx;
+	vector<uint64_t> tmpIdx;
 	vector<vector<int>> tmpNCommon;
 	vector<float> allMerit;
 	vector<int> idx, tmpIndex;
@@ -163,7 +162,11 @@ void MergerTree::SortByMerit()
 		for(int iC = 0; iC < nPTypes; iC++)
 			nComm += nCommon[iC][iM];
 
+#ifdef NOPTYPE
+		ratioM = (float) mainHalo.nPart[0] / (float) progHalos[iM].nPart[0];
+#else
 		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
+#endif
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
@@ -307,7 +310,7 @@ void FindProgenitors(int iOne, int iTwo)
 	 * particles shared by their two host halos. */
 	for (auto const& thisMap : locMapParts[iOne]) 
 	{
-		unsigned long long int thisID = thisMap.first;		// This particle ID
+		uint64_t thisID = thisMap.first;		// This particle ID
 		vector<Particle> thisParticle = thisMap.second;	 	// How many halos (halo IDs) share this particle
 
 		/* Loop on the halos on iOne to which this particle belongs */
@@ -319,7 +322,7 @@ void FindProgenitors(int iOne, int iTwo)
 			/* This same particle on iTwo is also shared by some halos: do the match with the haloIDs on iOne. */
 			for (int iN = 0; iN < nextParticle.size(); iN++)
 			{
-				unsigned long long int nextHaloID = nextParticle[iN].haloID;
+				uint64_t nextHaloID = nextParticle[iN].haloID;
 
 				/* If this ID is not in the list of progenitor IDs, then initialize the indexCommon 
 				   map and initialize the number of common particles */
@@ -346,7 +349,7 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Now clean and reconstruct the local merger trees */
 	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
 	{
-		unsigned long long int thisHaloID;
+		uint64_t thisHaloID;
 		int nProgs = locMTrees[iOne][iM].idProgenitor.size();
 		int thisHaloIndex = 0;
 
@@ -369,8 +372,14 @@ void FindProgenitors(int iOne, int iTwo)
 		/* Orphan halos are identified in the forward search only */
 		if (iOne == 0)
 		{
+
+#ifdef NOPTYPE
+			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
+				locMTrees[iOne][iM].mainHalo.nPart[0] > minPartHalo)
+#else
 			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
+#endif
 			{
 				Halo thisHalo = locHalos[iOne][iM];
 				thisHalo.isToken = true;
@@ -490,7 +499,7 @@ void FindProgenitors(int iOne, int iTwo)
 	 * particles shared by their two host halos. */
 	for (auto const& thisMap : locMapParts[iOne]) 
 	{
-		unsigned long long int thisID = thisMap.first;		// This particle ID
+		uint64_t thisID = thisMap.first;		// This particle ID
 		vector<Particle> thisParticle = thisMap.second;	 	// How many halos (halo IDs) share this particle
 
 		/* Loop on the halos on iOne to which this particle belongs */
@@ -502,7 +511,7 @@ void FindProgenitors(int iOne, int iTwo)
 			/* This same particle on iTwo is also shared by some halos: do the match with the haloIDs on iOne. */
 			for (int iN = 0; iN < nextParticle.size(); iN++)
 			{
-				unsigned long long int nextHaloID = nextParticle[iN].haloID;
+				uint64_t nextHaloID = nextParticle[iN].haloID;
 
 				/* If this ID is not in the list of progenitor IDs, then initialize the indexCommon 
 				   map and initialize the number of common particles */
@@ -529,7 +538,7 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Now clean and reconstruct the local merger trees */
 	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
 	{
-		unsigned long long int thisHaloID;
+		uint64_t thisHaloID;
 		int nProgs = locMTrees[iOne][iM].idProgenitor.size();
 		int thisHaloIndex = 0;
 
@@ -639,7 +648,7 @@ void CleanTrees(int iStep)
 #else
 		int iTree = kTree;
 #endif
-		unsigned long long int mainID = locHalos[0][iTree].ID;
+		uint64_t mainID = locHalos[0][iTree].ID;
 		int nProgSize = locMTrees[0][iTree].idProgenitor.size();
 
 		MergerTree mergerTree;
@@ -667,8 +676,8 @@ void CleanTrees(int iStep)
 		{
 			Halo progHalo;	
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
-			unsigned long long int progID = locMTrees[0][iTree].idProgenitor[iProg];
-			unsigned long long int descID;
+			uint64_t progID = locMTrees[0][iTree].idProgenitor[iProg];
+			uint64_t descID;
 
 #ifndef ZOOM 		
 			if (jTree < 0) 
@@ -748,7 +757,7 @@ void CleanTrees(int iStep)
 /* These two functions are used in mode = 1, when the MTrees are being read in from the .mtree files */
 void AssignDescendant()
 {
-	unsigned long long int mainID = 0;
+	uint64_t mainID = 0;
 	int mainIndex = 0;
 
 #ifdef ZOOM
@@ -792,7 +801,7 @@ void AssignDescendant()
 
 void AssignProgenitor()
 {
-	unsigned long long int progID = 0;
+	uint64_t progID = 0;
 	int progIndex = 0;
 
 	orphanHaloIndex.clear();

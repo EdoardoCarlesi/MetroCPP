@@ -126,7 +126,7 @@ void Communication::BufferSendRecv()
 			
 			for (int iT = 0; iT < nPTypes; iT ++)
 				buffSendSizeParts += locHalos[iUseCat][iH].nPart[iT] * sizePart;
-		
+
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
 				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). " 
 					<< "Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
@@ -224,7 +224,8 @@ void Communication::BufferSendRecv()
 		cout << "Allocating " << buffRecvSizeParts/1024/1024 << "MB recv buffer for " << nBuffRecvHalos << endl;
 #else
 		if (locTask == 0 && iT == 0)
-			cout << "Allocating " << buffRecvSizeParts/1024/1024 
+			//cout << "Allocating " << buffRecvSizeParts/1024/1024 
+			cout << "Allocating " << buffRecvSizeParts/1024
 				<< "MB for the particle recv buffer. " << endl;
 #endif
 
@@ -257,7 +258,7 @@ void Communication::BufferSendRecv()
 					for (int iP = 0; iP < nTmpPart; iP++)
 					{
 				       		Particle thisParticle;
-						unsigned long long int partID;
+						uint64_t partID;
  						partID = locBuffParts[iBuffTotHalo][iT][iP];
    	                      	        	thisParticle.haloID = locBuffHalos[iBuffTotHalo].ID;
         	                        	thisParticle.type   = iT;
@@ -302,9 +303,9 @@ void Communication::SyncMergerTreeBuffer()
 
 	/* These vectors contain the main halo and its main progenitor IDs, like [ID1, progID1, ID2, progID2... ]. 
 	 * The descendant ID is the i-th index while the progenitor is the i-th+1. */
-	vector <unsigned long long int> buffSendHaloIDs;
-	vector <unsigned long long int> buffRecvHaloIDs;
-	vector <unsigned long long int> totBuffRecvHaloIDs;
+	vector <uint64_t> buffSendHaloIDs;
+	vector <uint64_t> buffRecvHaloIDs;
+	vector <uint64_t> totBuffRecvHaloIDs;
 
 	// FIXME maybe these things are already set, no need to call these functions once again
 	/* Determine the order of sending and receiving tasks to avoid gridlocks and make it consistent through
@@ -366,8 +367,8 @@ void Communication::SyncMergerTreeBuffer()
 			     &nBuffRecvHaloIDs, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
 
 		/* Multiply by two to take into account progenitor and descendant */
-		buffSendSizeHaloIDs = 2 * nBuffSendHaloIDs * sizeof(unsigned long long int);
-		buffRecvSizeHaloIDs = 2 * nBuffRecvHaloIDs * sizeof(unsigned long long int);
+		buffSendSizeHaloIDs = 2 * nBuffSendHaloIDs * sizeof(uint64_t);
+		buffRecvSizeHaloIDs = 2 * nBuffRecvHaloIDs * sizeof(uint64_t);
 
 		nTotBuffHaloIDs += nBuffRecvHaloIDs;
 
@@ -405,8 +406,8 @@ void Communication::SyncMergerTreeBuffer()
 	/* Now synchronize the connections of the halos on the buffer */
 	for (int iH = 0; iH < locBuffHalos.size(); iH++)
 	{	
-		unsigned long long int descID = totBuffRecvHaloIDs[2 * iH];
-		unsigned long long int progID = totBuffRecvHaloIDs[2 * iH + 1];
+		uint64_t descID = totBuffRecvHaloIDs[2 * iH];
+		uint64_t progID = totBuffRecvHaloIDs[2 * iH + 1];
 
 		int thisTreeIndex = thisMapTrees[descID];
 
