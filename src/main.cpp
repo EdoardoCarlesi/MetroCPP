@@ -294,7 +294,7 @@ int main(int argv, char **argc)
 		iNumCat = 0;	iUseCat = 0;
 
 		SettingsIO.ReadHalos();
-
+		InitHaloTrees();
 #ifndef ZOOM
 		/* Communicate grid info across all tasks */
 		CommTasks.BroadcastAndGatherGrid();
@@ -303,29 +303,31 @@ int main(int argv, char **argc)
 		{
 			/* Initialize descendant halos */
 			iUseCat = 0;			
-#ifndef ZOOM
-			CommTasks.SyncIndex();
-#endif 
+
+			SyncIndex();
 			SettingsIO.ReadTrees();
 			AssignDescendant();
 
-			// TODO: At this point we could fix halo masses and position using some interpolation scheme
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
-#ifdef ZOOM
-			/* In ZOOM mode, this step is very quick */
-			AssignProgenitor();
-#else
+
+			// TODO: At this point we should fix halo masses and position using some interpolation scheme
+
+#ifndef ZOOM
 			/* In FULLBOX mode, we need to assign halos to the grid nodes and identify
 		         * the halos on the buffer, which then need to be communicated */
 			CommTasks.BroadcastAndGatherGrid();
 			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
 			CommTasks.BufferSendRecv();
-			CommTasks.SyncIndex();
+#endif
+			/* Read the following snapshot and assign the progenitors consistently */
+			SyncIndex();
 			AssignProgenitor();
+			BuildTrees();
+
+#ifndef ZOOM
 			CommTasks.CleanBuffer();
 #endif
-
 			ShiftHalosPartsGrids();
 		}
 

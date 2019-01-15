@@ -51,11 +51,11 @@ HaloTree::~HaloTree()
 
 void HaloTree::Clean()
 {
-	for (int iM = 0; iM < mTree.size(); iM++)
-		mTree[iM].Clean();
-
-	mTree.clear();
+	for (int iM = 0; iM < progHalo.size(); iM++)
+			progHalo[iM].clear();
+	
 	mainHalo.clear();
+	progHalo.clear();
 };
 
 
@@ -157,15 +157,23 @@ void MergerTree::SortByMerit()
 		int nComm = 0;
 		double ratioM = 0;
 
-		for(int iC = 0; iC < nPTypes; iC++)
+		for (int iC = 0; iC < nPTypes; iC++)
 			nComm += nCommon[iC][iM];
+		
+		int nPH0 = 0, nPH1 = 0;
+ 
+		for (int iP = 0; iP < nPTypes; iP++)
+		{	
+			nPH0 += mainHalo.nPart[iP];
+			nPH1 += progHalos[iM].nPart[iP];
+		}
 
-		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
+		//ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
+		ratioM = (float) nPH0 / (float) nPH1;
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
 		merit = nComm  / (ratioM*1.0001 - 1.0);
-		//merit = nCommon[1][iM] / (ratioM*1.0001 - 1.0);
 		merit *= (1.0 + 0.00001 * iM);	// We change the merit slightly, 
 						// to avoid confusion when two halos have the same number of particles 
 						// and the same number of particles shared with the host halo
@@ -820,11 +828,70 @@ void AssignProgenitor()
 			}
 		}
 	}
-
-	/* Halos have been assigned, so we can clear the map */
-	id2Index.clear();	
 };
 
+
+/* When re-loading the merger trees initialize for each halo at z = 0 the HaloTree, which will contain all its descendants */
+void InitHaloTrees()
+{
+	if (locTask == 0)
+		cout << "Initializing halo trees..." << endl;
+
+	locHaloTrees.resize(nLocHalos[0]);
+
+	for (int iH = 0; iH < locHalos[0].size(); iH++) 
+	{
+		locHaloTrees[iH].mainHalo.resize(nSnapsUse); 
+		locHaloTrees[iH].progHalo.resize(nSnapsUse);
+		locHaloTrees[iH].mainHalo[0] = locHalos[0][iH]; //locCleanTrees[0][iH].mainHalo;
+	}
+};
+
+
+/* Starting from redshift zero we build the tree backwards */
+void BuildTrees()
+{
+	if (locTask == 0)
+		cout << "Building trees..." << endl;
+
+	map<uint64_t, int>::iterator it;
+
+	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
+	{
+		uint64_t mainProgID = locCleanTrees[iNumCat-1][iC].progHalos[0].ID;
+	
+		it = id2Index.find(mainProgID);
+
+		/* If the main progenitor is found here, otherwise add it to the list of trees to be updated */
+		if (it != id2Index.end())
+		{
+			//locHalos[1][it->second].Info();
+		} else {
+				
+			//cout << mainProgID << " " << it->second << " " << it->first << endl;
+			// TODO Look for this halo on another task
+		}
+		
+	
+	}
+
+};
+
+
+void SyncIndex()
+{
+	/* Clean the map just in case */
+	id2Index.clear();
+	
+	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
+		id2Index[locHalos[iUseCat][iH].ID] = iH;
+
+#ifndef ZOOM
+	if (iUseCat == 1)
+		for (int iH = 0; iH < locBuffHalos.size(); iH++)
+			id2Index[locBuffHalos[iH].ID] = -iH-1;	// Add -1 to avoid overlap with index 0
+#endif
+}
 
 
 void DebugTrees()
@@ -840,7 +907,5 @@ void DebugTrees()
 				locCleanTrees[iC][iT].Info();
 	}
 };
-
-
 
 
