@@ -78,9 +78,7 @@ void MergerTree::Info()
 void MergerTree::Clean()
 {
 	for (int iC = 0; iC < nCommon.size(); iC++)
-	{
 		nCommon[iC].clear();
-	}
 
 	nCommon.clear();
 
@@ -760,15 +758,10 @@ void AssignDescendant()
 	uint64_t mainID = 0;
 	int mainIndex = 0;
 
-#ifdef ZOOM
-	orphanHaloIndex.clear();
-	orphanHaloIndex.shrink_to_fit();
-#else
 	locOrphIndex.clear();
 	locOrphIndex.shrink_to_fit();
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
-#endif
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
@@ -779,12 +772,8 @@ void AssignDescendant()
 		{
 			if (locCleanTrees[iNumCat-1][iC].isOrphan)
 			{
-#ifdef ZOOM
-				orphanHaloIndex.push_back(mainIndex);
-#else
 				locOrphIndex.push_back(mainIndex);
 				locOrphHalos.push_back(locCleanTrees[iNumCat-1][iC].mainHalo);
-#endif
 			}
 
 			locCleanTrees[iNumCat-1][iC].mainHalo = locHalos[iUseCat][mainIndex];
@@ -821,7 +810,6 @@ void AssignProgenitor()
 				if (id2Index.find(progID) != id2Index.end()) 
 				{
 					progIndex = id2Index[progID];
-
 #ifndef ZOOM	
 					if (progIndex < 0)
 						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex-1];

@@ -537,6 +537,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 
 			if (locChunk < nChunks) // Make sure we are not looking for catalog chunks beyond the boundaries
 			{
+
 				sprintf(charCpu, "%04d", locChunk);	
 				string locHaloFile = pathInput + haloPrefix + strSnaps[iF] + "." + charCpu + ".z" + charZ + "." + haloSuffix;
 				string locPartFile = pathInput + haloPrefix + strSnaps[iF] + "." + charCpu + ".z" + charZ + "." + partSuffix;
@@ -851,7 +852,7 @@ void IOSettings::ReadTrees()
 	if (nTreeChunks != totTask)
 	{
 		if (locTask == 0) 
-			cout << "ERROR: nTreeChunks in the .cfg file needs to be equal to the number of MPI Tasks in use. " << endl;
+			cout << "ERROR: nTreeChunks in the .cfg file has to be equal to the number of MPI Tasks in use. " << endl;
 
 		exit(0);
 		
