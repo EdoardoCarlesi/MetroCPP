@@ -160,11 +160,7 @@ void MergerTree::SortByMerit()
 		for(int iC = 0; iC < nPTypes; iC++)
 			nComm += nCommon[iC][iM];
 
-#ifdef NOPTYPE
-		ratioM = (float) mainHalo.nPart[0] / (float) progHalos[iM].nPart[0];
-#else
 		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
-#endif
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 

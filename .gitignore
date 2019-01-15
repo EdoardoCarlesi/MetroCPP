@@ -29,3 +29,8 @@ mpirun
 *.tmp
 *.swo
 *.out
+config/fullbox_laptop.cfg
+config/fullbox_leibniz.cfg
+config/fullbox_neruda.cfg
+config/zoom_test.cfg
+
