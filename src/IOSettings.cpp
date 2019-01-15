@@ -852,7 +852,7 @@ void IOSettings::ReadTrees()
 	if (nTreeChunks != totTask)
 	{
 		if (locTask == 0) 
-			cout << "ERROR: nTreeChunks in the .cfg file needs to be equal to the number of MPI Tasks in use. " << endl;
+			cout << "ERROR: nTreeChunks in the .cfg file has to be equal to the number of MPI Tasks in use. " << endl;
 
 		exit(0);
 		
