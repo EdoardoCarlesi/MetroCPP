@@ -34,12 +34,10 @@ The code is distributed under the terms of the GNU Public License, and can be fr
 Since \texttt{C++14}-style syntax is used at some points, in particular for the manipulation
 of (ordered) maps, the source code needs to be compiled with a non-prehistoric version of the compiler.
 A series of python and \texttt{bash} scripts for the post processing, analysis and visualization of the merger trees are also provided 
-together with the sources, inside the \texttt{scripts/} and \texttt{python/} subfolders.
-
-The structure of the algorithms of the code as well as its performance, cosmological applications and 
-physical modelling are described in the:
-\href{https://arxiv.org/abs/1612.07053}{code paper} (Carlesi, MNRAS, 2018).
-
+together with the sources, inside the \texttt{scripts/} and \texttt{python/} subfolders. 
+However, the post-processing scripts are very basic and might require a substantial tweak of the variables, so that the user
+may prefer to write his own post-processing routines instead.
+A basic description of the algorithm and design of the code is provided in section \ref{sec:advanced}.
 In this user's guide, we explain the basics for the setup and running of \texttt{METROC++}
 
 
@@ -47,24 +45,52 @@ In this user's guide, we explain the basics for the setup and running of \texttt
 
 \subsection{Compiling the code}
 
-The main folder contains a \texttt{Makefile.config} file 
+The main folder contains a \texttt{Makefile.config} file with some options related to the performance of the code and the 
+setup of the machine the code will be running on. Apart from a modern, $C++14$-compatible compiler and a working 
+\texttt{MPI-2.0} installation, the code does not require the installation of any additional library.
+The python scripts which are provided for post-processing might depend on libraries such as \texttt{numpy} and \texttt{matplotlib},
+however these are still largely being coded and are provided only for a very quick-and-dirty peek into the output.
 
 \noindent
 \texttt{-DZOOM}: When this flag is switched on, the comparison algorithm is optimized for the comparison of the 
-particle content of halos in zoom-in simulations. This means that only one particle type will be
+particle content of halos in zoom-in simulations, avoiding the buffer and overhead which is required by the 
+full box comparison mode. 
+Trees for zoom-in simulations can still be computed without switching this flag on, using one MPI task only.
 
 \noindent
 \texttt{-DVERBOSE}: This flag controls the output of the program - when enabled, the code will dump a lot more of 
 (boring) information at runtime, on inter-task communication, buffer sizes, number of particles and halos exchanged and so on.
 
 \noindent
-\texttt{-DNPTYPES=N}
+\texttt{-DNPTYPES=N}: Here we control the number of particles being tracked separately. For reasons of internal consistency 
+of the code, $N$ needs to be set greater or equal to $2$. Using the minimum amount of particle types required results in some marginal
+gains in the memory usage and code speed.
+
+\noindent
+\texttt{-DNOPTYPE}: When this option is set, we disregard the type and do not differentiate between different particles, so that
+each particle type has the same weight when computing the merger trees.
+
 
 \subsection{Code operation modes}
 
-The code has two basic modes of operation: \emph{tree-building} and \emph{post-processing}.
+The code has two basic modes of operation: \emph{tree-building} (\texttt{runMode=0}) and \emph{post-processing}
+(\texttt{runMode=1}); \texttt{runMode=2} will execute the post-processing routine right after the tree-building is finished.
+\textbf{The post-processing mode is not yet fully implemented in the code at the moment so that run modes 1 and 2 are disabled 
+for the moment.}
+The number $N$ of cores on which the code should run on has to be chosen according to the number of \texttt{AHF} files each catalog
+is split into. If each $AHF_halos$ file is divided into \texttt{nChunks} parts, the number $N_{MPI}$ 
+of \texttt{MPI} tasks should be smaller than \texttt{nChunks} and allow for to be equally divided among the tasks.
+For instance, if \texttt{nChunks}$=100$ setting $N_{MPI} = 10$ each MPI task would read in 10 pieces of the 
+halo catalog at any given redshift.
+Due to the fact that different tasks need to exchange buffers, an increase in the number of task does not necessarily mean
+an increase in the speed of the code, as this will also increase the size of the buffer data that needs to be exchanged.
+Ideally the number of 
+
+
 
 \subsection{Configuration file}
+
+The configuration file templates can be found in the subfolder \texttt{config/} where a few examples are provided. 
 
 \subsection{Temporary files}
 
@@ -74,7 +100,29 @@ They can be produced manually or using the scripts (\texttt{find\_z.sh}, \texttt
 and contain the list of files on which the halo finder will run on.
 This can be the full list of snapshots in one simulation, or can be edited to be only a subset of it.
 
+\section{Examples}
+
+\subsection{Full box simulation}
+To properly run the code for full box simulations, the \texttt{-DZOOM} flag needs to be commented in the \texttt{Makefile.config} file.
+\texttt{mpiexec -n N ./bin/metroCPP config/zoom\_test.cfg}
+
+
+\subsection{Zoom simulation}
+To properly run the code on zoom simulation, the \texttt{-DZOOM} flag needs to be switched on in the \texttt{Makefile.config} file.
+Zoom simulation can run on a single MPI task only, and the code needs to be executed as e.g.:\\
+
+\texttt{mpiexec -n 1 ./bin/metroCPP config/zoom\_test.cfg}
+
+
 \section{Advanced features}
+
+\subsection{Code performance}
+
+\label{sec:advanced}
+
+The 
+
+
 \subsection{Code structure}
 
 \begin{itemize}
@@ -103,15 +151,6 @@ support other software as well, as long as:
 \end{itemize}
 
 To add 
-
-\section{Examples}
-
-\subsection{Full box simulation}
-To properly run the code for full box simulations, the \texttt{-DZOOM} flag needs to be commented in the \texttt{Makefile.config} file.
-
-\subsection{Zoom simulation}
-To properly run the code on zoom simulation, the \texttt{-DZOOM} flag needs to be switched on in the \texttt{Makefile.config} file.
-
 
 \end{document}
 

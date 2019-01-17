@@ -7,7 +7,9 @@
 	  	  ecarlesi@aip.de
 ==================================================
 
-C++14, MPI-parallel program to compute the halo merger trees in cosmological simulations.
+C++11, MPI-parallel program to compute the halo merger trees in cosmological simulations.
+The code has been designed to work with AHF halo finder (http://popia.ft.uam.es/AHF/Download.html)
+but it can be easily made compatible with other formats as well.
 
 Official repository:
 https://github.com/EdoardoCarlesi/MetroCPP
