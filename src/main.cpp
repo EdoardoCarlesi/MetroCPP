@@ -289,7 +289,7 @@ int main(int argv, char **argc)
 	}	/* If running the tree and / or post processing mode only */
 	
 	/* Load in trees & halo catalogs */
-	if (runMode == 1)
+	if (runMode == 1 || runMode == 2)
 	{
 		iNumCat = 0;	iUseCat = 0;
 
@@ -328,22 +328,14 @@ int main(int argv, char **argc)
 #ifndef ZOOM
 			CommTasks.CleanBuffer();
 #endif
+			SettingsIO.WriteTree(iNumCat); 	
 			ShiftHalosPartsGrids();
 		}
 
-		SettingsIO.WriteTrees();
-
 		// TODO: once the MAHs have been computed, we need to smooth over 
-	}
-
-	/* Proceed with smoothing & interpolating the MAH of single halos */
-	if (runMode == 1 || runMode == 2)
-	{
-		/* 
-			POST PROCESSING STUFF:
-				- interpolate lost halo masses 
-				- compute local gravitational field to find missing halo's positions
-				- smooth over the mass: include (exclude) transient halos, flybys, subhalos outside Rvir
+		/* Proceed with smoothing & interpolating the MAH of single halos */
+		/*
+			 
 		*/
 	}
 

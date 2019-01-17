@@ -58,7 +58,7 @@ extern vector<vector<MergerTree>> locMTrees;
 extern vector<vector<MergerTree>> locCleanTrees;
 
 /* Helps connecting halos when rebuilidng the trees from input files */
-extern map <uint64_t, int> id2Index;
+extern vector<map<uint64_t, int>> id2Index;
 
 /* Particles on task, also allocated by particle type within each halo */
 extern vector<vector<vector<vector<uint64_t>>>> locParts;

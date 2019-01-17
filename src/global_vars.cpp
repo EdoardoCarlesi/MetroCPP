@@ -66,7 +66,7 @@ typedef struct Particle Particle;
 vector<map <uint64_t, vector<Particle>>> locMapParts;
 
 /* This map keeps track of the halo ids when reading from old mtree files */
-map <uint64_t, int> id2Index;
+vector<map<uint64_t, int>> id2Index;
 
 map <uint64_t, int> thisMapTrees;
 map <uint64_t, int> nextMapTrees;

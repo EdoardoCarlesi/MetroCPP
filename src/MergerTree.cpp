@@ -766,13 +766,15 @@ void AssignDescendant()
 	locOrphIndex.shrink_to_fit();
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
+	/*
+	*/
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
 		mainID = locCleanTrees[iNumCat-1][iC].mainHalo.ID;
-		mainIndex = id2Index[mainID];
+		mainIndex = id2Index[0][mainID];
 
-		if (id2Index.find(mainID) != id2Index.end()) 
+		if (id2Index[0].find(mainID) != id2Index[0].end()) 
 		{
 			if (locCleanTrees[iNumCat-1][iC].isOrphan)
 			{
@@ -785,9 +787,6 @@ void AssignDescendant()
 			cout << locTask << " does not have descendant ID: " << mainID << endl;
 		}
 	}
-
-	/* Halos have been assigned, so we can clear the map */
-	id2Index.clear();	
 };
 
 
@@ -796,9 +795,6 @@ void AssignProgenitor()
 {
 	uint64_t progID = 0;
 	int progIndex = 0;
-
-	orphanHaloIndex.clear();
-	orphanHaloIndex.shrink_to_fit();
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
@@ -811,9 +807,9 @@ void AssignProgenitor()
 				locCleanTrees[iNumCat-1][iC].progHalos[0] = locCleanTrees[iNumCat-1][iC].mainHalo; 
 			} else {
 
-				if (id2Index.find(progID) != id2Index.end()) 
+				if (id2Index[1].find(progID) != id2Index[1].end()) 
 				{
-					progIndex = id2Index[progID];
+					progIndex = id2Index[1][progID];
 #ifndef ZOOM	
 					if (progIndex < 0)
 						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex-1];
@@ -837,13 +833,19 @@ void InitHaloTrees()
 	if (locTask == 0)
 		cout << "Initializing halo trees..." << endl;
 
+	id2Index.resize(2);
 	locHaloTrees.resize(nLocHalos[0]);
 
-	for (int iH = 0; iH < locHalos[0].size(); iH++) 
+	//for (int iH = 0; iH < locHalos[0].size(); iH++) 
+	for (int iH = 0; iH < locCleanTrees[0].size(); iH++) 
 	{
 		locHaloTrees[iH].mainHalo.resize(nSnapsUse); 
 		locHaloTrees[iH].progHalo.resize(nSnapsUse);
-		locHaloTrees[iH].mainHalo[0] = locHalos[0][iH]; //locCleanTrees[0][iH].mainHalo;
+		locHaloTrees[iH].mainHalo[0] = locCleanTrees[0][iH].mainHalo;
+
+		//if (locCleanTrees[0][iH].mainHalo.ID != locHalos[0][iH].ID)
+		//	locHalos[0][iH].Info();
+			//cout << iH << " " << locHalos[0][iH].ID << endl;
 	}
 };
 
@@ -856,24 +858,47 @@ void BuildTrees()
 
 	map<uint64_t, int>::iterator it;
 
-	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
+	int iFound = 0, iNotFound = 0, iOrph = 0;
+	int nHaloTrees = locCleanTrees[iNumCat-1].size();
+
+	for (int iC = 0; iC < nHaloTrees; iC++)
 	{
 		uint64_t mainProgID = locCleanTrees[iNumCat-1][iC].progHalos[0].ID;
 	
-		it = id2Index.find(mainProgID);
+		it = id2Index[1].find(mainProgID);
 
 		/* If the main progenitor is found here, otherwise add it to the list of trees to be updated */
-		if (it != id2Index.end())
+		if (it != id2Index[1].end())
 		{
-			//locHalos[1][it->second].Info();
+			//if (it->second > nLocHalos[1])
+			//	cout << "buffer halo: " << it-> second << endl;
+
+			iFound++;	
 		} else {
-				
+
+			if (locCleanTrees[iNumCat-1][iC].isOrphan)
+			{
+				iOrph++;
+				// It's an orphan halo, just replicate it at the next step
+			} else {
+				// If this is not an orphan halo, we may need to look for it on another task
+				iNotFound++;
+			}
+				/*
+					cout << iC << ", Orphan halo " << locCleanTrees[iNumCat-1][iC].mainHalo.ID << endl;
+					if (locCleanTrees[iNumCat-1][iC].progHalos[0].isToken);
+					cout << iC << ", Token halo " << locCleanTrees[iNumCat-1][iC].progHalos[0].isToken << endl;
+				*/
+
+			//locCleanTrees[iNumCat-1][iC].mainHalo.Info();
+			//locCleanTrees[iNumCat-1][iC].progHalos[0].Info();
 			//cout << mainProgID << " " << it->second << " " << it->first << endl;
-			// TODO Look for this halo on another task
 		}
-		
-	
 	}
+	
+	if (locTask == 0)
+		cout << "OnTask = " << locTask << " nHalos: " << nHaloTrees << " found: " << iFound 
+			<< " not found: " << iNotFound << " orphans: " << iOrph << endl; 
 
 };
 
@@ -881,15 +906,15 @@ void BuildTrees()
 void SyncIndex()
 {
 	/* Clean the map just in case */
-	id2Index.clear();
+	id2Index[iUseCat].clear();
 	
 	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
-		id2Index[locHalos[iUseCat][iH].ID] = iH;
+		id2Index[iUseCat][locHalos[iUseCat][iH].ID] = iH;
 
 #ifndef ZOOM
 	if (iUseCat == 1)
 		for (int iH = 0; iH < locBuffHalos.size(); iH++)
-			id2Index[locBuffHalos[iH].ID] = -iH-1;	// Add -1 to avoid overlap with index 0
+			id2Index[1][locBuffHalos[iH].ID] = -iH-1;	// Add -1 to avoid overlap with index 0
 #endif
 }
 
