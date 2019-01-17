@@ -913,8 +913,12 @@ void SyncIndex()
 
 #ifndef ZOOM
 	if (iUseCat == 1)
+	{
+		//cout << "SyncIndex for buffer halos: " << locBuffHalos.size() << endl;
+ 
 		for (int iH = 0; iH < locBuffHalos.size(); iH++)
-			id2Index[1][locBuffHalos[iH].ID] = -iH-1;	// Add -1 to avoid overlap with index 0
+			id2Index[1][locBuffHalos[iH].ID] = nLocHalos[1] + iH;	
+	}
 #endif
 }
 

@@ -110,6 +110,7 @@ int main(int argv, char **argc)
 		if (locTask == 0)
 		{
 			cout << "RunMode unknown. Choose 0, 1 or 2.\nExiting program..." << endl;
+			MPI_Finalize();
 			exit(0);
 		}
 	};
@@ -141,6 +142,7 @@ int main(int argv, char **argc)
 		{
 			cout << "ZOOM mode requires only one MPI task to run correctly." << endl;	
 			cout << "Please restart setting the number of tasks equal to one.\nExiting program..." << endl;
+			MPI_Finalize();
 			exit(0);
 		}
 #endif
@@ -288,9 +290,27 @@ int main(int argv, char **argc)
 
 	}	/* If running the tree and / or post processing mode only */
 	
-	/* Load in trees & halo catalogs */
+	/* Load in trees & halo catalogs 
+	 * Post-processing mode is not enabled for the moment. */
 	if (runMode == 1 || runMode == 2)
 	{
+		if (locTask == 0)
+		{
+			cout << "\t=====================   ERROR   =======================" << endl;
+			cout << "\t= Run mode type 1 & 2 are not enabled yet.            =" << endl; 
+			cout << "\t= The code is working in runMode=0 only. Exiting...   =" << endl; 
+			cout << "\t=======================================================" << endl; 
+		}	
+		
+		MPI_Finalize();
+		exit(0);
+
+		// TODO:
+		/* The following code is a template for what should be done in the post-processing 
+		 * mode, reading in halos & mtree files and then smoothing the mass functions and 
+		 * interpolating for the position and mass of the missing halos. 
+		 * Some of the functions are working but the core is still under construction. */
+	
 		iNumCat = 0;	iUseCat = 0;
 
 		SettingsIO.ReadHalos();
