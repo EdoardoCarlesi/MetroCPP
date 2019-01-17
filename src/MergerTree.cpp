@@ -51,11 +51,11 @@ HaloTree::~HaloTree()
 
 void HaloTree::Clean()
 {
-	for (int iM = 0; iM < mTree.size(); iM++)
-		mTree[iM].Clean();
-
-	mTree.clear();
+	for (int iM = 0; iM < progHalo.size(); iM++)
+			progHalo[iM].clear();
+	
 	mainHalo.clear();
+	progHalo.clear();
 };
 
 
@@ -157,15 +157,23 @@ void MergerTree::SortByMerit()
 		int nComm = 0;
 		double ratioM = 0;
 
-		for(int iC = 0; iC < nPTypes; iC++)
+		for (int iC = 0; iC < nPTypes; iC++)
 			nComm += nCommon[iC][iM];
+		
+		int nPH0 = 0, nPH1 = 0;
+ 
+		for (int iP = 0; iP < nPTypes; iP++)
+		{	
+			nPH0 += mainHalo.nPart[iP];
+			nPH1 += progHalos[iM].nPart[iP];
+		}
 
-		ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
+		//ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
+		ratioM = (float) nPH0 / (float) nPH1;
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
 		merit = nComm  / (ratioM*1.0001 - 1.0);
-		//merit = nCommon[1][iM] / (ratioM*1.0001 - 1.0);
 		merit *= (1.0 + 0.00001 * iM);	// We change the merit slightly, 
 						// to avoid confusion when two halos have the same number of particles 
 						// and the same number of particles shared with the host halo
@@ -758,13 +766,15 @@ void AssignDescendant()
 	locOrphIndex.shrink_to_fit();
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
+	/*
+	*/
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
 		mainID = locCleanTrees[iNumCat-1][iC].mainHalo.ID;
-		mainIndex = id2Index[mainID];
+		mainIndex = id2Index[0][mainID];
 
-		if (id2Index.find(mainID) != id2Index.end()) 
+		if (id2Index[0].find(mainID) != id2Index[0].end()) 
 		{
 			if (locCleanTrees[iNumCat-1][iC].isOrphan)
 			{
@@ -777,9 +787,6 @@ void AssignDescendant()
 			cout << locTask << " does not have descendant ID: " << mainID << endl;
 		}
 	}
-
-	/* Halos have been assigned, so we can clear the map */
-	id2Index.clear();	
 };
 
 
@@ -788,9 +795,6 @@ void AssignProgenitor()
 {
 	uint64_t progID = 0;
 	int progIndex = 0;
-
-	orphanHaloIndex.clear();
-	orphanHaloIndex.shrink_to_fit();
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
@@ -803,9 +807,9 @@ void AssignProgenitor()
 				locCleanTrees[iNumCat-1][iC].progHalos[0] = locCleanTrees[iNumCat-1][iC].mainHalo; 
 			} else {
 
-				if (id2Index.find(progID) != id2Index.end()) 
+				if (id2Index[1].find(progID) != id2Index[1].end()) 
 				{
-					progIndex = id2Index[progID];
+					progIndex = id2Index[1][progID];
 #ifndef ZOOM	
 					if (progIndex < 0)
 						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex-1];
@@ -820,11 +824,103 @@ void AssignProgenitor()
 			}
 		}
 	}
-
-	/* Halos have been assigned, so we can clear the map */
-	id2Index.clear();	
 };
 
+
+/* When re-loading the merger trees initialize for each halo at z = 0 the HaloTree, which will contain all its descendants */
+void InitHaloTrees()
+{
+	if (locTask == 0)
+		cout << "Initializing halo trees..." << endl;
+
+	id2Index.resize(2);
+	locHaloTrees.resize(nLocHalos[0]);
+
+	//for (int iH = 0; iH < locHalos[0].size(); iH++) 
+	for (int iH = 0; iH < locCleanTrees[0].size(); iH++) 
+	{
+		locHaloTrees[iH].mainHalo.resize(nSnapsUse); 
+		locHaloTrees[iH].progHalo.resize(nSnapsUse);
+		locHaloTrees[iH].mainHalo[0] = locCleanTrees[0][iH].mainHalo;
+
+		//if (locCleanTrees[0][iH].mainHalo.ID != locHalos[0][iH].ID)
+		//	locHalos[0][iH].Info();
+			//cout << iH << " " << locHalos[0][iH].ID << endl;
+	}
+};
+
+
+/* Starting from redshift zero we build the tree backwards */
+void BuildTrees()
+{
+	if (locTask == 0)
+		cout << "Building trees..." << endl;
+
+	map<uint64_t, int>::iterator it;
+
+	int iFound = 0, iNotFound = 0, iOrph = 0;
+	int nHaloTrees = locCleanTrees[iNumCat-1].size();
+
+	for (int iC = 0; iC < nHaloTrees; iC++)
+	{
+		uint64_t mainProgID = locCleanTrees[iNumCat-1][iC].progHalos[0].ID;
+	
+		it = id2Index[1].find(mainProgID);
+
+		/* If the main progenitor is found here, otherwise add it to the list of trees to be updated */
+		if (it != id2Index[1].end())
+		{
+			//if (it->second > nLocHalos[1])
+			//	cout << "buffer halo: " << it-> second << endl;
+
+			iFound++;	
+		} else {
+
+			if (locCleanTrees[iNumCat-1][iC].isOrphan)
+			{
+				iOrph++;
+				// It's an orphan halo, just replicate it at the next step
+			} else {
+				// If this is not an orphan halo, we may need to look for it on another task
+				iNotFound++;
+			}
+				/*
+					cout << iC << ", Orphan halo " << locCleanTrees[iNumCat-1][iC].mainHalo.ID << endl;
+					if (locCleanTrees[iNumCat-1][iC].progHalos[0].isToken);
+					cout << iC << ", Token halo " << locCleanTrees[iNumCat-1][iC].progHalos[0].isToken << endl;
+				*/
+
+			//locCleanTrees[iNumCat-1][iC].mainHalo.Info();
+			//locCleanTrees[iNumCat-1][iC].progHalos[0].Info();
+			//cout << mainProgID << " " << it->second << " " << it->first << endl;
+		}
+	}
+	
+	if (locTask == 0)
+		cout << "OnTask = " << locTask << " nHalos: " << nHaloTrees << " found: " << iFound 
+			<< " not found: " << iNotFound << " orphans: " << iOrph << endl; 
+
+};
+
+
+void SyncIndex()
+{
+	/* Clean the map just in case */
+	id2Index[iUseCat].clear();
+	
+	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
+		id2Index[iUseCat][locHalos[iUseCat][iH].ID] = iH;
+
+#ifndef ZOOM
+	if (iUseCat == 1)
+	{
+		//cout << "SyncIndex for buffer halos: " << locBuffHalos.size() << endl;
+ 
+		for (int iH = 0; iH < locBuffHalos.size(); iH++)
+			id2Index[1][locBuffHalos[iH].ID] = nLocHalos[1] + iH;	
+	}
+#endif
+}
 
 
 void DebugTrees()
@@ -840,7 +936,5 @@ void DebugTrees()
 				locCleanTrees[iC][iT].Info();
 	}
 };
-
-
 
 

@@ -622,20 +622,6 @@ void Communication::SetSendRecvTasks()
 #endif
 };
 
-
-void Communication::SyncIndex()
-{
-	/* Clean the map just in case */
-	id2Index.clear();
-	
-	for (int iH = 0; iH < locHalos[iUseCat].size(); iH++)
-		id2Index[locHalos[iUseCat][iH].ID] = iH;
-
-	if (iUseCat == 1)
-		for (int iH = 0; iH < locBuffHalos.size(); iH++)
-			id2Index[locBuffHalos[iH].ID] = -iH-1;	// Add -1 to avoid overlap with index 0
-
-}
 #endif		// Non zoom mode (ifdef ZOOM, else, endif)
 
 
