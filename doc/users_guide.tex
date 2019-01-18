@@ -27,34 +27,43 @@ transportation system, which connects through space different points of the city
 through different points in time.\\
 
 The code is distributed under the terms of the GNU Public License, and can be freely downloaded from 
-\href{https://github.com/EdoardoCarlesi/MetroCPP}{this \texttt{GitHub} repository}.
+this \texttt{GitHub} repository: 
+\href{https://github.com/EdoardoCarlesi/MetroCPP}{https://github.com/EdoardoCarlesi/MetroCPP}.
 
-\texttt{METROC++} has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization.
+\texttt{METROC++} has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization; there are
+also a number of \texttt{bash} scripts used to automatically and consistently read-in large number of halo and particle catalogs.
 
-Since \texttt{C++14}-style syntax is used at some points, in particular for the manipulation
+Since \texttt{C++11/14}-style syntax is used at some points, in particular for the manipulation
 of (ordered) maps, the source code needs to be compiled with a non-prehistoric version of the compiler.
 A series of python and \texttt{bash} scripts for the post processing, analysis and visualization of the merger trees are also provided 
 together with the sources, inside the \texttt{scripts/} and \texttt{python/} subfolders. 
 However, the post-processing scripts are very basic and might require a substantial tweak of the variables, so that the user
-may prefer to write his own post-processing routines instead.
+may prefer to write his own post-processing routines instead.\\
+
+To address the issue of the so-called \emph{orphan} halos, i.e. halos (usually subhalos) unable to be linked to their parent 
+halo for one or more time steps, the code keeps track of their particle content for a number of snapshots proportional to the
+halo mass. In the usual mode of operation, though, it does not attempt to reconstruct the missing halos' positions and
+velocity, a feature which is provided in the post processing mode of operation of the code.\\
+
 A basic description of the algorithm and design of the code is provided in section \ref{sec:advanced}.
 In this user's guide, we explain the basics for the setup and running of \texttt{METROC++}
 
 
-\section{Basic setup}
-
-\subsection{Compiling the code}
+\section{Compiling and running the code}
 
 The main folder contains a \texttt{Makefile.config} file with some options related to the performance of the code and the 
-setup of the machine the code will be running on. Apart from a modern, $C++14$-compatible compiler and a working 
+setup of the machine the code will be running on. Apart from a modern, $C++11$-compatible compiler and a working 
 \texttt{MPI-2.0} installation, the code does not require the installation of any additional library.
 The python scripts which are provided for post-processing might depend on libraries such as \texttt{numpy} and \texttt{matplotlib},
 however these are still largely being coded and are provided only for a very quick-and-dirty peek into the output.
 
 \noindent
-\texttt{-DZOOM}: When this flag is switched on, the comparison algorithm is optimized for the comparison of the 
-particle content of halos in zoom-in simulations, avoiding the buffer and overhead which is required by the 
-full box comparison mode. 
+\textbf{Compile-time options:} The \texttt{Makefile.config} file contains a few options that need to be switched on at runtime 
+to optimize and speed-up the execution of the code
+
+\noindent
+\texttt{-DZOOM}: When this flag is switched on, the comparison algorithm is optimized for the 
+zoom-in simulations, avoiding the buffer and overhead which is required by the full box comparison mode. 
 Trees for zoom-in simulations can still be computed without switching this flag on, using one MPI task only.
 
 \noindent
@@ -70,22 +79,36 @@ gains in the memory usage and code speed.
 \texttt{-DNOPTYPE}: When this option is set, we disregard the type and do not differentiate between different particles, so that
 each particle type has the same weight when computing the merger trees.
 
+Once the adequate compile-time options are set, just type \texttt{make} in the root directory, and a binary executable named 
+\texttt{MetroCPP} will be placed in the \texttt{bin/} subfolder. 
 
-\subsection{Code operation modes}
 
-The code has two basic modes of operation: \emph{tree-building} (\texttt{runMode=0}) and \emph{post-processing}
-(\texttt{runMode=1}); \texttt{runMode=2} will execute the post-processing routine right after the tree-building is finished.
-\textbf{The post-processing mode is not yet fully implemented in the code at the moment so that run modes 1 and 2 are disabled 
-for the moment.}
-The number $N$ of cores on which the code should run on has to be chosen according to the number of \texttt{AHF} files each catalog
+
+\textbf{Execution:}
+To run the code, simply type:\\
+
+\texttt{mpiexec -n $N_{MPI}$ ./bin/MetroCPP config/your\_configuration\_file.cfg}\\
+
+\noindent
+from the terminal in the installation directory of the code, using a properly setup for the configuration file.
+The number $N_{MPI}$ of tasks on which the code should run on has to be chosen according to the number of \texttt{AHF} files each catalog
 is split into. If each $AHF_halos$ file is divided into \texttt{nChunks} parts, the number $N_{MPI}$ 
 of \texttt{MPI} tasks should be smaller than \texttt{nChunks} and allow for to be equally divided among the tasks.
 For instance, if \texttt{nChunks}$=100$ setting $N_{MPI} = 10$ each MPI task would read in 10 pieces of the 
 halo catalog at any given redshift.
 Due to the fact that different tasks need to exchange buffers, an increase in the number of task does not necessarily mean
 an increase in the speed of the code, as this will also increase the size of the buffer data that needs to be exchanged.
-Ideally the number of 
 
+
+
+\subsection{Code operation modes}
+
+The code has two basic modes of operation: \emph{tree-building} (\texttt{runMode=0}) and \emph{post-processing}
+(\texttt{runMode=1}); \texttt{runMode=2} will execute the post-processing routine right after the tree-building is finished.
+\textbf{The post-processing mode is not yet fully implemented in the code at the moment so that run modes 1 and 2 are disabled 
+for the moment.} The post-processing routines will be smoothing out the mass accretion histories of the halos properly taking into 
+account temporary fly-by of subhalos, bound satellites partially orbiting outside of the viral radius of their host (giving rise
+to large mass fluctuations) and reconstruction of the orbits of 
 
 
 \subsection{Configuration file}
@@ -94,25 +117,38 @@ The configuration file templates can be found in the subfolder \texttt{config/} 
 
 \subsection{Temporary files}
 
-The code produces a number of temporary files (\texttt{.tmp} format extension, located in the \texttt{tmp/} folder).
-These files are needed at runtime to 
+The code produces a number of temporary files (\texttt{.tmp} format extension, located in the \texttt{tmp/} folder), containing
+some information about the input files (such as their numbering and their redshift); these files are produced at each run but have
+to be manually removed after each run. Otherwise the code will not attempt to write new files but rather read those already existing
+inside the \texttt{tmp/} folder.
 They can be produced manually or using the scripts (\texttt{find\_z.sh}, \texttt{find\_n.sh} located in the \texttt{scripts/} folder)
 and contain the list of files on which the halo finder will run on.
 This can be the full list of snapshots in one simulation, or can be edited to be only a subset of it.
+
+\subsection{Code output}
+The code produces a series of \texttt{ASCII} files in the \texttt{.mtree} format 
+as well as a logfile with the \texttt{.txt} extension.
+The \texttt{.mtree} files contain basic information about the descendant-progenitor halos at each step,
+
+\begin{verbatim}
+stocazzo
+\end{verbatim}
+
 
 \section{Examples}
 
 \subsection{Full box simulation}
 To properly run the code for full box simulations, the \texttt{-DZOOM} flag needs to be commented in the \texttt{Makefile.config} file.
-\texttt{mpiexec -n N ./bin/metroCPP config/zoom\_test.cfg}
+
 
 
 \subsection{Zoom simulation}
 To properly run the code on zoom simulation, the \texttt{-DZOOM} flag needs to be switched on in the \texttt{Makefile.config} file.
 Zoom simulation can run on a single MPI task only, and the code needs to be executed as e.g.:\\
 
-\texttt{mpiexec -n 1 ./bin/metroCPP config/zoom\_test.cfg}
+\texttt{mpiexec -n 1 ./bin/metroCPP config/zoom\_test.cfg}\\
 
+This configuration of the code assumes that all the important halos are located in the same 
 
 \section{Advanced features}
 
