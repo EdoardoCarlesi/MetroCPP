@@ -128,11 +128,17 @@ This can be the full list of snapshots in one simulation, or can be edited to be
 \subsection{Code output}
 The code produces a series of \texttt{ASCII} files in the \texttt{.mtree} format 
 as well as a logfile with the \texttt{.txt} extension.
-The \texttt{.mtree} files contain basic information about the descendant-progenitor halos at each step,
+The \texttt{.mtree} files contain basic information about the descendant-progenitor halos at each step, specified by the
+header file printed by the master MPI task: \\
 
 \begin{verbatim}
-stocazzo
-\end{verbatim}
+# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)
+# Common DM particles (1)   ID progenitor(2)   Num. particles(3)
+\end{verbatim} 
+
+\noindent
+In the case of orphan halos, which are signaled by the 1 on the fourth column, the information about the
+dumped about the progenitor is a copy of the parent halo, keeping the same halo ID and number of particles.
 
 
 \section{Examples}
@@ -151,20 +157,19 @@ Zoom simulation can run on a single MPI task only, and the code needs to be exec
 This configuration of the code assumes that all the important halos are located in the same 
 
 \section{Advanced features}
-
-\subsection{Code performance}
-
 \label{sec:advanced}
 
-The 
+T
 
 
 \subsection{Code structure}
+The \texttt{src/} subfolder of the code contains the
 
 \begin{itemize}
 \item{\texttt{main.cpp}} A wrapper for the functions determined elsewhere
 \item{\texttt{utils.cpp}} General functions and utilities are implemented here
-\item{\texttt{spline.cpp}} The spline class is used for interpolation 
+\item{\texttt{spline.cpp}} The spline class is used for interpolation of e.g. $a(t)$ and $z(t)$, which are
+read from tabulated quantities.
 \item{\texttt{global\_vars.cpp}} A list of global variables accessible throughout the whole program
 \item{\texttt{MergerTree.cpp}} This file contains the merger tree class, that tracks the merging of the halos, 
 and series of functions (FindProgenitors) that compute the trees themselves.
