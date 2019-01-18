@@ -190,6 +190,12 @@ vector<string> SplitString (string strIn, string delim)
 
 void ShiftHalosPartsGrids()
 {
+	if (runMode == 1 || runMode == 2)
+	{
+		id2Index[0].clear();
+		id2Index[0].swap(id2Index[1]);
+	}
+
 	CleanMemory(0);
 	
 	if (locTask == 0)

@@ -60,8 +60,11 @@ public:
 
 	int nStep;
 	
-	vector<MergerTree> mTree; 
-	vector<Halo> mainHalo;				// This traces the main progenitor
+	/* main descendant halo at z=0 */
+	vector<Halo> mainHalo;				
+
+	/* Vector of n steps, each step containing all progenitor halos */
+	vector<vector<Halo>> progHalo;
 
 	void SmoothTree(void);				// Smooths over fly-bys 
 	void FixTree(void);				// Looks for missing subhalos and fixes with token halos at the missing positions
@@ -85,6 +88,9 @@ void DebugTrees(void);
 /* These functions are used in mode 1, when reading in a raw set of merger tree files */
 void AssignDescendant(void);
 void AssignProgenitor(void);
+void InitHaloTrees(void);
+void SyncIndex(void);
+void BuildTrees(void);
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);

@@ -26,7 +26,6 @@ public:
 	~Communication();	
 
 #ifndef ZOOM
-	void SyncIndex(void);
 	void BroadcastAndGatherGrid(void);
 	void SyncMergerTreeBuffer(void);
 #endif

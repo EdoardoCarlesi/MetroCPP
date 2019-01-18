@@ -48,8 +48,8 @@ extern MPI_Request request_recv, request_send;
 /* Halo & particle related variables for each task */
 extern vector<vector<Halo>> locHalos;
 
-/* Here we store all halo catalogs at all redshifts */
-extern vector<vector<Halo>> allHalos;
+/* HaloTree contains a mainHalo at z=0 and its full history */
+extern vector<HaloTree> locHaloTrees;
 
 /* Here we store the pairwise connections between halos in catalog 0 and 1, before being sorted */
 extern vector<vector<MergerTree>> locMTrees;
@@ -58,7 +58,7 @@ extern vector<vector<MergerTree>> locMTrees;
 extern vector<vector<MergerTree>> locCleanTrees;
 
 /* Helps connecting halos when rebuilidng the trees from input files */
-extern map <uint64_t, int> id2Index;
+extern vector<map<uint64_t, int>> id2Index;
 
 /* Particles on task, also allocated by particle type within each halo */
 extern vector<vector<vector<vector<uint64_t>>>> locParts;
