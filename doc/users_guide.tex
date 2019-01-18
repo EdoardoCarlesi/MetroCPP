@@ -6,7 +6,7 @@
 
 \pagenumbering{Roman}
 \pagenumbering{arabic}
-\title{\textbf{METROC++} \\
+\title{\textbf{METROC++ v0.1} \\
 \emph{A parallel code for the computation of merger trees in 
 cosmological simulations}}
 \author{Edoardo Carlesi\\ Leibniz Institut f\"ur Astrophysik\\ Potsdam, Germany\\ ecarlesi@aip.de}
@@ -46,7 +46,7 @@ halo mass. In the usual mode of operation, though, it does not attempt to recons
 velocity, a feature which is provided in the post processing mode of operation of the code.\\
 
 A basic description of the algorithm and design of the code is provided in section \ref{sec:advanced}.
-In this user's guide, we explain the basics for the setup and running of \texttt{METROC++}
+In this user's guide, we explain the basics for the setup and running of \texttt{METROC++}.
 
 
 \section{Compiling and running the code}
@@ -108,12 +108,20 @@ The code has two basic modes of operation: \emph{tree-building} (\texttt{runMode
 \textbf{The post-processing mode is not yet fully implemented in the code at the moment so that run modes 1 and 2 are disabled 
 for the moment.} The post-processing routines will be smoothing out the mass accretion histories of the halos properly taking into 
 account temporary fly-by of subhalos, bound satellites partially orbiting outside of the viral radius of their host (giving rise
-to large mass fluctuations) and reconstruction of the orbits of 
+to large mass fluctuations) and reconstruction of the orbits of the untracked halos.
 
 
 \subsection{Configuration file}
 
-The configuration file templates can be found in the subfolder \texttt{config/} where a few examples are provided. 
+The configuration file templates can be found in the subfolder \texttt{config/}. For the moment, these files are
+designed for the \texttt{AHF} format only, but can be easily extended to other halo finders as well.
+The expected structure of the input file is \texttt{prefix\_XXX.NNNN.zZ.ZZZ.suffix} (for those produced with the 
+MPI version of \texttt{AHF}) or \texttt{prefix\_XXX.zZ.ZZZ.suffix} (for the serial AHF); where the \texttt{prefix} and
+\texttt{suffix} are specified by the \texttt{haloPrefix}, \texttt{haloSuffix} for the halo catalogs and 
+\texttt{partPrefix} and \texttt{partSuffix} for the particle lists.
+Then we need to set the installation path of the program with the \texttt{pathMetroCpp} parameter, the path storing 
+the input files (\texttt{pathInput}) and the path where the output files will be printed to, \texttt{pathOutput}.
+
 
 \subsection{Temporary files}
 
@@ -156,14 +164,14 @@ Zoom simulation can run on a single MPI task only, and the code needs to be exec
 
 This configuration of the code assumes that all the important halos are located in the same 
 
-\section{Advanced features}
+\section{Code properties}
 \label{sec:advanced}
 
-T
 
+\subsection{Algorithms}
 
 \subsection{Code structure}
-The \texttt{src/} subfolder of the code contains the
+The \texttt{src/} subfolder of the code contains the main source files.
 
 \begin{itemize}
 \item{\texttt{main.cpp}} A wrapper for the functions determined elsewhere
@@ -171,14 +179,16 @@ The \texttt{src/} subfolder of the code contains the
 \item{\texttt{spline.cpp}} The spline class is used for interpolation of e.g. $a(t)$ and $z(t)$, which are
 read from tabulated quantities.
 \item{\texttt{global\_vars.cpp}} A list of global variables accessible throughout the whole program
-\item{\texttt{MergerTree.cpp}} This file contains the merger tree class, that tracks the merging of the halos, 
-and series of functions (FindProgenitors) that compute the trees themselves.
-\item{\texttt{IOSetting.cpp}} Input/Output settings
+\item{\texttt{MergerTree.cpp}} This file contains the merger tree class (tracking the pairwise connections of 
+halos in different catalogs) as well as functions (e.g. \texttt{FindProgenitors()}) 
+that compute the  themselves.
+\item{\texttt{IOSetting.cpp}} Input and output routines and settings.
 \item{\texttt{Cosmology.cpp}} Everything related to cosmological calculations, gravity solver to reconstruct the orphan halo 
 positions and velocities 
 \item{\texttt{Communication.cpp}} Handles most of the communication among tasks - sending / receiving buffers and so on
-\item{\texttt{Grid.cpp}} This handles the grid on which halos are placed and the buffers
-\item{\texttt{Halo.cpp}} The halo class contains the main halo properties
+\item{\texttt{Grid.cpp}} This class handles the grid on which halos are placed, and computes the buffer zones that need to 
+be communicated among tasks. 
+\item{\texttt{Halo.cpp}} The Halo class contains the basic halo properties and functions.
 \end{itemize}
 
 \subsection{Compatibility with other halo finders}
@@ -191,7 +201,6 @@ support other software as well, as long as:
 \item Particle catalogs contain the (unique) IDs for each halo particles' content
 \end{itemize}
 
-To add 
 
 \end{document}
 
