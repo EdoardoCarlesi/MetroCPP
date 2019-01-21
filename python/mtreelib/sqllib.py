@@ -35,7 +35,7 @@ class SQL_IO:
 		if strCheck != None:
 			print('ID: %s was already found in SQL database: %s' % (ID, self.dbName) )
 		else:
-			print('Inserting ID: %s in SQL database: %s' % (ID, self.dbName) )
+			#print('Inserting ID: %s in SQL database: %s' % (ID, self.dbName) )
 			cursor = self.mydb.cursor()
 			nPartStr = ''
 		
