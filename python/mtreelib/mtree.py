@@ -56,6 +56,9 @@ class MTree:
 		self.mainBranchNProg = np.full((n), 0)
 		self.isToken = np.full((n), False)
 
+	def get_mass_id(self):
+		return [self.mainBranchNPart, self.mainBranchID]
+
 	def print_mass_id(self):
 		for iM in range(0, self.nSteps):	
 			print("%s %d" % (self.mainBranchID[iM], self.mainBranchNPart[iM]))

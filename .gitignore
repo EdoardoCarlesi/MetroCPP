@@ -29,6 +29,7 @@ mpirun
 *.tmp
 *.swo
 *.out
+*.db
 job*.sh
 config/fullbox_laptop.cfg
 config/fullbox_leibniz.cfg

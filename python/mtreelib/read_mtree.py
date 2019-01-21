@@ -28,7 +28,8 @@ class ReadSettings:
 
 	def gen_file_list(self):		
 		for iStep in range(0, self.nSteps):			
-			strStep = "%03d." % (self.nSnaps - iStep)
+			#strStep = "%03d." % (self.nSnaps - iStep)
+			strStep = "%03d." % (iStep)
 			theseChunks = []
 
 			for iChunk in range(0, self.nChunk):

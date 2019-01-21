@@ -15,10 +15,11 @@ class SQL_IO:
 
 
 	def halo_table(self):
-		cursor = self.mydb.cursor()
 		'Create halo table for SQL database'
+
+		cursor = self.mydb.cursor()
 		createStr = """
-			CREATE TABLE halo (
+			CREATE TABLE IF NOT EXISTS halo (
 			haloID INT64,
 			allNumPart INT ARRAY[""" + str(self.nSnaps) + """], 
 			allHaloIds INT64 ARRAY[""" + str(self.nSnaps) + """] 
@@ -29,28 +30,34 @@ class SQL_IO:
 
 
 	def insert_tree(self, ID, nPart):
-		cursor = self.mydb.cursor()
-
-		nPartStr = ''
+		strCheck = self.select_tree(ID)
 		
-		for iPart in range (0, len(nPart)):
-			if iPart < len(nPart) - 1:
-				nPartStr += str(nPart[iPart]) + ', '
-			else:	
-				nPartStr += str(nPart[iPart])
+		if strCheck != None:
+			print('ID: %s was already found in SQL database: %s' % (ID, self.dbName) )
+		else:
+			print('Inserting ID: %s in SQL database: %s' % (ID, self.dbName) )
+			cursor = self.mydb.cursor()
+			nPartStr = ''
+		
+			for iPart in range (0, len(nPart)):
+				if iPart < len(nPart) - 1:
+					nPartStr += str(nPart[iPart]) + ', '
+				else:	
+					nPartStr += str(nPart[iPart])
 	
-		insertStr = """INSERT INTO halo (haloID, allNumPart) 
-		VALUES (' """ + str(ID) + """ ', ' """ + nPartStr + """ ' );"""
+			insertStr = """INSERT INTO halo (haloID, allNumPart) 
+				VALUES (' """ + str(ID) + """ ', ' """ + nPartStr + """ ' );"""
 
-		cursor.execute(insertStr)
-		self.mydb.commit()
+			cursor.execute(insertStr)
+			self.mydb.commit()
 
 	
 	def select_tree(self, ID):
 		cursor = self.mydb.cursor()
 		selectStr = "SELECT * FROM halo WHERE haloID = '%s' " % str(ID)
 		cursor.execute(selectStr)
-		print(cursor.fetchone())
+
+		return cursor.fetchone()
 
 
 	def close(self):
