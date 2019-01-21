@@ -6,15 +6,17 @@ from .mtree import *
 class ReadSettings:
 	baseFile = ''
 	suffFile = ''
-	nChunk = 0 
+	nChunk = 0
+	nSnaps = 0 
 	nSteps = 0
 	treeFiles = []
 	allTrees = []
 	treeIDz0 = []
 
-	def __init__(self, baseFile, suffFile, nChunk, nSteps):
+	def __init__(self, baseFile, suffFile, nChunk, nSnaps, nSteps):
 		print('ReadSettings, initialize with baseFile, suffFile, nChunk, nSteps')
 		self.nChunk = nChunk
+		self.nSnaps = nSnaps
 		self.nSteps = nSteps
 		self.baseFile = baseFile
 		self.suffFile = suffFile
@@ -26,7 +28,7 @@ class ReadSettings:
 
 	def gen_file_list(self):		
 		for iStep in range(0, self.nSteps):			
-			strStep = "%03d." % iStep
+			strStep = "%03d." % (self.nSnaps - iStep)
 			theseChunks = []
 
 			for iChunk in range(0, self.nChunk):
@@ -90,7 +92,8 @@ class ReadSettings:
 
 				# print("The new OldIndex has %d elements." % (len(allOldIndex)))
 
-		return [self. , self.allTrees]		
+		return self.allTrees		
+		#return [self. , self.allTrees]		
 			
 
 
