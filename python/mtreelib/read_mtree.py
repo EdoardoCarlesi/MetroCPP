@@ -28,8 +28,7 @@ class ReadSettings:
 
 	def gen_file_list(self):		
 		for iStep in range(0, self.nSteps):			
-			#strStep = "%03d." % (self.nSnaps - iStep)
-			strStep = "%03d." % (iStep)
+			strStep = "%03d." % (self.nSnaps - iStep)
 			theseChunks = []
 
 			for iChunk in range(0, self.nChunk):
@@ -91,10 +90,8 @@ class ReadSettings:
 
 				allTmpIndex.clear()
 
-				# print("The new OldIndex has %d elements." % (len(allOldIndex)))
 
 		return self.allTrees		
-		#return [self. , self.allTrees]		
 			
 
 

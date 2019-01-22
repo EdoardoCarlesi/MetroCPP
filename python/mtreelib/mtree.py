@@ -56,13 +56,36 @@ class MTree:
 		self.mainBranchNProg = np.full((n), 0)
 		self.isToken = np.full((n), False)
 
+	# 
+	def fill_mass_id(self, nps, ids):
+		for iM in range(0 , self.nSteps):
+			self.mainBranchNPart[iM] = nps[iM]
+			self.mainBranchID[iM] = ids[iM]
+
+	# 
 	def get_mass_id(self):
 		return [self.mainBranchNPart, self.mainBranchID]
 
+	# Print the number of particles and mass ID corresponding 
 	def print_mass_id(self):
 		for iM in range(0, self.nSteps):	
 			print("%s %d" % (self.mainBranchID[iM], self.mainBranchNPart[iM]))
 	
+	# Return the normalized (z=0) mass across all history
+	def norm_mass(self):
+		norm_mass = []
+		m_zero = self.mainBranchNPart[0]
+		
+		return self.mainBranchNPart[:]/m_zero
+	
+	# Smooth the mass accretion history of the object	TODO
+	def smooth_mass(self):
+
+		smooth = []
+
+		return smooth
+
+	# Add the descendant progenitor pairs to the next step
 	def update_desc_prog(self, iStep, dP):
 		self.mainBranchID[iStep] = dP.descID
 		self.mainBranchNPart[iStep] = dP.descNPart
