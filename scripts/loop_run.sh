@@ -12,6 +12,8 @@ RunNum[1]="45_17"
 RunNum[2]="55_02"
 RunNum[3]="34_13"
 
+resolution='2048'
+
 ncpu=1
 
 iniRun=0
@@ -33,7 +35,7 @@ do
 		echo rm $MetroTmp'/'*'.tmp'
 		rm $MetroTmp'/'*'.tmp'
 		SubRun=`printf "%02d" ${iSub}`
-		sed 's/RUNNUM/'${Run}'/g' < $TemplCfg | sed 's/SUBRUN/'${SubRun}'/g' &> $CfgTmp
+		sed 's/RUNNUM/'${Run}'/g' < $TemplCfg | sed 's/RESOLUTION/'$resolution'/g' | sed 's/SUBRUN/'${SubRun}'/g' &> $CfgTmp
 
 		mkdir $MetroOut'/'$Run'/'$SubRun
 		echo 'Sub-simulation number:' $CfgTmp
