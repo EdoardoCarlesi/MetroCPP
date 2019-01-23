@@ -2,22 +2,28 @@ import sqlite3
 import sys
 from .mtree import *
 
+'''
+	SQL_IO works as an interface between a SQL database containing tables of halos and a python program
+'''
 
 class SQL_IO:
 	dbName = ''
-	nSnaps = 0	
-
+	nSnaps = 0
+	
+	# Initialize as dummy objects, just to have the right type
+	mydb = sqlite3.connect('')
+	cursor = sqlite3.connect('').cursor()
 
 	def __init__(self, dbName, nSnaps):	
 		self.dbName = dbName	
 		self.nSnaps = nSnaps
 		self.mydb = sqlite3.connect(self.dbName)
-
-
+		self.cursor = self.mydb.cursor()
+	
+	# Create a halo table into the database
 	def halo_table(self):
 		'Create halo table for SQL database'
 
-		cursor = self.mydb.cursor()
 		createStr = """CREATE TABLE IF NOT EXISTS halo (
 				haloID INT64,
 				simuCode VARCHAR(10), 
@@ -31,45 +37,50 @@ class SQL_IO:
 				VZ FLOAT ARRAY[""" + str(self.nSnaps) + """]
 			)"""
 
-		cursor.execute(createStr)
-		self.mydb.commit()
-
-
-	def insert_tree(self, ID, simuCode, haloParts, haloIDs):
+		self.cursor.execute(createStr)
+	
+	# Update the properties of a given halo inside a database
+	def update_tree(self, ID):
 		strCheck = self.select_tree(ID)
 		
 		if strCheck != None:
-			print('ID: %s was already found in SQL database: %s' % (ID, self.dbName) )
-		else:
-			cursor = self.mydb.cursor()
-			haloPartsStr = ''
-			haloIDsStr = ''
+			print('Updating the database %s for HaloID %s.' % (self.dbName, ID) )
 		
-			for iPart in range (0, len(haloParts)):
-				if iPart < len(haloParts) - 1:
-					haloPartsStr += str(haloParts[iPart]) + ', '
-					haloIDsStr += str(haloIDs[iPart]) + ', '
-				else:	
-					haloPartsStr += str(haloParts[iPart])
-					haloIDsStr += str(haloIDs[iPart])
-
-			insertStr = """INSERT INTO halo (haloID, allNumPart, allHaloIDs, simuCode) 
-					VALUES ('"""+ ID +"""', '""" + simuCode + """',  
-					'""" + haloPartsStr + """', '""" + haloIDsStr + """' );"""
-
-			#print(insertStr)
-			cursor.execute(insertStr)
-			self.mydb.commit()
-
+		'TODO: add some halo (or progenitor) properties: positions, velocties, etc.'
 	
+	# Remove an halo from the database
+	def delete_tree(self, ID):
+		deleteStr = """DELETE FROM halo WHERE haloID=""" + str(ID)
+		self.cursor.execute(deleteStr)
+
+	# Add a new tree to the database
+	def insert_tree(self, ID, simuCode, haloParts, haloIDs):
+		checkStr = None
+
+		haloPartsStr = ''
+		haloIDsStr = ''
+	
+		for iPart in range (0, len(haloParts)):
+			if iPart < len(haloParts) - 1:
+				haloPartsStr += str(haloParts[iPart]) + ', '
+				haloIDsStr += str(haloIDs[iPart]) + ', '
+			else:	
+				haloPartsStr += str(haloParts[iPart])
+				haloIDsStr += str(haloIDs[iPart])
+
+		insertStr = """INSERT INTO halo (haloID, allNumPart, allHaloIDs, simuCode) 
+				VALUES ('"""+ ID +"""', '""" + simuCode + """',  
+				'""" + haloPartsStr + """', '""" + haloIDsStr + """' );"""
+		self.cursor.execute(insertStr)
+
+	# Simple database query
 	def select_tree(self, ID):
-		cursor = self.mydb.cursor()
 		selectStr = "SELECT * FROM halo WHERE haloID = %s " % str(ID)
-		cursor.execute(selectStr)
+		self.cursor.execute(selectStr)
 
-		return cursor.fetchone()
+		return self.cursor.fetchone()
 
-
+	# Given a halo ID, retrieve the full halo merger history from the database
 	def get_full_mtree(self, ID):
 		mergerTree = MTree(self.nSnaps, ID)
 		
@@ -78,14 +89,14 @@ class SQL_IO:
 		these_nps = tree_line[3].split()		
 		ids = []; nps = []; nPt = 0
 
+		# We loop on 54 values (which is what we expect) though for smaller haloes the tree might be shorter
 		for nPt in range(0, self.nSnaps):
 			
 			try:
 				this_id = these_ids[nPt].replace(",", "")
 				this_np = these_nps[nPt].replace(",", "")
 			except:
-				#break
-				'This is too short'
+				'This tree breaks up before expected. Maybe it is a small halo, so lets just add token values to it.'
 	
 			if this_np == '' or this_np == ' ':
 				this_np = 0	
@@ -100,6 +111,7 @@ class SQL_IO:
 
 		return mergerTree
 
+	# Close the database
 	def close(self):
 		self.mydb.close()
 

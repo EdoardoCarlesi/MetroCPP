@@ -21,10 +21,9 @@ done
 echo 'Total number of subfolders: ' $iRun
 
 ncpu=1
-do_tree='true'
+do_tree="true"
 iniRun=0
-totRun=1
-#totRun=$iRun
+totRun=$iRun
 
 for (( iRun=$iniRun; iRun<$totRun; iRun++ ))
 do
@@ -40,9 +39,12 @@ do
 			if [ $thisSize -gt "$MinSize" ]; then
 				do_tree='false'
 				echo 'Skipping' $ThisOutDir ' of size: ' $thisSize ', do_tree: ' $do_tree
+			else
+				do_tree='true'
 			fi			
 		
 		else			
+			do_tree='true'
 			mkdir $ThisOutDir
 		fi
 
@@ -61,7 +63,7 @@ do
 		rm $MetroTmp'/'*'.tmp'
 	fi
 
-	if [ "$do_tree" -eq "true" ]; then
+	if [ "$do_tree" == "true" ]; then
 
 		sed 's/HESTIARUN/'${Run}'/g' < $TemplCfg &> $CfgTmp
 		echo 'Sub-simulation number:' $CfgTmp
