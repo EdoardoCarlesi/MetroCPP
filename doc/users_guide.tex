@@ -27,7 +27,9 @@ transportation system, which connects through space different points of the city
 through different points in time.\\
 
 The code is distributed under the terms of the GNU Public License, and can be freely downloaded from 
-this \texttt{GitHub} repository: 
+this \texttt{GitHub} repository: \\
+
+\noindent
 \href{https://github.com/EdoardoCarlesi/MetroCPP}{https://github.com/EdoardoCarlesi/MetroCPP}.
 
 \texttt{METROC++} has been written in \texttt{C++} and relies on \texttt{MPI2.0 C-}bindings for the parallelization; there are
@@ -132,16 +134,51 @@ inside the \texttt{tmp/} folder.
 They can be produced manually or using the scripts (\texttt{find\_z.sh}, \texttt{find\_n.sh} located in the \texttt{scripts/} folder)
 and contain the list of files on which the halo finder will run on.
 This can be the full list of snapshots in one simulation, or can be edited to be only a subset of it.
+These scripts produce three \texttt{.tmp} files in the \texttt{tmp/} subfolder called:
+\texttt{output\_id.tmp} (which contains the snapshot unique number, usually in the form of \texttt{XXX} e.g. \texttt{001}, \texttt{023} 
+\texttt{256} etc.); \texttt{output\_n.tmp} (that simply contains the total number of snapshots found, for consistency check)
+\texttt{output\_z.tmp} (which stores the redshift corresponding to each snapshot).
+These files can be also produced manually e.g. if the user wants to select a subset of snapshots for the comparison 
+without using them at all the timesteps.
 
-\subsection{Code output}
+
+\subsection{Input format}
+
+\textbf{Halo catalogs}:
+At the time being, \texttt{METROC++} supports \texttt{AHF} ASCII halo catalogs, of the form:
+\begin{verbatim}
+#ID(1)  hostHalo(2)     numSubStruct(3) Mvir(4) npart(5)        
+Xc(6)   Yc(7)   Zc(8)   VXc(9)  VYc(10) VZc(11) Rvir(12) [...]
+\end{verbatim} 
+The reader can be easily modified for alternative halo catalog formats.
+
+
+\textbf{Particle lists:}
+Particle files must contain a list of the unique particle IDs that belong to each halo, and possibly their type 
+(gas, dark matter, stars...). The first row of the file should contain the total number of halos stored in the
+file; while the following lines should be structured as follows:
+
+\begin{verbatim}
+HaloID (1)  Particle Number (2)   
+Particle ID (1) Particle Type (2)
+\end{verbatim} 
+
+\noindent
+i.e. after specifying the halo ID and the number of particles it contains an actual list of particle IDs and types should follow.
+When switching on the \texttt{-DNOPTYPE} option, only the particle ID will be read and the rest of the line will be ignored.
+
+
+
+\subsection{Output format}
 The code produces a series of \texttt{ASCII} files in the \texttt{.mtree} format 
 as well as a logfile with the \texttt{.txt} extension.
 The \texttt{.mtree} files contain basic information about the descendant-progenitor halos at each step, specified by the
 header file printed by the master MPI task: \\
 
 \begin{verbatim}
-# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)
-# Common DM particles (1)   ID progenitor(2)   Num. particles(3)
+# ID host(1) N particles host(2) Num. progenitors(3)  
+Orphan[0=no, 1=yes](4)
+# Common DM particles (1) ID progenitor(2) Num. particles(3)
 \end{verbatim} 
 
 \noindent
@@ -169,9 +206,17 @@ This configuration of the code assumes that all the important halos are located 
 
 
 \subsection{Algorithms}
+When dealing with cosmological full box simulations, the code reads in the halo catalogs among different tasks, so that
+each task will only hold a fraction of the total halo and particle content of the simulation.
+To ease the access and communication of data, a grid is placed on the simulation box on which each halo is assigned to its
+nearest grid point (NGP). A node can be shared among different tasks.
+Then, each task sends and receives the information for halos and particles at the edge of the subvolume of the box it contains. 
+This buffer is needed to consistently compare the particle content of objects which may be close but located on different 
+tasks at different steps. 
+
 
 \subsection{Code structure}
-The \texttt{src/} subfolder of the code contains the main source files.
+The \texttt{src/} subfolder of the code contains the main source files:
 
 \begin{itemize}
 \item{\texttt{main.cpp}} A wrapper for the functions determined elsewhere
@@ -191,8 +236,12 @@ be communicated among tasks.
 \item{\texttt{Halo.cpp}} The Halo class contains the basic halo properties and functions.
 \end{itemize}
 
-\subsection{Compatibility with other halo finders}
+The \texttt{python/} subfolder contains some useful phyton libraries used to post process and store the data in 
+a standard \texttt{SQL} database, to ease the access to the fully reconstructed merging histories querying the 
+halo ID value of $z=0$ objects.
 
+
+\subsection{Compatibility with other halo finders}
 Although \texttt{METROC++} was conceived and mainly tested using the \texttt{AHF} halo finder, it can be easily extended to 
 support other software as well, as long as:
 
