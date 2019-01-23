@@ -47,9 +47,10 @@ for iSeed in range(iSeedIni, iSeedEnd):
 		thisSubDir = iSeedStr + '_' + gSeedStr
 		thisTreePath = baseTreeMCPP + thisSubDir
 		rootFile = thisSubDir + '/lgf_' + thisSubDir + '_'	
+		testFile = thisSubDir + '/lgf_' + thisSubDir + '_' + '%03d' % nSteps + suffTreeMCPP
 	
 		# If this path exists then extract the merger tree therein
-		if os.path.isdir(thisTreePath):
+		if os.path.isdir(thisTreePath) and os.path.isfile(thisTreePath+testFile):
 			readFiles = ReadSettings(baseTreeMCPP+rootFile, suffTreeMCPP, nChunk, nSnaps, nSteps)
 			allTrees = readFiles.read_trees()
 		
