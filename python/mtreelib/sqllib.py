@@ -68,7 +68,7 @@ class SQL_IO:
 				haloPartsStr += str(haloParts[iPart])
 				haloIDsStr += str(haloIDs[iPart])
 
-		insertStr = """INSERT INTO halo (haloID, allNumPart, allHaloIDs, simuCode) 
+		insertStr = """INSERT INTO halo (haloID, simuCode, allNumPart, allHaloIDs) 
 				VALUES ('"""+ ID +"""', '""" + simuCode + """',  
 				'""" + haloPartsStr + """', '""" + haloIDsStr + """' );"""
 		self.cursor.execute(insertStr)
