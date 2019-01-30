@@ -22,8 +22,8 @@ baseTreeMCPP = '/home/eduardo/CLUES/DATA/LGF/'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
-nSteps = 54
-nChunk = 1
+nSteps = 10
+nChunk = 4
 
 iSeedIni = 0
 iSeedEnd = 1
@@ -31,7 +31,8 @@ gSeedIni = 10
 gSeedEnd = 11
 
 # Save all the extracted trees into a database
-thisDb = baseTreeMCPP + 'lgf_all_trees.db'
+#thisDb = baseTreeMCPP + 'lgf_all_trees.db'
+thisDb = baseTreeMCPP + 'lgf_fb_trees.db'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)
@@ -51,13 +52,13 @@ for iSeed in range(iSeedIni, iSeedEnd):
 		#rootFile = thisTreePath + '/lgf_' + thisSubDir + '_'	
 		#testFile = thisTreePath + '/lgf_' + thisSubDir + '_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 
-		#thisTreePath = baseTreeMCPP + 'trees/00_10mpi'
-		#rootFile = thisTreePath + '/lgf_00_10_'	
-		#testFile = thisTreePath + '/lgf_00_10_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+		thisTreePath = baseTreeMCPP + 'trees/00_10mpi'
+		rootFile = thisTreePath + '/lgf_00_10_'	
+		testFile = thisTreePath + '/lgf_00_10_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 
-		thisTreePath = baseTreeMCPP + 'trees/00_06_00/'
-		rootFile = thisTreePath + '/lgf_00_06_00'	
-		testFile = thisTreePath + '/lgf_00_06_00' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+		#thisTreePath = baseTreeMCPP + 'trees/00_06_00/'
+		#rootFile = thisTreePath + '/lgf_00_06_00'	
+		#testFile = thisTreePath + '/lgf_00_06_00' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 	
 		print(rootFile, testFile)
 

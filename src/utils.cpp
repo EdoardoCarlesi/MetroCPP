@@ -209,9 +209,6 @@ void ShiftHalosPartsGrids()
 	for (auto thisOrphHalo : locOrphHalos) 
 		locHalos[0].push_back(thisOrphHalo);
 
-	if (locTask == 0)
-		cout << " LOC ORPH HALO AUTO " << endl;
-
 	if (runMode == 0 || runMode == 2)
 	{ 
 		locParts[0].resize(nLocHalos[0]);

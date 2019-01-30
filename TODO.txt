@@ -2,7 +2,7 @@ TO DO NEXT:
 
 - Make the output .tmp files with all the halo lists selectable from the .cfg file
 
-- Change the output filename numbering format (from last snapshot to first one)
+- In some cases if the descendant is on one task and the progenitor is on another task the match is not done properly
 
 - If non zoom mode is on allow for one single non mpi file to be read (.0000. string)
 
