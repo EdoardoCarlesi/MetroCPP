@@ -970,6 +970,8 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
+
+	// TODO: Particle numbering here is incoherent, should be fixed!!!!!!
 	halo->nPart[nPTypes] = tmpNpart;
 
 	if (nPTypes > 2)
@@ -1005,7 +1007,7 @@ void IOSettings::WriteTree(int iThisCat)
 {
 	string outName;
         string strCpu = to_string(locTask);
-	int totTrees = locCleanTrees.size(), orphan, iType = 0;
+	int orphan, iType = 0;
 
 	iType = 1;
 
@@ -1027,40 +1029,53 @@ void IOSettings::WriteTree(int iThisCat)
                 if (locTask == 0)
                         cout << "Printing trees to file " << outName << endl;
 
+                //if (locTask == 0)
+		//	cout << "nHalos = " << nLocHalos[0] << " trees: " << locCleanTrees[iC].size() << endl;
+
 		if (locTask == 0)
 		{
 			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)" << endl;
 			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)" << endl;
 		} 
 
-                for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
+                for (int iM = 0; iM < locCleanTrees[iC].size(); iM++)
                 {
-			MergerTree thisTree = locCleanTrees[iC][iT];
+			MergerTree thisTree = locCleanTrees[iC][iM];
 
 			if (thisTree.isOrphan)
 				orphan = 1;	
 			else
 				orphan = 0;
 
-			fileOut << thisTree.mainHalo.ID << " " 
-				<< thisTree.mainHalo.nPart[iType] << " " 
+			int nTotPt = 0;
+			for (int iA = 0; iA < nPTypes; iA++)
+				nTotPt += thisTree.mainHalo.nPart[iA];
+
+			fileOut << thisTree.mainHalo.ID 	<< " " 
+				<< nTotPt 			<< " " 
+				<< thisTree.idProgenitor.size() << " "
+				<< orphan << endl;
+				//<< thisTree.mainHalo.nPart[iType] << " " 
 				//<< thisTree.mainHalo.X[0] << " " 
 				//<< thisTree.mainHalo.X[1] << " " 
 				//<< thisTree.mainHalo.X[2] << " " 
-				<< thisTree.idProgenitor.size() << " "
-				<< orphan << endl;
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
 				Halo progHalo = thisTree.progHalos[iP];
 
-				fileOut	<< thisTree.nCommon[iType][iP]	<< " " 
+				int nTotPt = 0;
+				for (int iA = 0; iA < nPTypes; iA++)
+					nTotPt += progHalo.nPart[iA];
+
+				fileOut	<< nTotPt 			<< " " 
+                                	<< progHalo.ID			<< " "
+					<< progHalo.nPart[iType] 	<< endl;
+					//fileOut	<< thisTree.nCommon[iType][iP]	<< " " 
                                 	//<< thisTree.idProgenitor[iP] 	<< " "
-                                	<< progHalo.ID		 	<< " "
                                 	//<< progHalo.X[0]		 	<< " "
                                 	//<< progHalo.X[1]		 	<< " "
                                 	//<< progHalo.X[2]		 	<< " "
-					<< progHalo.nPart[iType] << endl;
 			}
                 }
 		
@@ -1102,72 +1117,6 @@ void IOSettings::WriteLog(int iNum, float time)
 	} else if (iNum == -1) {
 		fileLogOut.close();
 	}
-};
-
-
-
-void IOSettings::WriteTrees()
-{
-	string outName;
-        string strCpu = to_string(locTask);
-	int totTrees = locCleanTrees.size(), orphan;
-
-        for (int iC = 0; iC < totTrees; iC++)
-        {
-		char *strFnm;	strFnm = (char *) calloc(4, sizeof(char));
-		sprintf(strFnm, "%03d", iC);
-
-		if (runMode == 1)
-			outName = pathOutput + outPrefix + strFnm + "." + strCpu + ".restore." + outSuffix;
-		else
-			outName = pathOutput + outPrefix + strFnm + "." + strCpu + "." + outSuffix;
-
-		ofstream fileOut;
-		fileOut.open(outName);
-
-                if (locTask == 0)
-                        cout << "Printing trees to file " << outName << endl;
-
-		if (locTask == 0)
-		{
-			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)" << endl;
-			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)" << endl;
-		} 
-
-                for (int iT = 0; iT < locCleanTrees[iC].size(); iT++)
-                {
-			MergerTree thisTree = locCleanTrees[iC][iT];
-
-			if (thisTree.isOrphan)
-				orphan = 1;	
-			else
-				orphan = 0;
-
-			fileOut << thisTree.mainHalo.ID << " " 
-				<< thisTree.mainHalo.nPart[1] << " " 
-				//<< thisTree.mainHalo.X[0] << " " 
-				//<< thisTree.mainHalo.X[1] << " " 
-				//<< thisTree.mainHalo.X[2] << " " 
-				<< thisTree.idProgenitor.size() << " "
-				<< orphan << endl;
-
-                        for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
-			{
-				Halo progHalo = thisTree.progHalos[iP];
-
-				fileOut	<< thisTree.nCommon[1][iP]	<< " " 
-                                	//<< thisTree.idProgenitor[iP] 	<< " "
-                                	<< progHalo.ID		 	<< " "
-                                	//<< progHalo.X[0]		 	<< " "
-                                	//<< progHalo.X[1]		 	<< " "
-                                	//<< progHalo.X[2]		 	<< " "
-					<< progHalo.nPart[1] << endl;
-			}
-                }
-		
-                //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
-		fileOut.close();
-        }
 };
 
 

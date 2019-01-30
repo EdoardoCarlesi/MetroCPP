@@ -187,7 +187,8 @@ vector<string> SplitString (string strIn, string delim)
 }
 
 
-
+/* At each step, the old snapshot [1] is copied to the new [0] to avoid re-reading the 
+ * input halo & particle files. */
 void ShiftHalosPartsGrids()
 {
 	if (runMode == 1 || runMode == 2)
@@ -198,28 +199,18 @@ void ShiftHalosPartsGrids()
 
 	CleanMemory(0);
 	
-	if (locTask == 0)
-		cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
+	//if (locTask == 0)
+	//	cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
 
 	nLocHalos[0] = nLocHalos[1];
 	locHalos[0] = locHalos[1];
 
-	//cout << locTask << " Orphan: " << locOrphHalos.size() << endl;
-
 	/* Keep track of the orphan halos at the next step */
-	for (int iO = 0; iO < locOrphHalos.size(); iO++)
-	{
-		//if (!locOrphHalos[iO].isToken || locOrphHalos[iO].nOrphanSteps == 0)	// FIXME nOrphanSteps == 0 first, why?
-		//	cout << "Bad assignment of token status to halo " << iO << " on task " << locTask << endl;
+	for (auto thisOrphHalo : locOrphHalos) 
+		locHalos[0].push_back(thisOrphHalo);
 
-		if (!locOrphHalos[iO].isToken) 
-			locOrphHalos[iO].isToken = true;
-
-		if (locOrphHalos[iO].nOrphanSteps == 0)	
-			locOrphHalos[iO].isToken += 1;
-
-		locHalos[0].push_back(locOrphHalos[iO]);
-	}
+	if (locTask == 0)
+		cout << " LOC ORPH HALO AUTO " << endl;
 
 	if (runMode == 0 || runMode == 2)
 	{ 
@@ -234,7 +225,7 @@ void ShiftHalosPartsGrids()
 			{
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
 
-				for (auto const partID : locParts[0][iH][iT])
+				for (auto const& partID : locParts[0][iH][iT])
 				{
 					Particle thisParticle;
  	                	        thisParticle.haloID = locHalos[0][iH].ID;
@@ -245,26 +236,62 @@ void ShiftHalosPartsGrids()
 			}
 		}
 
+		int iCountPart = 0, iCount;
+	
+		//if (locTask == 0)
+		//	cout << " LOC ORPH PART AUTO " << locOrphHalos.size() << " PART MAP " << locMapParts[0].size() 
+		//		<< " countPt: " << iCountPart << " " << endl;
+
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
-			locParts[0].push_back(locOrphParts[iO]);
-			locParts[0][nLocHalos[0]+iO].resize(nPTypes);
+			int locPartIndex = iO + nLocHalos[0];
+			locParts[0].resize(locPartIndex+1); 
+			locParts[0][locPartIndex].resize(nPTypes);
 
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
-				locParts[0][nLocHalos[0]+iO][iT].swap(locOrphParts[iO][iT]);
-				for (auto const & partID : locParts[0][nLocHalos[0]+iO][iT])
+				for (auto partID : locOrphParts[iO][iT])
 				{
 					Particle thisParticle;
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
 
                                 	thisParticle.type   = iT;
                                 	locMapParts[0][partID].push_back(thisParticle);
+					locParts[0][locPartIndex][iT].push_back(partID);
+					iCountPart++;
 				}
 			}
-		}	
+		}
+
+		//cout << "Counted: " << float(iCountPart) / 1.e+6 << " Mparticles. " << endl;
+
+		for (int iO = 0; iO < locOrphHalos.size(); iO++)
+		{
+			for (int iT = 0; iT < nPTypes; iT++)
+			{
+				locOrphParts[iO][iT].clear();
+				locOrphParts[iO][iT].shrink_to_fit();
+			}
+
+			locOrphParts[iO].clear();
+			locOrphParts[iO].shrink_to_fit();
+		}
+
+		locOrphParts.clear();
+		locOrphParts.shrink_to_fit();
 	}	// runMode 0 or 2
-		
+	
+	/*
+	if (locTask == 0)
+		cout << " LOC ORPH PART SIZE " << endl;
+
+	
+		if (locTask == 0)	
+	{
+		cout << "Local number of particles: " << locMapParts[0].size() << endl;
+		cout << "Local number of orphans  : " << locOrphHalos.size() << endl;
+	}*/
+
 	/* Now free and reset the orphan halo trackers */
 	nLocHalos[0] += locOrphHalos.size();
 	locOrphHalos.clear();
@@ -303,10 +330,10 @@ void ShiftHalosPartsGrids()
 		locBuffParts.clear();
 		locBuffParts.shrink_to_fit();
 	}
+#endif
 	
 	if (locTask == 0)
 		cout << "Grid, halo and particle data has been cleaned and copied 1 ---> 0." << endl;
-#endif
 
 	CleanMemory(1);
 

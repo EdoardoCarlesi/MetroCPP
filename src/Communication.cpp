@@ -254,11 +254,9 @@ void Communication::BufferSendRecv()
 					MPI_Unpack(buffRecvParts, buffRecvSizeParts, &posRecvPart, &locBuffParts[iBuffTotHalo][iT][0], 
 							nTmpPart * sizePart, MPI_BYTE, MPI_COMM_WORLD);
 
-					for (int iP = 0; iP < nTmpPart; iP++)
+					for (auto const& partID : locBuffParts[iBuffTotHalo][iT])
 					{
 				       		Particle thisParticle;
-						uint64_t partID;
- 						partID = locBuffParts[iBuffTotHalo][iT][iP];
    	                      	        	thisParticle.haloID = locBuffHalos[iBuffTotHalo].ID;
         	                        	thisParticle.type   = iT;
                 	                	locMapParts[iUseCat][partID].push_back(thisParticle);

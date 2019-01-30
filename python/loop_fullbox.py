@@ -16,18 +16,19 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 print('Testing Merger Tree python post-processing scripts')
 
-filePrefix='/fullbox_'
-#filePrefix='/fb_'
+#filePrefix='/fullbox_'
+filePrefix='/fb_'
 
-baseTreeMCPP = '/z/carlesi/CLUES/DATA/trees/FullBox/'
+baseTreeMCPP = '/home/eduardo/CLUES/DATA/FullBox/trees/'
+#baseTreeMCPP = '/z/carlesi/CLUES/DATA/trees/FullBox/'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
-nSteps = 54
+nSteps = 5
 nChunk = 40
 
-iSeedIni = 0
-iSeedEnd = 1
+iSeedIni = 1
+iSeedEnd = 2
 
 # Loop on the large scale seed codes
 for iSeed in range(iSeedIni, iSeedEnd):

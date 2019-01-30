@@ -71,7 +71,6 @@ extern vector<vector<vector<uint64_t>>> locBuffParts;
 
 /* These vectors keep track of orphan halos for which no progenitor could be found (so far) */
 extern vector<Halo> locOrphHalos;
-extern vector<int> locOrphIndex;
 extern vector<vector<vector<uint64_t>>> locOrphParts;
 
 struct Particle {

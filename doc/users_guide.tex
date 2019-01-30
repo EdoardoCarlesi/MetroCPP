@@ -140,6 +140,9 @@ These scripts produce three \texttt{.tmp} files in the \texttt{tmp/} subfolder c
 \texttt{output\_z.tmp} (which stores the redshift corresponding to each snapshot).
 These files can be also produced manually e.g. if the user wants to select a subset of snapshots for the comparison 
 without using them at all the timesteps.
+These files are read in at the beginning of each execution of the code; they are not needed for the subsequent run and 
+should be deleted. They are not automatically erased each time in order to give to the users the opportunity to
+edit or write their own list of catalogues to be compared.
 
 
 \subsection{Input format}

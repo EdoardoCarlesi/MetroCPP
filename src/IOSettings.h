@@ -84,7 +84,7 @@ public:
 	/* Write output */
 	void WriteLog(int, float);
 	void WriteTree(int);
-	void WriteTrees();
+	//void WriteTrees();
 	void WriteSmoothTrees();
 
 private:

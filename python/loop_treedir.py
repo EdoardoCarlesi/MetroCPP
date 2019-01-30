@@ -16,7 +16,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 print('Testing Merger Tree python post-processing scripts')
 
-baseTreeMCPP = '/z/carlesi/STORE/LGF/trees/metrocpp/'
+#baseTreeMCPP = '/z/carlesi/STORE/LGF/trees/metrocpp/'
+baseTreeMCPP = '/home/eduardo/CLUES/DATA/LGF/'
+#suffTreeMCPP = 'mtree'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
@@ -26,10 +28,10 @@ nChunk = 1
 iSeedIni = 0
 iSeedEnd = 1
 gSeedIni = 10
-gSeedEnd = 20
+gSeedEnd = 11
 
 # Save all the extracted trees into a database
-thisDb = baseTreeMCPP + 'LGF_all_trees.db'
+thisDb = baseTreeMCPP + 'lgf_all_trees.db'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)
@@ -45,13 +47,23 @@ for iSeed in range(iSeedIni, iSeedEnd):
 		gSeedStr = '%02d' % gSeed
 		
 		thisSubDir = iSeedStr + '_' + gSeedStr
-		thisTreePath = baseTreeMCPP + thisSubDir
-		rootFile = thisSubDir + '/lgf_' + thisSubDir + '_'	
-		testFile = thisSubDir + '/lgf_' + thisSubDir + '_' + '%03d' % nSteps + '.' + suffTreeMCPP
+		#thisTreePath = baseTreeMCPP + thisSubDir
+		#rootFile = thisTreePath + '/lgf_' + thisSubDir + '_'	
+		#testFile = thisTreePath + '/lgf_' + thisSubDir + '_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+
+		#thisTreePath = baseTreeMCPP + 'trees/00_10mpi'
+		#rootFile = thisTreePath + '/lgf_00_10_'	
+		#testFile = thisTreePath + '/lgf_00_10_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+
+		thisTreePath = baseTreeMCPP + 'trees/00_06_00/'
+		rootFile = thisTreePath + '/lgf_00_06_00'	
+		testFile = thisTreePath + '/lgf_00_06_00' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 	
+		print(rootFile, testFile)
+
 		# If this path exists then extract the merger tree therein
-		if os.path.isdir(thisTreePath) and os.path.isfile(thisTreePath+testFile):
-			readFiles = ReadSettings(baseTreeMCPP+rootFile, suffTreeMCPP, nChunk, nSnaps, nSteps)
+		if os.path.isdir(thisTreePath) and os.path.isfile(testFile):
+			readFiles = ReadSettings(rootFile, suffTreeMCPP, nChunk, nSnaps, nSteps)
 			allTrees = readFiles.read_trees()
 		
 			start = timeit.default_timer()

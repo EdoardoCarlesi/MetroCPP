@@ -91,6 +91,7 @@ void MergerTree::Clean()
 
 MergerTree::MergerTree()
 {
+	nCommon.resize(nPTypes);
 };
 
 MergerTree::~MergerTree()
@@ -101,15 +102,13 @@ MergerTree::~MergerTree()
 void MergerTree::AssignMap()
 {
 	int nProgs = 0, nCommTot = 0, iP = 0;
-	map<uint64_t, vector<int>>::iterator thisMap;
-	
-	nCommon.resize(nPTypes);
+	//map<uint64_t, vector<int>>::iterator thisMap;
 	
 	/* Each merger tree stores the halo ids in a map that stores the number of particles shared with each progenitor */
-	for (thisMap = indexCommon.begin(); thisMap != indexCommon.end(); thisMap++)
+	for (auto const& thisMap : indexCommon) 
 	{
-		uint64_t thisHaloID = thisMap->first;
-		vector<int> thisCommon = thisMap->second;
+		uint64_t thisHaloID = thisMap.first;
+		vector<int> thisCommon = thisMap.second;
 
 		nCommTot = 0;
 
@@ -131,8 +130,8 @@ void MergerTree::AssignMap()
 	if (nProgs == 0)
 	{
 		isOrphan = true;
-
-	} else {
+		//cout << "Halo " << mainHalo.ID << " has no progenitors. " << endl;
+	} else { 
 		/* We allocate these vectors here, the indexes and the halos will be copied inside later on */
 		isOrphan = false;
 		indexProgenitor.resize(nProgs);
@@ -173,7 +172,7 @@ void MergerTree::SortByMerit()
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
 
-		merit = nComm  / (ratioM*1.0001 - 1.0);
+		merit = nComm  / (ratioM*1.01 - 1.0);
 		merit *= (1.0 + 0.00001 * iM);	// We change the merit slightly, 
 						// to avoid confusion when two halos have the same number of particles 
 						// and the same number of particles shared with the host halo
@@ -286,7 +285,6 @@ void FindProgenitors(int iOne, int iTwo)
 		thisMapTrees[thisHalo.ID] = iL;
 
 		locMTrees[iOne][iL].mainHalo = thisHalo; 
-		locMTrees[iOne][iL].nCommon.resize(nPTypes);
 	}
 
 	/* Map the iTwo halo IDs to their indexes */
@@ -377,7 +375,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 #ifdef NOPTYPE
 			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
-				locMTrees[iOne][iM].mainHalo.nPart[0] > minPartHalo)
+				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
 #else
 			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
@@ -391,7 +389,6 @@ void FindProgenitors(int iOne, int iTwo)
 					iOldOrphans++;
 
 				/* Update the container of local orphan halos */
-				locOrphIndex.push_back(iM);
 				locOrphHalos.push_back(thisHalo);
 
 				/* Update the local mtree with a copy of itself */
@@ -404,7 +401,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 				/* Copy particle blocks divided by particle type */
 				for (int iP = 0; iP < nPTypes; iP++)
-					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].begin(), 
+					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
 
 				nLocOrphans++;
@@ -425,7 +422,6 @@ void FindProgenitors(int iOne, int iTwo)
 		nLocOrphans = locOrphHalos.size();
 		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0, nTotTrees = 0; 
 
-		//cout << "\nFound " << nLocOrphans << " orphan halos on task " << locTask << ", " << locOrphIndex.size() << endl;
 		MPI_Reduce(&nLocTrees,   &nTotTrees, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -484,7 +480,6 @@ void FindProgenitors(int iOne, int iTwo)
 		thisMapTrees[thisHalo.ID] = iL;
 
 		locMTrees[iOne][iL].mainHalo = thisHalo; 
-		locMTrees[iOne][iL].nCommon.resize(nPTypes);
 	}
 
 	/* Map the iTwo halo IDs to their indexes */
@@ -495,6 +490,14 @@ void FindProgenitors(int iOne, int iTwo)
 		/* This map connects halo IDs & their indexes in the SECOND locHalo structure */
 		nextMapTrees[thisHalo.ID] = iL;
 	}
+
+	/*
+	if (locTask == 0)
+	{
+		cout << "\nMap[FWD] has " << locMapParts[iOne].size() << " particles." << endl; 
+		cout << "Map[BCK] has " << locMapParts[iTwo].size() << " particles." << endl; 
+	}
+	*/
 
 	/* Here we loop on all the particles, each particle keeps track of the Halos it belongs to. 
 	 * We match particle IDs in iOne with particle IDs in iTwo, and count the total number of 
@@ -540,9 +543,9 @@ void FindProgenitors(int iOne, int iTwo)
 	/* Now clean and reconstruct the local merger trees */
 	for (int iM = 0; iM < locMTrees[iOne].size(); iM++)
 	{
-		uint64_t thisHaloID;
 		int nProgs = locMTrees[iOne][iM].idProgenitor.size();
 		int thisHaloIndex = 0;
+		uint64_t thisHaloID;
 
 		for (int iP = 0; iP < nProgs; iP++)
 		{
@@ -570,7 +573,6 @@ void FindProgenitors(int iOne, int iTwo)
 					iOldOrphans++;
 
 				/* Update the container of local orphan halos */
-				locOrphIndex.push_back(iM);
 				locOrphHalos.push_back(thisHalo);
 
 				/* Update the local mtree with a copy of itself */
@@ -583,7 +585,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 				/* Copy particle blocks divided by particle type */
 				for (int iP = 0; iP < nPTypes; iP++)
-					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].begin(), 
+					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
 
 				nLocOrphans++;
@@ -622,39 +624,26 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, halosPerTask = 0, halosRemaind = 0;
-	int nErr = 0;
-        halosPerTask = int(nLocHalos[0] / totTask);
-        halosRemaind = nLocHalos[0] % totTask;
-
-#ifdef ZOOM
-	if (locTask < halosRemaind)
-		halosPerTask += 1;
-#else
-	halosPerTask = nLocHalos[0]; 
-#endif
+	int thisIndex = 0;
 
 	if (locTask == 0)
-		cout << "Cleaning Merger Tree connections for " << halosPerTask << " halos." << endl;
+		cout << "Cleaning Merger Tree connections for " << nLocHalos[0] << " halos." << endl;
 
 #ifdef VERBOSE
 	if (locTask == 0)
 		cout << "nHalos " << locHalos[0].size() << ", nTrees: " << locMTrees[0].size() << endl; 
 #endif
 
-	for (int kTree = 0; kTree < halosPerTask; kTree++)
+	for (int iTree = 0; iTree < nLocHalos[0]; iTree++)
 	{
-
-#ifdef ZOOM	// In ZOOM mode each task holds all the halos, but only analyzes some of them
-		int iTree = locTask + kTree * totTask;
-#else
-		int iTree = kTree;
-#endif
 		uint64_t mainID = locHalos[0][iTree].ID;
 		int nProgSize = locMTrees[0][iTree].idProgenitor.size();
 
+		//if (mainID == 2902278011962691764)
+		//	cout << "TEST DI CRISTO " << iTree << " nProgSize: " << nProgSize << " " 
+		//		<< locMTrees[0][iTree].idProgenitor[0] << endl;
+
 		MergerTree mergerTree;
-		mergerTree.nCommon.resize(nPTypes);
 		mergerTree.mainHalo = locHalos[0][iTree];
 		mergerTree.isOrphan = locMTrees[0][iTree].isOrphan;
 
@@ -681,49 +670,20 @@ void CleanTrees(int iStep)
 			uint64_t progID = locMTrees[0][iTree].idProgenitor[iProg];
 			uint64_t descID;
 
-#ifndef ZOOM 		
+#ifdef ZOOM
+			descID = locMTrees[1][jTree].idProgenitor[0];	
+			progHalo = locMTrees[1][jTree].mainHalo;
+#else 		
 			if (jTree < 0) 
 			{
 				int kTree = -jTree -1;			// Need to correct for the "offset" factor
-
-				if (kTree > locMTrees[1].size())
-					cout << locTask << ", " <<  jTree << ", " << nLocHalos[1] << ", " << locMTrees[1].size() << endl;
-
-				/* This kind of error might be due to the incorrect setting of the facRSearch variable */
-				if(locMTrees[1][kTree + nLocHalos[1]].idProgenitor.size() == 0)
-				{
-					cout << "ERROR OnTask:" <<  locTask << ", jTree:" <<  jTree 
-						<< ", nHalos:" << nLocHalos[1] << ", locTrees:" 
-							<< locMTrees[1][kTree+nLocHalos[1]].progHalos.size() << endl;
-	
-					progHalo.Info();
-					mergerTree.mainHalo.Info();
-					locMTrees[1][kTree + nLocHalos[1]+1].mainHalo.Info();
-
-				} else {
-					progHalo = locMTrees[1][nLocHalos[1]+kTree].mainHalo;	
-					descID = locMTrees[1][nLocHalos[1]+kTree].idProgenitor[0];	
-				}
+				progHalo = locMTrees[1][nLocHalos[1]+kTree].mainHalo;	
+				descID = locMTrees[1][nLocHalos[1]+kTree].idProgenitor[0];	
 		
 			} else {
-				
-				// Sanity check
-				if (jTree > locMTrees[1].size())
-					cout << "ERROR in CleanTrees(). MTree size: " << locMTrees[1].size() 
-						<< ", indexj: " << jTree << endl;
-						
-				if (locMTrees[1][jTree].idProgenitor.size() > 0)
-				{
-					descID = locMTrees[1][jTree].idProgenitor[0];	
-				} else {
-					locMTrees[1][jTree].mainHalo.Info();
-				}
-
+				descID = locMTrees[1][jTree].idProgenitor[0];	
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
-#else
-			descID = locMTrees[1][jTree].idProgenitor[0];	
-			progHalo = locMTrees[1][jTree].mainHalo;
 #endif
 
 			/* Sanity check */
@@ -733,6 +693,7 @@ void CleanTrees(int iStep)
 					<< " | " << iTree << " " << jTree << endl;
 			}
 
+			/* Check that the main halo is the likeliest descendant of its progenitor */
 			if (mainID == descID)
 			{
 				mergerTree.idProgenitor.push_back(progID);
@@ -744,6 +705,38 @@ void CleanTrees(int iStep)
 			}	// mainID = descID
 		}	// iProg for loop
 
+		/* In some cases, a subhalo disappears and its main progenitor turns out to be the host halo, 
+		 * In this case, the subhalo is not recorded among the orphan halos, since it does have a connection
+		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
+		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
+		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) 
+		{
+			int nLocOrphans = locOrphHalos.size();
+			Halo thisHalo = mergerTree.mainHalo;
+			thisHalo.nOrphanSteps++;
+			thisHalo.isToken = true;
+
+			/* Update the container of local orphan halos */
+			locOrphHalos.push_back(thisHalo);
+
+			/* Update the particle content */
+			locOrphParts.push_back(locParts[0][iTree]);
+			locOrphParts[nLocOrphans].resize(nPTypes);
+
+			/* Copy particle blocks divided by particle type */
+			for (int iP = 0; iP < nPTypes; iP++)
+				copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
+					back_inserter(locOrphParts[nLocOrphans][iP]));
+
+			mergerTree.isOrphan = true;
+			mergerTree.idProgenitor.push_back(thisHalo.ID);
+			mergerTree.indexProgenitor.push_back(iTree);
+			mergerTree.progHalos.push_back(thisHalo);
+
+			for(int iT = 0; iT < nPTypes; iT++)
+				mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][0]);
+		} 
+
 		if (!mergerTree.isOrphan)	
 			mergerTree.SortByMerit();
 
@@ -752,6 +745,9 @@ void CleanTrees(int iStep)
 
 		mergerTree.Clean();
 	}	// kTree for loop
+
+	if (locTask == 0)
+		cout << "The local number of orphan halos after cleaning the connections is: " << locOrphHalos.size() << endl;
 };
 
 
@@ -762,12 +758,8 @@ void AssignDescendant()
 	uint64_t mainID = 0;
 	int mainIndex = 0;
 
-	locOrphIndex.clear();
-	locOrphIndex.shrink_to_fit();
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
-	/*
-	*/
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
@@ -778,7 +770,6 @@ void AssignDescendant()
 		{
 			if (locCleanTrees[iNumCat-1][iC].isOrphan)
 			{
-				locOrphIndex.push_back(mainIndex);
 				locOrphHalos.push_back(locCleanTrees[iNumCat-1][iC].mainHalo);
 			}
 
