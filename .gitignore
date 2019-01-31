@@ -34,6 +34,7 @@ bin/MetroCPP-all
 bin/MetroCPP-zoom
 config/lgf_2048.cfg
 config/fb_tmp.cfg
+config/lgf_tmp.cfg
 job*.sh
 config/fullbox_laptop.cfg
 config/fullbox_leibniz.cfg

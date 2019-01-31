@@ -233,7 +233,7 @@ void MergerTree::SortByMerit()
 
 void FindProgenitors(int iOne, int iTwo)
 {
-	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0; 
+	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0, nLocUntrack = 0; 
 
 	/* Loop also on the buffer halos, in the backward loop only! */
 	if (iOne == 1)
@@ -381,30 +381,40 @@ void FindProgenitors(int iOne, int iTwo)
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
 #endif
 			{
+
 				Halo thisHalo = locHalos[iOne][iM];
 				thisHalo.isToken = true;
 				thisHalo.nOrphanSteps++;
-
+		
 				if (thisHalo.nOrphanSteps > 1)
 					iOldOrphans++;
 
-				/* Update the container of local orphan halos */
-				locOrphHalos.push_back(thisHalo);
+				int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
 
-				/* Update the local mtree with a copy of itself */
-				locMTrees[iOne][iM].isOrphan = true;
-				locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
+				/* Stop tracking small halos after a while */
+				if (thisHalo.nOrphanSteps <= maxOrphanSteps )
+				{
+					/* Update the container of local orphan halos */
+					locOrphHalos.push_back(thisHalo);
 
-				/* Update the particle content */
-				locOrphParts.push_back(locParts[iOne][iM]);
-				locOrphParts[nLocOrphans].resize(nPTypes);
+					/* Update the local mtree with a copy of itself */
+					locMTrees[iOne][iM].isOrphan = true;
+					locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
 
-				/* Copy particle blocks divided by particle type */
-				for (int iP = 0; iP < nPTypes; iP++)
-					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
-						back_inserter(locOrphParts[nLocOrphans][iP]));
+					/* Update the particle content */
+					locOrphParts.push_back(locParts[iOne][iM]);
+					locOrphParts[nLocOrphans].resize(nPTypes);
 
-				nLocOrphans++;
+					/* Copy particle blocks divided by particle type */
+					for (int iP = 0; iP < nPTypes; iP++)
+						copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
+							back_inserter(locOrphParts[nLocOrphans][iP]));
+
+					nLocOrphans++;
+				} else {	// Stop tracking this orphan halo
+					nLocUntrack++;
+				}
+
 			} else { // This halo has a progenitor
 
 				if (locHalos[iOne][iM].isToken)
@@ -420,10 +430,11 @@ void FindProgenitors(int iOne, int iTwo)
 	if (iOne == 0)
 	{
 		nLocOrphans = locOrphHalos.size();
-		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0, nTotTrees = 0; 
+		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0, nTotTrees = 0, nTotUntrack = 0; 
 
 		MPI_Reduce(&nLocTrees,   &nTotTrees, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&nLocUntrack, &nTotUntrack, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
@@ -433,12 +444,14 @@ void FindProgenitors(int iOne, int iTwo)
 			cout << "  Tracking a total of " << nTotTrees << " halos on " << totTask << " tasks. "  << endl;
 			cout << "  On all tasks, there are: " << endl;
 			cout << "     ---> " << nTotOrphans << " total orphan halos." << endl;
+			cout << "     ---> " << nTotUntrack << " orphan halos are being untracked." << endl;
 			cout << "     ---> " << nTotOrphans - nTotOld << " new orphan halos." << endl;
 			cout << "     ---> " << nTotOld << " orphans since more than one step." << endl;
 			cout << "     ---> " << nTotFix << " orphans reconnected to their descendants.  " << endl;
 			cout << "  On the master task there are " << nLocTrees << " halos as well as: " << endl;
 			cout << "     ---> " << nLocOrphans << " total orphan halos." << endl;
 			cout << "     ---> " << nLocOrphans - iOldOrphans << " new orphan halos." << endl;
+			cout << "     ---> " << nLocUntrack << " orphan halos are being untracked." << endl;
 			cout << "     ---> " << iOldOrphans << " orphans since more than one step." << endl;
 			cout << "     ---> " << iFixOrphans << " orphans reconnected to their descendants.  " << endl;
 		}
@@ -450,7 +463,7 @@ void FindProgenitors(int iOne, int iTwo)
 
 void FindProgenitors(int iOne, int iTwo)
 {
-	int iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0; 
+	int iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0, nLocUntrack = 0; 
 
 	locMTrees[iOne].clear();
 	locMTrees[iOne].shrink_to_fit();
@@ -572,23 +585,31 @@ void FindProgenitors(int iOne, int iTwo)
 				if (thisHalo.nOrphanSteps > 1)
 					iOldOrphans++;
 
-				/* Update the container of local orphan halos */
-				locOrphHalos.push_back(thisHalo);
+				int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
 
-				/* Update the local mtree with a copy of itself */
-				locMTrees[iOne][iM].isOrphan = true;
-				locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
+				/* Stop tracking small halos after a while */
+				if (thisHalo.nOrphanSteps <= maxOrphanSteps )
+				{
+					/* Update the container of local orphan halos */
+					locOrphHalos.push_back(thisHalo);
 
-				/* Update the particle content */
-				locOrphParts.push_back(locParts[iOne][iM]);
-				locOrphParts[nLocOrphans].resize(nPTypes);
+					/* Update the local mtree with a copy of itself */
+					locMTrees[iOne][iM].isOrphan = true;
+					locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
 
-				/* Copy particle blocks divided by particle type */
-				for (int iP = 0; iP < nPTypes; iP++)
-					copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
-						back_inserter(locOrphParts[nLocOrphans][iP]));
+					/* Update the particle content */
+					locOrphParts.push_back(locParts[iOne][iM]);
+					locOrphParts[nLocOrphans].resize(nPTypes);
 
-				nLocOrphans++;
+					/* Copy particle blocks divided by particle type */
+					for (int iP = 0; iP < nPTypes; iP++)
+						copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
+							back_inserter(locOrphParts[nLocOrphans][iP]));
+
+					nLocOrphans++;
+				} else { // Stop tracking this orphan halo after a while
+					nLocUntrack++;
+				}
 			} else { // This halo has a progenitor
 
 				if (locHalos[iOne][iM].isToken)
@@ -607,6 +628,7 @@ void FindProgenitors(int iOne, int iTwo)
 		cout << "  On the master task there are " << nLocTrees << " halos as well as: " << endl;
 		cout << "     ---> " << nLocOrphans << " total orphan halos." << endl;
 		cout << "     ---> " << nLocOrphans - iOldOrphans << " new orphan halos." << endl;
+		cout << "     ---> " << nLocUntrack << " orphan halos are being untracked." << endl;
 		cout << "     ---> " << iOldOrphans << " orphans since more than one step." << endl;
 		cout << "     ---> " << iFixOrphans << " orphans reconnected to their descendants.  " << endl;
 	}
@@ -624,7 +646,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0;
+	int thisIndex = 0, nLocUntrack = 0;
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << nLocHalos[0] << " halos." << endl;
@@ -646,11 +668,10 @@ void CleanTrees(int iStep)
 		MergerTree mergerTree;
 		mergerTree.mainHalo = locHalos[0][iTree];
 		mergerTree.isOrphan = locMTrees[0][iTree].isOrphan;
-
+	
 		if (mergerTree.isOrphan)
 		{
 			nProgSize = 0;
-			locMTrees[0][iTree].idProgenitor[0] = mainID;
 			mergerTree.idProgenitor.push_back(mainID);
 			mergerTree.progHalos.push_back(locHalos[0][iTree]);
 			
@@ -659,7 +680,8 @@ void CleanTrees(int iStep)
 				mergerTree.nCommon[iT].resize(1);
 				mergerTree.nCommon[iT][0] = locHalos[0][iTree].nPart[iT];
 			}
-		}
+
+		} else {	// If the halo is not orphan, rank order its progenitors
 
 		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
 		 * reconstruction of the full merger history. This will be done later. */
@@ -669,7 +691,6 @@ void CleanTrees(int iStep)
 			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			uint64_t progID = locMTrees[0][iTree].idProgenitor[iProg];
 			uint64_t descID;
-
 #ifdef ZOOM
 			descID = locMTrees[1][jTree].idProgenitor[0];	
 			progHalo = locMTrees[1][jTree].mainHalo;
@@ -703,51 +724,67 @@ void CleanTrees(int iStep)
 				for(int iT = 0; iT < nPTypes; iT++)
 					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 			}	// mainID = descID
-		}	// iProg for loop
+		}	// loop on progenitors
+
+	} // isOrphan == false
 
 		/* In some cases, a subhalo disappears and its main progenitor turns out to be the host halo, 
 		 * In this case, the subhalo is not recorded among the orphan halos, since it does have a connection
 		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
 		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
-		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) 
+		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
 		{
 			int nLocOrphans = locOrphHalos.size();
 			Halo thisHalo = mergerTree.mainHalo;
 			thisHalo.nOrphanSteps++;
 			thisHalo.isToken = true;
 
-			/* Update the container of local orphan halos */
-			locOrphHalos.push_back(thisHalo);
+			/* We need to update this as well, since the halo was probably found to have a progenitor */
+			//locHalos[0][iTree].isToken = true;
+			//locHalos[0][iTree].nOrphanSteps++;
 
-			/* Update the particle content */
-			locOrphParts.push_back(locParts[0][iTree]);
-			locOrphParts[nLocOrphans].resize(nPTypes);
+			int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
+			
+			/* Check if it's worth to continue tracking this orphan halo */
+			if (thisHalo.nOrphanSteps <= maxOrphanSteps)
+			{ 
+				/* Update the container of local orphan halos */
+				locOrphHalos.push_back(thisHalo);
 
-			/* Copy particle blocks divided by particle type */
-			for (int iP = 0; iP < nPTypes; iP++)
-				copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
-					back_inserter(locOrphParts[nLocOrphans][iP]));
+				/* Update the particle content */
+				locOrphParts.push_back(locParts[0][iTree]);
+				locOrphParts[nLocOrphans].resize(nPTypes);
 
-			mergerTree.isOrphan = true;
-			mergerTree.idProgenitor.push_back(thisHalo.ID);
-			mergerTree.indexProgenitor.push_back(iTree);
-			mergerTree.progHalos.push_back(thisHalo);
+				/* Copy particle blocks divided by particle type */
+				for (int iP = 0; iP < nPTypes; iP++)
+					copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
+						back_inserter(locOrphParts[nLocOrphans][iP]));
 
-			for(int iT = 0; iT < nPTypes; iT++)
-				mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][0]);
-		} 
+				mergerTree.isOrphan = true;
+				mergerTree.idProgenitor.push_back(thisHalo.ID);
+				mergerTree.indexProgenitor.push_back(iTree);
+				mergerTree.progHalos.push_back(thisHalo);
 
-		if (!mergerTree.isOrphan)	
-			mergerTree.SortByMerit();
+				for(int iT = 0; iT < nPTypes; iT++)
+					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][0]);
+			} else {	// We stop following this halo
+				nLocUntrack++;
+			}	
+ 
+		} else if (mergerTree.idProgenitor.size() > 0 && nProgSize > 0) { /* This is not an orphan halo */
 
-		if (mergerTree.idProgenitor.size() > 0)
+			if (mergerTree.idProgenitor.size() > 1)	
+				mergerTree.SortByMerit();
+
 			locCleanTrees[iStep-1].push_back(mergerTree);
+		}
 
 		mergerTree.Clean();
-	}	// kTree for loop
+	}	// iTree for loop
 
 	if (locTask == 0)
-		cout << "The local number of orphan halos after cleaning the connections is: " << locOrphHalos.size() << endl;
+		cout << "The local number of orphan halos after cleaning the connections is: " << locOrphHalos.size() 
+			<< " while " << nLocUntrack << " will be untracked. "  << endl;
 };
 
 

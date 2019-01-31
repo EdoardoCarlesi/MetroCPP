@@ -260,7 +260,7 @@ void ShiftHalosPartsGrids()
 			}
 		}
 
-		//cout << "Counted: " << float(iCountPart) / 1.e+6 << " Mparticles. " << endl;
+		cout << "Counted: " << float(iCountPart) / 1.e+6 << " Mparticles for " << locOrphHalos.size() << endl;
 
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{

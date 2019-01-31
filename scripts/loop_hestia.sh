@@ -46,5 +46,5 @@ do
 	mkdir $MetroOut'/'$Run'/'$SubRun
 	echo 'Sub-simulation number:' $CfgTmp
 	echo mpirun -n $ncpu $MetroExe $CfgTmp
-	#mpirun -n $ncpu $MetroExe $CfgTmp
+	mpirun -n $ncpu $MetroExe $CfgTmp
 done

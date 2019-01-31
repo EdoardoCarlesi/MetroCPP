@@ -12,7 +12,7 @@ MinSize=1024
 
 iRun=0
 
-for ThisRunNum in `ls $ThisDir | grep [0-9][0-9]'_1'[0-9]`
+for ThisRunNum in `ls $ThisDir | grep [0-9][0-9]'_'[0-9][0-9]`
 do
 #echo $ThisRunNum
 RunNum[${iRun}]=$ThisRunNum iRun=$(expr "$iRun" + "1")
@@ -20,10 +20,12 @@ done
 
 echo 'Total number of subfolders: ' $iRun
 
+rm -rf $MetroTmp'/'*'.tmp'	
+
 ncpu=1
 do_tree="true"
 iniRun=0
-totRun=10 #$iRun
+totRun=1 #$iRun
 
 for (( iRun=$iniRun; iRun<$totRun; iRun++ ))
 do
