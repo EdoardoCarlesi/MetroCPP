@@ -504,14 +504,6 @@ void FindProgenitors(int iOne, int iTwo)
 		nextMapTrees[thisHalo.ID] = iL;
 	}
 
-	/*
-	if (locTask == 0)
-	{
-		cout << "\nMap[FWD] has " << locMapParts[iOne].size() << " particles." << endl; 
-		cout << "Map[BCK] has " << locMapParts[iTwo].size() << " particles." << endl; 
-	}
-	*/
-
 	/* Here we loop on all the particles, each particle keeps track of the Halos it belongs to. 
 	 * We match particle IDs in iOne with particle IDs in iTwo, and count the total number of 
 	 * particles shared by their two host halos. */
@@ -771,13 +763,13 @@ void CleanTrees(int iStep)
 				nLocUntrack++;
 			}	
  
-		} else if (mergerTree.idProgenitor.size() > 0 && nProgSize > 0) { /* This is not an orphan halo */
+		} //else if (mergerTree.idProgenitor.size() > 0 && nProgSize > 0) { /* This is not an orphan halo */
 
-			if (mergerTree.idProgenitor.size() > 1)	
-				mergerTree.SortByMerit();
+		if (mergerTree.idProgenitor.size() > 1)	
+			mergerTree.SortByMerit();
 
+		if (mergerTree.idProgenitor.size() > 0) 
 			locCleanTrees[iStep-1].push_back(mergerTree);
-		}
 
 		mergerTree.Clean();
 	}	// iTree for loop

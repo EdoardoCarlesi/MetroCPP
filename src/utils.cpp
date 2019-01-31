@@ -199,8 +199,8 @@ void ShiftHalosPartsGrids()
 
 	CleanMemory(0);
 	
-	//if (locTask == 0)
-	//	cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
+	if (locTask == 0)
+		cout << "Shifting halos, particles and grid from 1 to 0..." << endl;
 
 	nLocHalos[0] = nLocHalos[1];
 	locHalos[0] = locHalos[1];
@@ -233,12 +233,6 @@ void ShiftHalosPartsGrids()
 			}
 		}
 
-		int iCountPart = 0, iCount;
-	
-		//if (locTask == 0)
-		//	cout << " LOC ORPH PART AUTO " << locOrphHalos.size() << " PART MAP " << locMapParts[0].size() 
-		//		<< " countPt: " << iCountPart << " " << endl;
-
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
 			int locPartIndex = iO + nLocHalos[0];
@@ -255,12 +249,9 @@ void ShiftHalosPartsGrids()
                                 	thisParticle.type   = iT;
                                 	locMapParts[0][partID].push_back(thisParticle);
 					locParts[0][locPartIndex][iT].push_back(partID);
-					iCountPart++;
 				}
 			}
 		}
-
-		cout << "Counted: " << float(iCountPart) / 1.e+6 << " Mparticles for " << locOrphHalos.size() << endl;
 
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
@@ -278,17 +269,6 @@ void ShiftHalosPartsGrids()
 		locOrphParts.shrink_to_fit();
 	}	// runMode 0 or 2
 	
-	/*
-	if (locTask == 0)
-		cout << " LOC ORPH PART SIZE " << endl;
-
-	
-		if (locTask == 0)	
-	{
-		cout << "Local number of particles: " << locMapParts[0].size() << endl;
-		cout << "Local number of orphans  : " << locOrphHalos.size() << endl;
-	}*/
-
 	/* Now free and reset the orphan halo trackers */
 	nLocHalos[0] += locOrphHalos.size();
 	locOrphHalos.clear();
@@ -382,33 +362,6 @@ vector<int> SortIndexes(vector<float> vec) {
 
 	for (int iV = 0; iV < nVec; iV++)
 		idx[iV] = floatPos[newVec[iV]];
-
-	/*
-	
-	for (int iV = 0; iV < nVec; iV++)
-		idx[iV] = iV;
-
-	sort(idx.begin(), idx.end(), [&vec](int i1, int i2) 
-		{return vec[i1] < vec[i2];});
-
-	//int idx0 = 0; 
-	//float maxV = 100000.0;
-	//float maxV = 0.0;
-	//for (int iD = 0; iD < nVec; iD++)
-	//	cout << "* " << iD << " vec=" << vec[iD] << " idx=" << idx[iD] << endl;
-	//sort(idx.begin(), idx.end(), [&vec](int i1, int i2)
-	//	{return vec[i1] < vec[i2];});
-
-	for (int iD = 0; iD < nVec; iD++)
-	{
-		if (vec[iD] > maxV)
-		{
-			maxV = vec[iD];
-			idx0 = iD;
-		}
-	}
-	//return idx0;
-	*/
 
 	return idx;
 };

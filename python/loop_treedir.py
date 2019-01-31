@@ -23,7 +23,7 @@ suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
 nSteps = 10
-nChunk = 4
+nChunk = 1
 
 iSeedIni = 0
 iSeedEnd = 1
@@ -52,13 +52,13 @@ for iSeed in range(iSeedIni, iSeedEnd):
 		#rootFile = thisTreePath + '/lgf_' + thisSubDir + '_'	
 		#testFile = thisTreePath + '/lgf_' + thisSubDir + '_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 
-		thisTreePath = baseTreeMCPP + 'trees/00_10mpi'
-		rootFile = thisTreePath + '/lgf_00_10_'	
-		testFile = thisTreePath + '/lgf_00_10_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+		#thisTreePath = baseTreeMCPP + 'trees/00_10mpi'
+		#rootFile = thisTreePath + '/lgf_00_10_'	
+		#testFile = thisTreePath + '/lgf_00_10_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 
-		#thisTreePath = baseTreeMCPP + 'trees/00_06_00/'
-		#rootFile = thisTreePath + '/lgf_00_06_00'	
-		#testFile = thisTreePath + '/lgf_00_06_00' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+		thisTreePath = baseTreeMCPP + 'trees/00_06_00/'
+		rootFile = thisTreePath + '/lgf_00_06_00'	
+		testFile = thisTreePath + '/lgf_00_06_00' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 	
 		print(rootFile, testFile)
 
