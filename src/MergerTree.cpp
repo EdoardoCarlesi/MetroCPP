@@ -759,11 +759,11 @@ void CleanTrees(int iStep)
 
 				for(int iT = 0; iT < nPTypes; iT++)
 					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][0]);
-			} else {	// We stop following this halo
+			} else {	// We stop following this orphan halo, too small and disconnected for too many steps
 				nLocUntrack++;
 			}	
  
-		} //else if (mergerTree.idProgenitor.size() > 0 && nProgSize > 0) { /* This is not an orphan halo */
+		} 
 
 		if (mergerTree.idProgenitor.size() > 1)	
 			mergerTree.SortByMerit();
