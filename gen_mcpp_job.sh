@@ -1,6 +1,6 @@
 #!/bin/bash
 
-runCode='03'
+runCode=$1
 
 base_cfg=config/fullbox_template_leibniz.cfg
 tmp_cfg=config/tmp_fullbox_$runCode'.cfg'

@@ -10,6 +10,7 @@
 *.tmp.*
 *.mtree
 *.pyc
+job_metrocpp.sh
 clean.sh
 metro_cpp.*
 output/*
@@ -40,4 +41,5 @@ config/fullbox_laptop.cfg
 config/fullbox_leibniz.cfg
 config/fullbox_neruda.cfg
 config/zoom_test.cfg
-
+config/tmp_fullbox_00.cfg
+mcpp*
