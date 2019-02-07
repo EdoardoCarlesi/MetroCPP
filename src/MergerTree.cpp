@@ -774,9 +774,16 @@ void CleanTrees(int iStep)
 		mergerTree.Clean();
 	}	// iTree for loop
 
+	/* Final statistics - sanity check */
+	int nTotOrphans = 0, nTotUntrack = 0, nLocOrphans = 0;
+	nLocOrphans = locOrphHalos.size();
+
+	MPI_Reduce(&nLocOrphans,   &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&nLocUntrack,   &nTotUntrack, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
 	if (locTask == 0)
-		cout << "The local number of orphan halos after cleaning the connections is: " << locOrphHalos.size() 
-			<< " while " << nLocUntrack << " will be untracked. "  << endl;
+		cout << "The total number of orphan halos after cleaning the connections is: " << nTotOrphans
+			<< " while " << nTotUntrack << " will be untracked. "  << endl;
 };
 
 
