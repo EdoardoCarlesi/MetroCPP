@@ -736,7 +736,11 @@ void CleanTrees(int iStep)
 			//locHalos[0][iTree].nOrphanSteps++;
 
 			int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
-			
+
+			/* Upper limit on the total number of steps an halo can be tracked */
+			if (maxOrphanSteps > 4)		
+				maxOrphanSteps = 4;
+
 			/* Check if it's worth to continue tracking this orphan halo */
 			if (thisHalo.nOrphanSteps <= maxOrphanSteps)
 			{ 
