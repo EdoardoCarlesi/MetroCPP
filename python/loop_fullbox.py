@@ -24,11 +24,11 @@ baseTreeMCPP = '/home/eduardo/CLUES/DATA/FullBox/trees/'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
-nSteps = 5
-nChunk = 40
+nSteps = 54
+nChunk = 60
 
-iSeedIni = 1
-iSeedEnd = 2
+iSeedIni = 0
+iSeedEnd = 1
 
 # Loop on the large scale seed codes
 for iSeed in range(iSeedIni, iSeedEnd):
