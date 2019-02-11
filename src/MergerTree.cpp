@@ -638,7 +638,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, nLocUntrack = 0;
+	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 6;
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << nLocHalos[0] << " halos." << endl;
@@ -738,8 +738,8 @@ void CleanTrees(int iStep)
 			int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
 
 			/* Upper limit on the total number of steps an halo can be tracked */
-			if (maxOrphanSteps > 4)		
-				maxOrphanSteps = 4;
+			if (maxOrphanSteps > absMaxOrphanSteps)		
+				maxOrphanSteps = absMaxOrphanSteps;
 
 			/* Check if it's worth to continue tracking this orphan halo */
 			if (thisHalo.nOrphanSteps <= maxOrphanSteps)

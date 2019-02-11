@@ -19,7 +19,8 @@ print('Testing Merger Tree python post-processing scripts')
 #filePrefix='/fullbox_'
 filePrefix='/fb_'
 
-baseTreeMCPP = '/home/eduardo/CLUES/DATA/FullBox/trees/'
+baseTreeMCPP = '/home/eduardo/CLUES/MetroCPP/output/'
+#baseTreeMCPP = '/home/eduardo/CLUES/DATA/FullBox/trees/'
 #baseTreeMCPP = '/z/carlesi/CLUES/DATA/trees/FullBox/'
 suffTreeMCPP = 'mtree'
 
