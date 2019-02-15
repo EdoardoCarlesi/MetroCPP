@@ -413,40 +413,6 @@ void FindProgenitors(int iOne, int iTwo)
 		} // if iOne = 0 
 #endif	// test
 	}
-
-#ifdef TEST
-	/* Trace the orphans in the forward loop */
-	if (iOne == 0)
-	{
-		nLocOrphans = locOrphHalos.size();
-		int nTotOrphans = 0, nTotFix = 0, nTotOld = 0, nTotTrees = 0, nTotUntrack = 0; 
-
-		MPI_Reduce(&nLocTrees,   &nTotTrees, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&nLocOrphans, &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&nLocUntrack, &nTotUntrack, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&iOldOrphans, &nTotOld, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(&iFixOrphans, &nTotFix, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-		if (locTask == 0)
-		{	
-			cout << endl;
-			cout << "  Tracking a total of " << nTotTrees << " halos on " << totTask << " tasks. "  << endl;
-			cout << "  On all tasks, there are: " << endl;
-			cout << "     ---> " << nTotOrphans << " total orphan halos." << endl;
-			cout << "     ---> " << nTotUntrack << " orphan halos are being untracked." << endl;
-			cout << "     ---> " << nTotOrphans - nTotOld << " new orphan halos." << endl;
-			cout << "     ---> " << nTotOld << " orphans since more than one step." << endl;
-			cout << "     ---> " << nTotFix << " orphans reconnected to their descendants.  " << endl;
-			cout << "  On the master task there are " << nLocTrees << " halos as well as: " << endl;
-			cout << "     ---> " << nLocOrphans << " total orphan halos." << endl;
-			cout << "     ---> " << nLocOrphans - iOldOrphans << " new orphan halos." << endl;
-			cout << "     ---> " << nLocUntrack << " orphan halos are being untracked." << endl;
-			cout << "     ---> " << iOldOrphans << " orphans since more than one step." << endl;
-			cout << "     ---> " << iFixOrphans << " orphans reconnected to their descendants.  " << endl;
-		}
-	}
-#endif
-
 };		/* End of the find progenitor function in full box mode */
 
 #else		 /* The Find Progenitors function in ZOOM MODE is different than the standard one */
@@ -549,69 +515,10 @@ void FindProgenitors(int iOne, int iTwo)
 			locMTrees[iOne][iM].progHalo[iP] = locHalos[iTwo][thisHaloIndex];
 		}
 
-		locMTrees[iOne][iM].SortByMerit();
-
-		/* Orphan halos are identified in the forward search only */
-		if (iOne == 0)
-		{
-			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
-				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
-			{
-				Halo thisHalo = locHalos[iOne][iM];
-				thisHalo.isToken = true;
-				thisHalo.nOrphanSteps++;
-
-				if (thisHalo.nOrphanSteps > 1)
-					iOldOrphans++;
-
-				int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
-
-				/* Stop tracking small halos after a while */
-				if (thisHalo.nOrphanSteps <= maxOrphanSteps )
-				{
-					/* Update the container of local orphan halos */
-					locOrphHalos.push_back(thisHalo);
-
-					/* Update the local mtree with a copy of itself */
-					locMTrees[iOne][iM].isOrphan = true;
-					locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
-
-					/* Update the particle content */
-					locOrphParts.push_back(locParts[iOne][iM]);
-					locOrphParts[nLocOrphans].resize(nPTypes);
-
-					/* Copy particle blocks divided by particle type */
-					for (int iP = 0; iP < nPTypes; iP++)
-						copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
-							back_inserter(locOrphParts[nLocOrphans][iP]));
-
-					nLocOrphans++;
-				} else { // Stop tracking this orphan halo after a while
-					nLocUntrack++;
-				}
-			} else { // This halo has a progenitor
-
-				if (locHalos[iOne][iM].isToken)
-					iFixOrphans++;
-
-				locMTrees[iOne][iM].isOrphan = false;
-				nLocTrees++;
-			}
-		} 
+		/* Sort */
+		if (locMTrees[iOne][iM].progHalos.size() > 1)
+			locMTrees[iOne][iM].SortByMerit();
 	}
-
-	/* Stats about orphan halos in the fwd loop */
-	if (iOne == 0)
-	{
-		cout << endl;
-		cout << "  On the master task there are " << nLocTrees << " halos as well as: " << endl;
-		cout << "     ---> " << nLocOrphans << " total orphan halos." << endl;
-		cout << "     ---> " << nLocOrphans - iOldOrphans << " new orphan halos." << endl;
-		cout << "     ---> " << nLocUntrack << " orphan halos are being untracked." << endl;
-		cout << "     ---> " << iOldOrphans << " orphans since more than one step." << endl;
-		cout << "     ---> " << iFixOrphans << " orphans reconnected to their descendants.  " << endl;
-	}
-
 };
 #endif		// ifndef ZOOM
 
