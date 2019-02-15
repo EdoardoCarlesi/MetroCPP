@@ -532,7 +532,8 @@ void CleanTrees(int iStep)
 			/* Sanity check */
 			if (descID == 0 && progHalo.nPart[1] > minPartHalo)
 			{
-				cout << "OnTask= " << locTask << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
+				locMTrees[1][jTree].Info(); 
+				cout << "OnTask= " << locTask << ": WARNING, progen. ID: " << progID << " has no descID: " << descID 
 					<< " | " << iTree << " " << jTree << endl;
 			}
 
