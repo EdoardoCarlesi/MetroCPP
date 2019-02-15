@@ -285,40 +285,30 @@ void Communication::BufferSendRecv()
 
 
 
-/* Once the merger trees are built, we need to communicate the results 
+/* 
+ * Once the merger trees are built, we need to communicate the results 
  * 
  */
 void Communication::SyncMergerTreeBuffer()
 {
+	/* Communicate the progenitor list for the halos in the buffer and keep track of their indexing */
+	vector<Halo> buffSendProg, buffRecvProg, totBuffRecvProg;
+	vector<int> buffSendProgIndex, buffRecvProgIndex, totBuffRecvProgIndex;
+	vector<uint64_t> buffSendDescID, buffRecvDescID, totBuffRecvDescID;
+	vector<int> buffSendComm, buffRecvComm, totBuffRecvComm;
+
 	/* Tasks receiving and sending messages */
 	int recvTask = 0, sendTask = 0;
 
 	/* These buffers hold the number of halos to be sent/recvd to/from multiple tasks */
-	int iBuffTotHaloIDs = 0, nBuffSendHaloIDs = 0, nBuffRecvHaloIDs = 0, buffIndexHaloIDs = 0, nTotBuffHaloIDs = 0;
-	
-	size_t buffSendSizeHaloIDs = 0, buffRecvSizeHaloIDs = 0;
+	int iBuffTotDescID = 0, nBuffSendDescID = 0, nBuffRecvDescID = 0, nTotBuffDescID = 0, nBuffRecvProg = 0, nBuffSendProg = 0;
 
-	/* These vectors contain the main halo and its main progenitor IDs, like [ID1, progID1, ID2, progID2... ]. 
-	 * The descendant ID is the i-th index while the progenitor is the i-th+1. */
-	vector <uint64_t> buffSendHaloIDs;
-	vector <uint64_t> buffRecvHaloIDs;
-	vector <uint64_t> totBuffRecvHaloIDs;
-
-	// FIXME maybe these things are already set, no need to call these functions once again
 	/* Determine the order of sending and receiving tasks to avoid gridlocks and make it consistent through
 	 * all the tasks  */
 	SetSendRecvTasks();
 
-	/* First communicate the list of nodes to be sent and received by every task 
-	 * The list of nodes also contains the list of haloes associated to them  */
-	//ExchangeBuffers();
-
 	if (locTask == 0)
 		cout << "Synchronizing merger trees in the buffer regions..." << endl; 
-
-	//for (int iT = 0; iT < totTask-1; iT++)
-	//	cout << iT << " on Task " << locTask << " send: " << sendTasks[iT] << " recv: " << recvTasks[iT] << endl;  
-
 
 	/* Loop on all the tasks except the local one */
 	for (int iT = 0; iT < totTask-1; iT++)
@@ -327,98 +317,171 @@ void Communication::SyncMergerTreeBuffer()
 		recvTask = recvTasks[iT];
 
 		/* At this step, locTask will send nBuffSendHalos to sendTask */
-		nBuffSendHaloIDs = buffIndexSendHalo[sendTask].size();
+		int nBuffTotDesc = buffIndexSendHalo[sendTask].size();
 
 #ifdef VERBOSE
-		if (nBuffSendHaloIDs == 0)
+		if (nBuffSendDescID == 0)
 			cout << "Task=" << locTask << " has zero send buffer to " << sendTask << endl;  
 #endif
 
-		buffSendHaloIDs.resize(2 * nBuffSendHaloIDs);
+		int iDesc = 0;
 
-		for (int iP = 0; iP < nBuffSendHaloIDs; iP ++)
+		/* Communicate the structure of these descendant halos (in backward mode) */
+		for (int iP = 0; iP < nBuffTotDesc; iP ++)
 		{
 			int iH = buffIndexSendHalo[sendTask][iP];
 			
-			/* i-th and i+1-th IDs in the vector are a descendant/progenitor pair */
-			buffSendHaloIDs[2 * iP] = locMTrees[iUseCat][iH].mainHalo.ID;
+			/* If the halo has no likely progenitor on this task then it's pointless to communicate it */
+			if (locMTrees[1][iH].progHalo.size() > 0) 
+			{
+				buffSendDescID.push_back(locMTrees[1][iH].mainHalo.ID);
+				buffSendProgIndex.push_back(locMTrees[1][iH].progHalo.size());
 
-			/* If the halo on the buffer is orphan, then we assign it its own ID as progenitor */
-			if (locMTrees[iUseCat][iH].isOrphan == true)
-				buffSendHaloIDs[2 * iP + 1] = locMTrees[1][iH].mainHalo.ID;
-			else
-				buffSendHaloIDs[2 * iP + 1] = locMTrees[1][iH].idProgenitor[0];
-			
-			if (iH > locHalos[iUseCat].size())	// Sanity check 
-				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). " 
-					<< "Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
+				for (int iProg = 0; iProg < buffSendProgIndex[iDesc]; iProg++)
+				{
+					Halo thisProg = locMTrees[1][iH].progHalo[iProg]; 
+					buffSendProg.push_back(thisProg); 
+
+					for (int iC = 0; iC < nPTypes; iC++)
+						buffSendComm.push_back(locMTrees[1][iH].nCommon[iC][iProg]);
+				}
+
+				iDesc++;
+			}
 		}
 
+		/* Size of all the progenitor halos to be sent */
+		nBuffSendDescID = buffSendDescID.size();
+		nBuffSendProg = buffSendProg.size();
+
 #ifdef VERBOSE
-		cout << iT << ") On task=" << locTask << ") sending " << nBuffSendHaloIDs << " halos to " << sendTask <<endl;
-		cout << iT << ") On task=" << locTask << ") sending " << buffSendSizeHaloIDs << " b to " << sendTask <<endl;
+		cout << iT << ") On task=" << locTask << ") sending " << nBuffSendProg << " halos to " << sendTask <<endl;
 #endif
-		
+
 		/* Communicate the number of halo IDs on the buffer (progenitor only) */
-		MPI_Sendrecv(&nBuffSendHaloIDs, 1, MPI_INT, sendTask, 0, 
-			     &nBuffRecvHaloIDs, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
+		MPI_Sendrecv(&nBuffSendDescID, 1, MPI_INT, sendTask, 0, 
+			     &nBuffRecvDescID, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
+
+		/* Communicate the number of progenitor halos */
+		MPI_Sendrecv(&nBuffSendProg, 1, MPI_INT, sendTask, 0, 
+			     &nBuffRecvProg, 1, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
 
 		/* Multiply by two to take into account progenitor and descendant */
-		buffSendSizeHaloIDs = 2 * nBuffSendHaloIDs * sizeof(uint64_t);
-		buffRecvSizeHaloIDs = 2 * nBuffRecvHaloIDs * sizeof(uint64_t);
+		size_t buffSendSizeDescID = nBuffSendDescID * sizeof(uint64_t);
+		size_t buffRecvSizeDescID = nBuffRecvDescID * sizeof(uint64_t);
 
-		nTotBuffHaloIDs += nBuffRecvHaloIDs;
-
-		buffRecvHaloIDs.resize(2 * nBuffRecvHaloIDs);	
+		buffRecvProgIndex.resize(nBuffRecvDescID);
+		buffRecvDescID.resize(nBuffRecvDescID);	
 
 #ifdef VERBOSE
-		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvHaloIDs << " halos from " << recvTask <<endl;
-		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeHaloIDs << " b from " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << nBuffRecvProg << " halos from " << recvTask <<endl;
+		cout << iT << ") On task=" << locTask << ") recving " << buffRecvSizeDescID << " b from " << recvTask <<endl;
 #endif
-		MPI_Sendrecv(&buffSendHaloIDs[0], buffSendSizeHaloIDs, MPI_BYTE, sendTask, 0, 
-			     &buffRecvHaloIDs[0], buffRecvSizeHaloIDs, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
+		MPI_Sendrecv(&buffSendDescID[0], buffSendSizeDescID, MPI_BYTE, sendTask, 0, 
+			     &buffRecvDescID[0], buffRecvSizeDescID, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
 
-		/* Append halo ids to the total recv buffer */
-		for (int iH = 0; iH < 2 * nBuffRecvHaloIDs; iH++)
-			totBuffRecvHaloIDs.push_back(buffRecvHaloIDs[iH]);
+		MPI_Sendrecv(&buffSendProgIndex[0], nBuffSendDescID, MPI_INT, sendTask, 0, 
+			     &buffRecvProgIndex[0], nBuffRecvDescID, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
 
-		/* Clean the recv halo buffer */
-		if (buffRecvHaloIDs.size() > 0)
+		buffRecvProg.resize(nBuffRecvProg);
+		buffRecvComm.resize(nBuffRecvProg * nPTypes);
+
+		/* Send the progenitor halos */
+		MPI_Sendrecv(&buffSendProg[0], nBuffSendProg * sizeHalo, MPI_BYTE, sendTask, 0, 
+			     &buffRecvProg[0], nBuffRecvProg * sizeHalo, MPI_BYTE, recvTask, 0, MPI_COMM_WORLD, &status);
+
+		/* Send also the list of particle shared with each progenitor */
+		MPI_Sendrecv(&buffSendComm[0], nBuffSendProg * nPTypes, MPI_INT, sendTask, 0, 
+			     &buffRecvComm[0], nBuffRecvProg * nPTypes, MPI_INT, recvTask, 0, MPI_COMM_WORLD, &status);
+
+		/* Append halo ids for the descendants and indexes for the progenitors to the total recv buffer */
+		for (int iH = 0; iH < nBuffRecvDescID; iH++)
 		{
-			buffRecvHaloIDs.clear();
-			buffRecvHaloIDs.shrink_to_fit();
+			totBuffRecvDescID.push_back(buffRecvDescID[iH]);
+			totBuffRecvProgIndex.push_back(buffRecvProgIndex[iH]);
 		}
 
-		/* Clean the send buffer after Sendrecv */
-		if (buffSendHaloIDs.size() > 0)
+		int jH = 0;
+
+		/* Append number of progenitors list */
+		for (int iH = 0; iH < nBuffRecvProg; iH++)
 		{
-			buffSendHaloIDs.clear();
-			buffSendHaloIDs.shrink_to_fit();
+			totBuffRecvProg.push_back(buffRecvProg[iH]);
+
+			for (int iC = 0; iC < nPTypes; iC++)
+				totBuffRecvComm.push_back(buffRecvComm[jH]);		
+			jH++;
 		}
 
+		MPI_Barrier(MPI_COMM_WORLD);
+
+		/* Clean the send buffer */
+		if (buffRecvDescID.size() > 0)
+		{
+			buffSendProgIndex.clear();
+			buffSendDescID.clear();
+			buffSendProg.clear();
+			buffSendComm.clear();
+			buffSendProgIndex.shrink_to_fit();
+			buffSendDescID.shrink_to_fit();
+			buffSendProg.shrink_to_fit();
+			buffSendComm.shrink_to_fit();
+		}
+
+		/* Clean the recv buffer */
+		if (buffRecvProg.size() > 0)
+		{
+			buffRecvProgIndex.clear();
+			buffRecvDescID.clear();
+			buffRecvProg.clear();
+			buffRecvComm.clear();
+			buffRecvProgIndex.shrink_to_fit();
+			buffRecvDescID.shrink_to_fit();
+			buffRecvProg.shrink_to_fit();
+			buffRecvComm.shrink_to_fit();
+		}
 	}	// Loop on the send/recv tasks
 
-	// TODO fix this map trees in non CMP mode
-
+	int iProg = 0, iComm = 0;
+	
 	/* Now synchronize the connections of the halos on the buffer */
-	for (int iH = 0; iH < locBuffHalos.size(); iH++)
+	for (int iH = 0; iH < totBuffRecvDescID.size(); iH++)
 	{	
-		uint64_t descID = totBuffRecvHaloIDs[2 * iH];
-		uint64_t progID = totBuffRecvHaloIDs[2 * iH + 1];
+		uint64_t descID = totBuffRecvDescID[iH];
+		int thisIndex = thisMapTrees[descID];
+		int nProgs = totBuffRecvProgIndex[iH];
 
-		int thisTreeIndex = thisMapTrees[descID];
-
-		/* Check whether the most likely descendant of the halo in the buffer is the same as the one found in its "original" task. */
-		if (locMTrees[1][thisTreeIndex].mainHalo.ID == descID && locMTrees[1][thisTreeIndex].idProgenitor.size() > 0)
+		for (int jH = 0; jH < nProgs; jH++)
 		{
 
-			/* If the progenitor with the highest merit is not on this task, replace the (local) highest merit ID with this one.
-			 * In this way, this halo now knows that its most likely descendant is not located on this task, and when cleaning the 
-			 * connection will not be taken among the progenitors of the old highest merit ID-halo.	*/
-			if (locMTrees[1][thisTreeIndex].idProgenitor[0] != progID)
-				locMTrees[1][thisTreeIndex].idProgenitor[0] = progID;
+			Halo thisProg = totBuffRecvProg[iProg];
+			locMTrees[1][thisIndex].idProgenitor.push_back(thisProg.ID);
+			locMTrees[1][thisIndex].progHalo.push_back(thisProg);
+	
+			for (int iC = 0; iC < nPTypes; iC++)
+			{
+				locMTrees[1][thisIndex].nCommon[iC].push_back(totBuffRecvComm[iComm]);
+				iComm++;
+			}
+
+		if (locTask == 0)
+			cout << iH << ", " << descID << ", " << jH << "/ " << nProgs << " : " << iProg << ", " << thisProg.ID 
+				<< " " << locMTrees[1][thisIndex].nCommon[1][jH] << endl; //", " << descID << 
+		
+			iProg++;
+		}
+
+		if (locMTrees[1][thisIndex].progHalo.size() > 1)
+		{
+			locMTrees[1][thisIndex].SortByMerit();
+
+		//	if (locTask == 0)
+		//	locMTrees[1][thisIndex].Info();
 		}
 	}
+
+	/**/
+
 }
 
 

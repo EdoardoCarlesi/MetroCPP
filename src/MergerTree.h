@@ -33,19 +33,18 @@ public:
 	MergerTree();
 	~MergerTree();
 
-	vector<Halo> progHalos;				// progenitor Halos of the main tree
 	Halo mainHalo;					// Main halo of the MTree, to be stored in the cleantree only
+	vector<Halo> progHalo;				// progenitor Halos of the main tree
 
 	bool isOrphan;					// If no progenitor is found, the halo is orphan and a token placeholder halo is 
 							// created with the same particle content to keep tracking it at subsequent steps
-	vector<uint64_t> idProgenitor;	// IDs of progenitors
-	vector<int> indexProgenitor;			// local array index of progenitors
+	vector<uint64_t> idProgenitor;			// IDs of progenitors --> this is needed to track halos from maps and then load the progenitors
 	vector<vector<int>> nCommon;			// Particles in common are separated per particle type
 
 	map<uint64_t, vector<int>> indexCommon; 	
-	void AssignMap(void);
 
 	void SortByMerit(void);				// Once possible progenitors have been found, compare
+	void AssignMap(void);				
 	void Clean(void);
 	void Info(void);
 };
