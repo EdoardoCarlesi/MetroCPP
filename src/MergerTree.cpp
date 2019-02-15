@@ -355,63 +355,9 @@ void FindProgenitors(int iOne, int iTwo)
 				locMTrees[iOne][iM].progHalo[iP] = locHalos[iTwo][thisHaloIndex];
 		}
 
-		locMTrees[iOne][iM].SortByMerit();
-
-#ifdef TEST
-		/* Orphan halos are identified in the forward search only */
-		if (iOne == 0)
-		{
-#ifdef NOPTYPE
-			if (locMTrees[iOne][iM].progHalo.size() == 0 && 
-				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
-#else
-			if (locMTrees[iOne][iM].progHalo.size() == 0 && 
-				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
-#endif
-			{
-				Halo thisHalo = locHalos[iOne][iM];
-				thisHalo.isToken = true;
-				thisHalo.nOrphanSteps++;
-		
-				if (thisHalo.nOrphanSteps > 1)
-					iOldOrphans++;
-
-				int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
-
-				/* Stop tracking small halos after a while */
-				if (thisHalo.nOrphanSteps <= maxOrphanSteps )
-				{
-					/* Update the container of local orphan halos */
-					locOrphHalos.push_back(thisHalo);
-
-					/* Update the local mtree with a copy of itself */
-					locMTrees[iOne][iM].isOrphan = true;
-					locMTrees[iOne][iM].idProgenitor.push_back(locHalos[iOne][iM].ID);
-
-					/* Update the particle content */
-					locOrphParts.push_back(locParts[iOne][iM]);
-					locOrphParts[nLocOrphans].resize(nPTypes);
-
-					/* Copy particle blocks divided by particle type */
-					for (int iP = 0; iP < nPTypes; iP++)
-						copy(locParts[iOne][iM][iP].begin(), locParts[iOne][iM][iP].end(), 
-							back_inserter(locOrphParts[nLocOrphans][iP]));
-
-					nLocOrphans++;
-				} else {	// Stop tracking this orphan halo
-					nLocUntrack++;
-				}
-
-			} else { // This halo has a progenitor
-
-				if (locHalos[iOne][iM].isToken)
-					iFixOrphans++;
-
-				locMTrees[iOne][iM].isOrphan = false;
-				nLocTrees++;
-			}
-		} // if iOne = 0 
-#endif	// test
+		/* Sort only with 2 progenitors at least */
+		if (locMTrees[iOne][iM].progHalo.size() > 1)
+			locMTrees[iOne][iM].SortByMerit();
 	}
 };		/* End of the find progenitor function in full box mode */
 
@@ -515,8 +461,8 @@ void FindProgenitors(int iOne, int iTwo)
 			locMTrees[iOne][iM].progHalo[iP] = locHalos[iTwo][thisHaloIndex];
 		}
 
-		/* Sort */
-		if (locMTrees[iOne][iM].progHalos.size() > 1)
+		/* Sort only with 2 progenitors at least */
+		if (locMTrees[iOne][iM].progHalo.size() > 1)
 			locMTrees[iOne][iM].SortByMerit();
 	}
 };
@@ -578,14 +524,15 @@ void CleanTrees(int iStep)
 			{
 				cout << " ON TASK " << locTask << " jTree is outside the limits: " << jTree << endl; 
 			} else {
-				descID = locMTrees[1][jTree].idProgenitor[0];	
+				//descID = locMTrees[1][jTree].idProgenitor[0];	
+				descID = locMTrees[1][jTree].progHalo.ID;	
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
 
 			/* Sanity check */
 			if (descID == 0 && progHalo.nPart[1] > minPartHalo)
 			{
-				cout << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
+				cout << "OnTask= " << locTask << "WARNING. Progenitor ID not assigned: " << progID << " " << descID 
 					<< " | " << iTree << " " << jTree << endl;
 			}
 
@@ -730,7 +677,7 @@ void AssignProgenitor()
 
 				} else {
 					//cout << locTask << " does not have progenitor ID: " << progID << endl;
-					//locCleanTrees[iNumCat-1][iC].progHalos[iS].Info();
+					//locCleanTrees[iNumCat-1][iC].progHalo[iS].Info();
 				}
 			}
 		}
