@@ -525,7 +525,7 @@ void CleanTrees(int iStep)
 				cout << " ON TASK " << locTask << " jTree is outside the limits: " << jTree << endl; 
 			} else {
 				//descID = locMTrees[1][jTree].idProgenitor[0];	
-				descID = locMTrees[1][jTree].progHalo.ID;	
+				descID = locMTrees[1][jTree].progHalo[0].ID;	
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
 

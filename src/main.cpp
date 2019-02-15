@@ -260,7 +260,6 @@ int main(int argv, char **argc)
 #endif
 			iniTime = clock();
 			CleanTrees(iNumCat);
-			//CommTasks.SyncMergerTreeBuffer();
 
 #ifndef ZOOM
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers 
