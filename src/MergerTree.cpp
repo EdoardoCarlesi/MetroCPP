@@ -66,11 +66,11 @@ void MergerTree::Info()
 
 	if (isOrphan)
 		for (int iP = 0; iP < idProgenitor.size(); iP++)
-			cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << endl;
+			cout << " ID= " << idProgenitor[iP] << endl;
 	else
+		for (int iC = 1; iC < nPTypes; iC++)
 		for (int iP = 0; iP < idProgenitor.size(); iP++)
-			cout << "Ind=" << indexProgenitor[iP] << " ID= " << idProgenitor[iP] << " NP=" << nCommon[1][iP] << endl;
-
+			cout << iP << ",  " << iC << " ID= " << idProgenitor[iP] << " nPartComm=" << nCommon[iC][iP] <<  " nProg: " << idProgenitor.size() << endl;
 };
 
 
@@ -83,8 +83,7 @@ void MergerTree::Clean()
 	nCommon.clear();
 
 	idProgenitor.clear();
-	indexProgenitor.clear();
-	progHalos.clear();
+	progHalo.clear();
 };
 
 
@@ -102,7 +101,6 @@ MergerTree::~MergerTree()
 void MergerTree::AssignMap()
 {
 	int nProgs = 0, nCommTot = 0, iP = 0;
-	//map<uint64_t, vector<int>>::iterator thisMap;
 	
 	/* Each merger tree stores the halo ids in a map that stores the number of particles shared with each progenitor */
 	for (auto const& thisMap : indexCommon) 
@@ -134,8 +132,7 @@ void MergerTree::AssignMap()
 	} else { 
 		/* We allocate these vectors here, the indexes and the halos will be copied inside later on */
 		isOrphan = false;
-		indexProgenitor.resize(nProgs);
-		progHalos.resize(nProgs);
+		progHalo.resize(nProgs);
 	}
 };
 
@@ -147,27 +144,24 @@ void MergerTree::SortByMerit()
 	vector<uint64_t> tmpIdx;
 	vector<vector<int>> tmpNCommon;
 	vector<float> allMerit;
-	vector<int> idx, tmpIndex;
-	vector<Halo> tmpProgHalos;
+	vector<int> idx;
+	vector<Halo> tmpProgHalo;
 	float merit = 0.0;
 
-	for (int iM = 0; iM < idProgenitor.size(); iM++)
+	for (int iM = 0; iM < progHalo.size(); iM++)
 	{
-		int nComm = 0;
+		int nComm = 0, nPH0 = 0, nPH1 = 0;
 		double ratioM = 0;
 
 		for (int iC = 0; iC < nPTypes; iC++)
 			nComm += nCommon[iC][iM];
-		
-		int nPH0 = 0, nPH1 = 0;
  
 		for (int iP = 0; iP < nPTypes; iP++)
 		{	
 			nPH0 += mainHalo.nPart[iP];
-			nPH1 += progHalos[iM].nPart[iP];
+			nPH1 += progHalo[iM].nPart[iP];
 		}
 
-		//ratioM = (float) mainHalo.nPart[1] / (float) progHalos[iM].nPart[1];
 		ratioM = (float) nPH0 / (float) nPH1;
 	
 		if (ratioM < 1.0) ratioM = 1.0 / ratioM;
@@ -181,8 +175,7 @@ void MergerTree::SortByMerit()
 	}
 	
 	idx = SortIndexes(allMerit);
-	tmpProgHalos.resize(idx.size());
-	tmpIndex.resize(idx.size());
+	tmpProgHalo.resize(idx.size());
 	tmpIdx.resize(idx.size());
 	tmpNCommon.resize(nPTypes);
 
@@ -200,15 +193,13 @@ void MergerTree::SortByMerit()
 			tmpNCommon[iT][oldIdx] = nCommon[iT][newIdx];
 
 		tmpIdx[oldIdx] = idProgenitor[newIdx];
-		tmpIndex[oldIdx] = indexProgenitor[newIdx];
-		tmpProgHalos[oldIdx] = progHalos[newIdx];
+		tmpProgHalo[oldIdx] = progHalo[newIdx];
 	}	
 
 	for (int iM = 0; iM < idProgenitor.size(); iM++)
 	{
 		idProgenitor[iM] = tmpIdx[iM];
-		indexProgenitor[iM] = tmpIndex[iM];
-		progHalos[iM] = tmpProgHalos[iM];
+		progHalo[iM] = tmpProgHalo[iM];
 
 		for (int iT = 0; iT < nPTypes; iT++)
 			nCommon[iT][iM] = tmpNCommon[iT][iM];
@@ -216,10 +207,10 @@ void MergerTree::SortByMerit()
 
 	tmpIdx.clear();
 	tmpIdx.shrink_to_fit();
-	tmpIndex.clear();
-	tmpIndex.shrink_to_fit();
-	tmpProgHalos.clear();
-	tmpProgHalos.shrink_to_fit();
+	tmpProgHalo.clear();
+	tmpProgHalo.shrink_to_fit();
+#ifdef TEST
+#endif
 };
 
 	       /****************************************************************************
@@ -358,30 +349,26 @@ void FindProgenitors(int iOne, int iTwo)
 			thisHaloID = locMTrees[iOne][iM].idProgenitor[iP];
 			thisHaloIndex = nextMapTrees[thisHaloID];			
 
-			/* Here we fill the indexProgenitor & progHalos */
-			locMTrees[iOne][iM].indexProgenitor[iP] = thisHaloIndex;
-
 			if (thisHaloIndex >= nLocHalos[iTwo])
-				locMTrees[iOne][iM].progHalos[iP] = locBuffHalos[thisHaloIndex-nLocHalos[iTwo]];
+				locMTrees[iOne][iM].progHalo[iP] = locBuffHalos[thisHaloIndex-nLocHalos[iTwo]];
 			else
-				locMTrees[iOne][iM].progHalos[iP] = locHalos[iTwo][thisHaloIndex];
+				locMTrees[iOne][iM].progHalo[iP] = locHalos[iTwo][thisHaloIndex];
 		}
 
 		locMTrees[iOne][iM].SortByMerit();
 
+#ifdef TEST
 		/* Orphan halos are identified in the forward search only */
 		if (iOne == 0)
 		{
-
 #ifdef NOPTYPE
-			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
+			if (locMTrees[iOne][iM].progHalo.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
 #else
-			if (locMTrees[iOne][iM].idProgenitor.size() == 0 && 
+			if (locMTrees[iOne][iM].progHalo.size() == 0 && 
 				locMTrees[iOne][iM].mainHalo.nPart[1] > minPartHalo)
 #endif
 			{
-
 				Halo thisHalo = locHalos[iOne][iM];
 				thisHalo.isToken = true;
 				thisHalo.nOrphanSteps++;
@@ -423,9 +410,11 @@ void FindProgenitors(int iOne, int iTwo)
 				locMTrees[iOne][iM].isOrphan = false;
 				nLocTrees++;
 			}
-		} 
+		} // if iOne = 0 
+#endif	// test
 	}
 
+#ifdef TEST
 	/* Trace the orphans in the forward loop */
 	if (iOne == 0)
 	{
@@ -456,6 +445,7 @@ void FindProgenitors(int iOne, int iTwo)
 			cout << "     ---> " << iFixOrphans << " orphans reconnected to their descendants.  " << endl;
 		}
 	}
+#endif
 
 };		/* End of the find progenitor function in full box mode */
 
@@ -556,10 +546,7 @@ void FindProgenitors(int iOne, int iTwo)
 		{
 			thisHaloID = locMTrees[iOne][iM].idProgenitor[iP];
 			thisHaloIndex = nextMapTrees[thisHaloID];			
-
-			/* Here we fill the indexProgenitor & progHalos */
-			locMTrees[iOne][iM].indexProgenitor[iP] = thisHaloIndex;
-			locMTrees[iOne][iM].progHalos[iP] = locHalos[iTwo][thisHaloIndex];
+			locMTrees[iOne][iM].progHalo[iP] = locHalos[iTwo][thisHaloIndex];
 		}
 
 		locMTrees[iOne][iM].SortByMerit();
@@ -653,10 +640,6 @@ void CleanTrees(int iStep)
 		uint64_t mainID = locHalos[0][iTree].ID;
 		int nProgSize = locMTrees[0][iTree].idProgenitor.size();
 
-		//if (mainID == 2902278011962691764)
-		//	cout << "TEST DI CRISTO " << iTree << " nProgSize: " << nProgSize << " " 
-		//		<< locMTrees[0][iTree].idProgenitor[0] << endl;
-
 		MergerTree mergerTree;
 		mergerTree.mainHalo = locHalos[0][iTree];
 		mergerTree.isOrphan = locMTrees[0][iTree].isOrphan;
@@ -665,7 +648,7 @@ void CleanTrees(int iStep)
 		{
 			nProgSize = 0;
 			mergerTree.idProgenitor.push_back(mainID);
-			mergerTree.progHalos.push_back(locHalos[0][iTree]);
+			mergerTree.progHalo.push_back(locHalos[0][iTree]);
 			
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
@@ -680,24 +663,17 @@ void CleanTrees(int iStep)
 		for (int iProg = 0; iProg < nProgSize; iProg++)
 		{
 			Halo progHalo;	
-			int jTree = locMTrees[0][iTree].indexProgenitor[iProg];
 			uint64_t progID = locMTrees[0][iTree].idProgenitor[iProg];
+			int jTree = thisMapTrees[progID]; //locMTrees[0][iTree].indexProgenitor[iProg];	// CHECK THIS OUT TODO FIXME why not nextMapTrees
 			uint64_t descID;
-#ifdef ZOOM
-			descID = locMTrees[1][jTree].idProgenitor[0];	
-			progHalo = locMTrees[1][jTree].mainHalo;
-#else 		
-			if (jTree < 0) 
+
+			if (jTree > locMTrees[1].size() || jTree < 0) 
 			{
-				int kTree = -jTree -1;			// Need to correct for the "offset" factor
-				progHalo = locMTrees[1][nLocHalos[1]+kTree].mainHalo;	
-				descID = locMTrees[1][nLocHalos[1]+kTree].idProgenitor[0];	
-		
+				cout << " ON TASK " << locTask << " jTree is outside the limits: " << jTree << endl; 
 			} else {
 				descID = locMTrees[1][jTree].idProgenitor[0];	
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
-#endif
 
 			/* Sanity check */
 			if (descID == 0 && progHalo.nPart[1] > minPartHalo)
@@ -710,14 +686,12 @@ void CleanTrees(int iStep)
 			if (mainID == descID)
 			{
 				mergerTree.idProgenitor.push_back(progID);
-				mergerTree.indexProgenitor.push_back(jTree);
-				mergerTree.progHalos.push_back(progHalo);
+				mergerTree.progHalo.push_back(progHalo);
 
 				for(int iT = 0; iT < nPTypes; iT++)
 					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 			}	// mainID = descID
 		}	// loop on progenitors
-
 	} // isOrphan == false
 
 		/* In some cases, a subhalo disappears and its main progenitor turns out to be the host halo, 
@@ -758,8 +732,7 @@ void CleanTrees(int iStep)
 
 				mergerTree.isOrphan = true;
 				mergerTree.idProgenitor.push_back(thisHalo.ID);
-				mergerTree.indexProgenitor.push_back(iTree);
-				mergerTree.progHalos.push_back(thisHalo);
+				mergerTree.progHalo.push_back(thisHalo);
 
 				for(int iT = 0; iT < nPTypes; iT++)
 					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][0]);
@@ -767,7 +740,7 @@ void CleanTrees(int iStep)
 				nLocUntrack++;
 			}	
  
-		} 
+		}	// if the tree has no progenitors  
 
 		if (mergerTree.idProgenitor.size() > 1)	
 			mergerTree.SortByMerit();
@@ -829,13 +802,13 @@ void AssignProgenitor()
 
 	for (int iC = 0; iC < locCleanTrees[iNumCat-1].size(); iC++)
 	{
-		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].progHalos.size(); iS++ )
+		for (int iS = 0; iS < locCleanTrees[iNumCat-1][iC].progHalo.size(); iS++ )
 		{
-			progID = locCleanTrees[iNumCat-1][iC].progHalos[iS].ID;
+			progID = locCleanTrees[iNumCat-1][iC].progHalo[iS].ID;
 	
 			if(locCleanTrees[iNumCat-1][iC].isOrphan)
 			{
-				locCleanTrees[iNumCat-1][iC].progHalos[0] = locCleanTrees[iNumCat-1][iC].mainHalo; 
+				locCleanTrees[iNumCat-1][iC].progHalo[0] = locCleanTrees[iNumCat-1][iC].mainHalo; 
 			} else {
 
 				if (id2Index[1].find(progID) != id2Index[1].end()) 
@@ -843,10 +816,10 @@ void AssignProgenitor()
 					progIndex = id2Index[1][progID];
 #ifndef ZOOM	
 					if (progIndex < 0)
-						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locBuffHalos[-progIndex-1];
+						locCleanTrees[iNumCat-1][iC].progHalo[iS] = locBuffHalos[-progIndex-1];
 					else
 #endif
-						locCleanTrees[iNumCat-1][iC].progHalos[iS] = locHalos[iUseCat][progIndex];
+						locCleanTrees[iNumCat-1][iC].progHalo[iS] = locHalos[iUseCat][progIndex];
 
 				} else {
 					//cout << locTask << " does not have progenitor ID: " << progID << endl;
@@ -894,7 +867,7 @@ void BuildTrees()
 
 	for (int iC = 0; iC < nHaloTrees; iC++)
 	{
-		uint64_t mainProgID = locCleanTrees[iNumCat-1][iC].progHalos[0].ID;
+		uint64_t mainProgID = locCleanTrees[iNumCat-1][iC].progHalo[0].ID;
 	
 		it = id2Index[1].find(mainProgID);
 

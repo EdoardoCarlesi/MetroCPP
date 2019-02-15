@@ -892,17 +892,16 @@ void IOSettings::ReadTrees()
 					for (int iC = 0; iC < nPTypes; iC++)
 						mergerTree.nCommon[iC].resize(nProgHalo);
 
-					mergerTree.progHalos.resize(nProgHalo);
+					mergerTree.progHalo.resize(nProgHalo);
 					mergerTree.idProgenitor.resize(nProgHalo);
-					mergerTree.indexProgenitor.resize(nProgHalo);
 
 					if (orphanHalo == 1)
 					{
 						mergerTree.isOrphan = true;
-						mergerTree.progHalos[0].isToken = true;
+						mergerTree.progHalo[0].isToken = true;
 					} else {
 						mergerTree.isOrphan = false;
-						mergerTree.progHalos[0].isToken = false;
+						mergerTree.progHalo[0].isToken = false;
 					}
 
 					iLine++;
@@ -913,8 +912,8 @@ void IOSettings::ReadTrees()
 
 					mergerTree.idProgenitor[iLine-1] = progHaloID;
 					mergerTree.nCommon[1][iLine-1] = commPart;
-					mergerTree.progHalos[iLine-1].ID = progHaloID;
-					mergerTree.progHalos[iLine-1].nPart[1] = progPart;
+					mergerTree.progHalo[iLine-1].ID = progHaloID;
+					mergerTree.progHalo[iLine-1].nPart[1] = progPart;
 					iLine++;
 				}
 
@@ -1062,7 +1061,7 @@ void IOSettings::WriteTree(int iThisCat)
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
-				Halo progHalo = thisTree.progHalos[iP];
+				Halo progHalo = thisTree.progHalo[iP];
 
 				int nTotPt = 0;
 				for (int iA = 0; iA < nPTypes; iA++)
