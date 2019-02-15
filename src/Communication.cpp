@@ -307,7 +307,7 @@ void Communication::SyncMergerTreeBuffer()
 	// FIXME maybe these things are already set, no need to call these functions once again
 	/* Determine the order of sending and receiving tasks to avoid gridlocks and make it consistent through
 	 * all the tasks  */
-	SetSendRecvTasks();
+	//SetSendRecvTasks();
 
 	/* First communicate the list of nodes to be sent and received by every task 
 	 * The list of nodes also contains the list of haloes associated to them  */
@@ -332,6 +332,8 @@ void Communication::SyncMergerTreeBuffer()
 #ifdef VERBOSE
 		if (nBuffSendHaloIDs == 0)
 			cout << "Task=" << locTask << " has zero send buffer to " << sendTask << endl;  
+		//if (locTask == 0)
+		//cout << "Task = " << locTask << "; " << nBuffSendHaloIDs << " is the send buffer to " << sendTask << endl;  
 #endif
 
 		buffSendHaloIDs.resize(2 * nBuffSendHaloIDs);
@@ -344,11 +346,13 @@ void Communication::SyncMergerTreeBuffer()
 			buffSendHaloIDs[2 * iP] = locMTrees[iUseCat][iH].mainHalo.ID;
 
 			/* If the halo on the buffer is orphan, then we assign it its own ID as progenitor */
-			if (locMTrees[iUseCat][iH].isOrphan == true)
+			if (locMTrees[iUseCat][iH].isOrphan == true) {
 				buffSendHaloIDs[2 * iP + 1] = locMTrees[1][iH].mainHalo.ID;
-			else
+				//locMTrees[1][iH].mainHalo.Info();
+			} else {
 				buffSendHaloIDs[2 * iP + 1] = locMTrees[1][iH].idProgenitor[0];
-			
+			}
+
 			if (iH > locHalos[iUseCat].size())	// Sanity check 
 				cout << "WARNING. Halo index " << iH << " not found locally (locHalos). " 
 					<< "Required in the send buffer from task=" << locTask << " to task=" << sendTask << endl;
@@ -416,9 +420,17 @@ void Communication::SyncMergerTreeBuffer()
 			 * In this way, this halo now knows that its most likely descendant is not located on this task, and when cleaning the 
 			 * connection will not be taken among the progenitors of the old highest merit ID-halo.	*/
 			if (locMTrees[1][thisTreeIndex].idProgenitor[0] != progID)
-				locMTrees[1][thisTreeIndex].idProgenitor[0] = progID;
+			{
+				//locMTrees[1][thisTreeIndex].idProgenitor[0] = progID;
+				//if (locTask ==0)
+				//	locMTrees[1][thisTreeIndex].mainHalo.Info();
+			}
+			//if (!locMTrees[1][thisTreeIndex].mainHalo.isToken) 
 		}
 	}
+#ifdef TEST
+#endif
+
 }
 
 

@@ -255,7 +255,7 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 			{
 				SettingsIO.WriteLog(iNumCat, elapsed);
-				cout << "Merger Tree buffer synchronized in " << elapsed << "s. " << endl;
+				//cout << "Merger Tree buffer synchronized in " << elapsed << "s. " << endl;
 			}
 #endif
 			iniTime = clock();
