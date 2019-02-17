@@ -28,6 +28,7 @@ public:
 #ifndef ZOOM
 	void BroadcastAndGatherGrid(void);
 	void SyncMergerTreeBuffer(void);
+	void GatherMergerTrees(int);
 #endif
 
 	void BufferSendRecv(void);	

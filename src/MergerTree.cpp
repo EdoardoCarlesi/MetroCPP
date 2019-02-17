@@ -46,7 +46,7 @@ HaloTree::~HaloTree()
 {
 	Clean();
 };
-
+	
 
 
 void HaloTree::Clean()
@@ -58,6 +58,30 @@ void HaloTree::Clean()
 	progHalo.clear();
 };
 
+
+/* Append a list of progenitors from another tree to this one */
+void MergerTree::Append(MergerTree mTree)
+{
+	if (mainHalo.ID != mTree.mainHalo.ID)
+		cout << "WARNING. Appending mtree of halo " << mTree.mainHalo.ID << " to a different main branch: " << mainHalo.ID << endl;
+
+	for (int iM = 0; iM < mTree.progHalo.size(); iM ++)
+	{
+		map<uint64_t, vector<int>>::iterator iter;
+		iter = indexCommon.find(mTree.progHalo[iM].ID);
+
+		/* If the progenitor is not inside this tree then append it */
+		if (iter == indexCommon.end())
+		{
+			idProgenitor.push_back(mTree.progHalo[iM].ID);
+			progHalo.push_back(progHalo[iM]);
+
+			for (int iC = 0; iC < nPTypes; iC ++)
+				nCommon[iC].push_back(mTree.nCommon[iC][iM]);
+		}
+	}
+
+};
 
 
 void MergerTree::Info()

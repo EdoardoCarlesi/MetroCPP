@@ -43,6 +43,7 @@ public:
 
 	map<uint64_t, vector<int>> indexCommon; 	
 
+	void Append(MergerTree);
 	void SortByMerit(void);				// Once possible progenitors have been found, compare
 	void AssignMap(void);				
 	void Clean(void);
@@ -64,6 +65,7 @@ public:
 
 	/* Vector of n steps, each step containing all progenitor halos */
 	vector<vector<Halo>> progHalo;
+
 
 	void SmoothTree(void);				// Smooths over fly-bys 
 	void FixTree(void);				// Looks for missing subhalos and fixes with token halos at the missing positions

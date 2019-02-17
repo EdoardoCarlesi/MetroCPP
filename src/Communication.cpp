@@ -284,10 +284,129 @@ void Communication::BufferSendRecv()
 };
 
 
+/* 
+ * Once the merger trees are built, we need to communicate the results 
+ */
+void Communication::GatherMergerTrees(int iMTree)
+{
+	int *sizeProgs = nullptr, *sizeMains = nullptr, *dispProgs = nullptr, *dispMains = nullptr, *sizePTProgs = nullptr, *dispPTProgs = nullptr; 
+	int *recvTrackProgs = nullptr, *recvTrackNComm = nullptr;
+	int nSendProgs = 0, nSendMains = 0, nRecvProgs= 0, nRecvMains = 0;
+	Halo *recvMainHalos, *recvProgHalos;
+	
+	/* These are useful only non non-master task */
+	vector<int> trackProgs, trackNComm;
+	vector<Halo> mainHalos, progHalos;
+
+	/* All tasks except the master now pack the halos for gathering */
+	if (locTask != 0)
+	{
+		for (int iL = 0; iL < locMTrees[iMTree].size(); iL ++)
+		{
+			MergerTree thisTree = locMTrees[iMTree][iL];
+			mainHalos.push_back(thisTree.mainHalo);
+			trackProgs.push_back(thisTree.progHalo.size());			
+	
+			for (int iP = 0; iP < thisTree.progHalo.size(); iP++)
+			{
+				progHalos.push_back(thisTree.progHalo[iP]);
+				
+				for (int iT = 0; iT < nPTypes; iT++)
+					trackNComm.push_back(thisTree.nCommon[iT][iP]);
+			}
+		}
+		
+		/* Count the objects to be sent and gathered */
+		nSendProgs = progHalos.size();
+		nSendMains = mainHalos.size();
+	}
+
+	MPI_Reduce(&nSendMains, &nRecvMains, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&nSendProgs, &nRecvProgs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+	if (locTask == 0)
+	{
+		cout << "Gathering " << nRecvProgs << " progenitors and " << nRecvMains << " main branch halos. " << endl;
+		
+		sizeProgs = (int *) malloc(totTask * sizeof(int));
+		sizeMains = (int *) malloc(totTask * sizeof(int));
+		dispProgs = (int *) malloc(totTask * sizeof(int));
+		dispMains = (int *) malloc(totTask * sizeof(int));
+		dispPTProgs = (int *) malloc(totTask * sizeof(int));
+		sizePTProgs = (int *) malloc(totTask * sizeof(int));
+
+		recvMainHalos = (Halo *) malloc(nRecvMains * sizeof(Halo));
+		recvProgHalos = (Halo *) malloc(nRecvProgs * sizeof(Halo));
+		recvTrackProgs = (int *) malloc(nRecvMains * sizeof(int));
+		recvTrackNComm = (int *) malloc(nRecvProgs * nPTypes * sizeof(int));
+	}
+
+	/* Gather step 0 */
+	MPI_Gather(&nSendMains, 1, MPI_INT, sizeMains, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gather(&nSendProgs, 1, MPI_INT, sizeProgs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	if (locTask == 0)
+	{
+		nSendMains = 0;
+		dispProgs[0] = 0;
+		dispMains[0] = 0;
+
+		for (int iT = 1; iT < totTask; iT++)
+		{
+			dispProgs[iT] = dispProgs[iT -1] + sizeProgs[iT -1];
+			dispMains[iT] = dispMains[iT -1] + sizeMains[iT -1];
+			//cout << iT << " " << dispMains[iT] << endl;
+		}
+
+		/* Correct for number of particle types */
+		for (int iT = 0; iT < totTask; iT++)
+		{
+			dispPTProgs[iT] = dispProgs[iT] * nPTypes;
+			sizePTProgs[iT] = sizeProgs[iT] * nPTypes;
+		}
+	}
+
+	/* How many progenitors per main halo */
+	MPI_Gatherv(&trackProgs[0], nSendMains, MPI_INT, recvTrackProgs, sizeMains, dispMains, MPI_INT, 0, MPI_COMM_WORLD);
+
+	/* Particles shared by each progenitor */
+	MPI_Gatherv(&trackProgs[0], nSendProgs * nPTypes, MPI_INT, recvTrackNComm, sizePTProgs, dispPTProgs, MPI_INT, 0, MPI_COMM_WORLD);
+
+	if (locTask == 0)
+	{
+		for (int iT = 0; iT < totTask; iT++)
+		{
+			dispMains[iT] *= (int) sizeHalo;
+			sizeMains[iT] *= (int) sizeHalo;
+			dispProgs[iT] *= (int) sizeHalo;
+			sizeProgs[iT] *= (int) sizeHalo;
+			//cout << iT << " " << sizeProgs[iT] << endl;
+			//cout << iT << " " << sizeMains[iT] << endl;
+		}
+	
+		mainHalos.clear();
+		mainHalos.shrink_to_fit();
+	}	
+
+	/* Gather descendant main halos */
+	MPI_Gatherv(&mainHalos[0], nSendMains * sizeHalo, MPI_BYTE, recvMainHalos, sizeMains, dispMains, MPI_BYTE, 0, MPI_COMM_WORLD);
+
+#ifdef TEST
+	/* Gather progenitors */
+	MPI_Gatherv(&progHalos[0], nSendProgs * sizeHalo, MPI_BYTE, recvProgHalos, sizeProgs, dispProgs, MPI_BYTE, 0, MPI_COMM_WORLD);
+#endif
+	/* Update the merger tree maps on the main task */	
+
+	// if 0
+
+	// if 1
+
+}
+
+
 
 /* 
  * Once the merger trees are built, we need to communicate the results 
- * 
  */
 void Communication::SyncMergerTreeBuffer()
 {
@@ -296,6 +415,7 @@ void Communication::SyncMergerTreeBuffer()
 	vector<int> buffSendProgIndex, buffRecvProgIndex, totBuffRecvProgIndex;
 	vector<uint64_t> buffSendDescID, buffRecvDescID, totBuffRecvDescID;
 	vector<int> buffSendComm, buffRecvComm, totBuffRecvComm;
+	vector<int> trackHaloTask; 
 
 	/* Tasks receiving and sending messages */
 	int recvTask = 0, sendTask = 0;
