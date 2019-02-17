@@ -286,6 +286,7 @@ void Communication::BufferSendRecv()
 
 /* 
  * Once the merger trees are built, we need to communicate the results 
+ * TODO: maybe do MPI allgather only for 1 and keep it split among tasks?
  */
 void Communication::GatherMergerTrees(int iMTree)
 {
@@ -320,6 +321,8 @@ void Communication::GatherMergerTrees(int iMTree)
 		nSendProgs = progHalos.size();
 		nSendMains = mainHalos.size();
 	}
+
+	cout << "On Task= " << locTask << " there are " << nSendProgs << " progenitors and " << nSendMains << " main halos. " << endl; 
 
 	MPI_Reduce(&nSendMains, &nRecvMains, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&nSendProgs, &nRecvProgs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -380,8 +383,6 @@ void Communication::GatherMergerTrees(int iMTree)
 			sizeMains[iT] *= (int) sizeHalo;
 			dispProgs[iT] *= (int) sizeHalo;
 			sizeProgs[iT] *= (int) sizeHalo;
-			//cout << iT << " " << sizeProgs[iT] << endl;
-			//cout << iT << " " << sizeMains[iT] << endl;
 		}
 	
 		mainHalos.clear();
@@ -391,16 +392,79 @@ void Communication::GatherMergerTrees(int iMTree)
 	/* Gather descendant main halos */
 	MPI_Gatherv(&mainHalos[0], nSendMains * sizeHalo, MPI_BYTE, recvMainHalos, sizeMains, dispMains, MPI_BYTE, 0, MPI_COMM_WORLD);
 
-#ifdef TEST
 	/* Gather progenitors */
 	MPI_Gatherv(&progHalos[0], nSendProgs * sizeHalo, MPI_BYTE, recvProgHalos, sizeProgs, dispProgs, MPI_BYTE, 0, MPI_COMM_WORLD);
-#endif
-	/* Update the merger tree maps on the main task */	
 
-	// if 0
+	/* Free the buffer and the bufffer information */
+	if (locTask != 0)
+	{
+		mainHalos.clear();
+		progHalos.clear();
+	} else {
+		free(sizeMains); free(dispMains);
+		free(sizeProgs); free(dispProgs);
+		free(sizePTProgs); free(dispPTProgs);
+	}
 
-	// if 1
+	/*
+	 * Update the merger tree maps on the main task 
+	 * 						*/	
 
+	if (locTask == 0)
+	{
+
+		int iTrack = 0, iComm = 0, iAppend = 0;	
+
+		for (int iMain = 0; iMain < nRecvMains; iMain++)
+		{
+			MergerTree thisTree;
+			thisTree.mainHalo = recvMainHalos[iMain];
+
+			int nProg = recvTrackProgs[iMain], iProg = 0;
+
+			for (int iProg = 0; iProg < nProg; iProg++)
+			{
+				Halo thisProg = recvProgHalos[iTrack];
+				thisTree.idProgenitor.push_back(thisProg.ID);
+				thisTree.progHalo.push_back(thisProg);
+
+				for (int iC = 0; iC < nPTypes; iC++)
+				{
+					thisTree.nCommon[iC].push_back(recvTrackNComm[iComm]);
+					iComm++;
+				}
+			
+				iTrack++;
+			}
+		
+			/* if 0 --> There is no buffer exchange on 0 so just add everything to locMTree[0] */
+			if (iMTree == 0)
+			{
+				locMTrees[0].push_back(thisTree);
+				thisMapTrees[thisTree.mainHalo.ID] = locMTrees[0].size()-1;
+
+			/* Need to synchronize and update halos on the buffer */
+			} else if (iMTree == 1) {
+	
+				map<uint64_t, int>::iterator iter;
+				iter = nextMapTrees.find(thisTree.mainHalo.ID);
+	
+				/* This halo is already on the local buffer */
+				if (iter != nextMapTrees.end())
+				{
+					int thisIndex = nextMapTrees[thisTree.mainHalo.ID];
+					locMTrees[1][thisIndex].Append(thisTree);		
+					iAppend++;
+				} else {
+					locMTrees[1].push_back(thisTree);
+					nextMapTrees[thisTree.mainHalo.ID] = locMTrees[1].size()-1;
+				}
+
+			}
+		}	// for iMain 
+				
+		cout << "Local MergerTree[" << iMTree << "] size: " << nLocHalos[1] << ", now: " << locMTrees[1].size() << " append: " << iAppend  << endl;
+	} 	// locTask == 0
 }
 
 
