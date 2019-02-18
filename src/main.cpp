@@ -223,7 +223,7 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 			{
 				SettingsIO.WriteLog(iNumCat, elapsed);
-				cout << "Forward tree building done in " << elapsed << "s. " << endl;
+				cout << "done in " << elapsed << "s. " << endl;
 			}
 
 			if (locTask == 0)
@@ -243,6 +243,31 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "done in " << elapsed << "s. " << endl;
 			}
+#ifdef GATHER_TREES
+
+			iniTime = clock();
+			CommTasks.GatherMergerTrees(0);
+
+			CommTasks.GatherMergerTrees(1);
+	
+			endTime = clock();
+			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+	
+			if (locTask == 0)
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
+				cout << "Merger Trees gathered in " << elapsed << "s. " << endl;
+			}
+
+			if (locTask == 0)
+				CleanTrees(iNumCat);
+
+			CommTasks.CleanBuffer();
+			ShiftHalosPartsGrids();
+
+			if (locTask == 0)
+				SettingsIO.WriteTree(iNumCat); 
+#else
 #ifndef ZOOM
 			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			
 			iniTime = clock();
@@ -255,11 +280,13 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 			{
 				SettingsIO.WriteLog(iNumCat, elapsed);
-				//cout << "Merger Tree buffer synchronized in " << elapsed << "s. " << endl;
+				cout << "Merger Tree buffer synchronized in " << elapsed << "s. " << endl;
 			}
 #endif
 			iniTime = clock();
 			CleanTrees(iNumCat);
+			//CommTasks.SyncMergerTreeBuffer();
+			//CleanTrees(iNumCat);
 
 #ifndef ZOOM
 			/* Now shift the halo catalog from 1 to 0, and clean the buffers 
@@ -278,6 +305,7 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Memory cleared and Merger Trees written in " << elapsed << "s. " << endl;
 			}
+#endif	// GATHER_TREES
 
 		}	/* Finish: the trees have now been built for this step */
 
