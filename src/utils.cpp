@@ -291,7 +291,6 @@ void ShiftHalosPartsGrids()
 	
 	if (runMode == 0 || runMode == 2)
 	{
-
 		for (int iP = 0; iP < locBuffParts.size(); iP++)
 		{
 			for (int iT = 0; iT < nPTypes; iT++)
