@@ -493,27 +493,35 @@ void Communication::SyncOrphanHalos()
 	/* Each task looks for the orphan halo it holds */
 	for (auto const& thisOrphID: allOrphIDs)
 	{
-		int iTree = nextMapTrees[thisOrphID];
+		map<uint64_t, int>::iterator iter;
 
-		/* Only track halos that were originally assigned to this task */
-		if (iTree < nLocHalos[0])
+		iter = nextMapTrees.find(thisOrphID);
+	
+		/* If the ID is on this task, then copy the halo to the orphan list */
+		if (iter != nextMapTrees.end())
 		{
-			Halo thisHalo = locHalos[0][iTree];
-			locOrphHalos.push_back(thisHalo);
+			int iTree = nextMapTrees[thisOrphID];
+	
+			/* Make sure we only track halos that were originally assigned to this task */
+			if (iTree < nLocHalos[0])
+			{
+				Halo thisHalo = locHalos[0][iTree];
+				locOrphHalos.push_back(thisHalo);
 
-			/* Update the particle content */
-			locOrphParts.push_back(locParts[0][iTree]);
-			locOrphParts[nLocOrphans].resize(nPTypes);
+				/* Update the particle content */
+				locOrphParts.push_back(locParts[0][iTree]);
+				locOrphParts[nLocOrphans].resize(nPTypes);
 
-			/* Copy particle blocks divided by particle type */
-			for (int iP = 0; iP < nPTypes; iP++)
-				copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
-					back_inserter(locOrphParts[nLocOrphans][iP]));
+				/* Copy particles by particle type */
+				for (int iP = 0; iP < nPTypes; iP++)
+					locOrphParts[nLocOrphans][iP] = locParts[0][iTree][iP];
+					
+			} // If nLocHalos[0]
 
 			nLocOrphans++;	
 		}
 	}
-	
+
 	allOrphIDs.clear();
 	allOrphIDs.shrink_to_fit();
 

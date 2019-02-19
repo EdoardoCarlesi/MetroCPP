@@ -245,8 +245,8 @@ int main(int argv, char **argc)
 			}
 #ifdef GATHER_TREES
 			iniTime = clock();
-			CommTasks.GatherMergerTrees(0);
 
+			CommTasks.GatherMergerTrees(0);
 			CommTasks.GatherMergerTrees(1);
 	
 			endTime = clock();
@@ -264,8 +264,8 @@ int main(int argv, char **argc)
 
 			CommTasks.SyncOrphanHalos();
 
-			if (locTask == 0)
-				SettingsIO.WriteTree(iNumCat); 
+		//	if (locTask == 0)
+		//		SettingsIO.WriteTree(iNumCat); 
 
 			/* Clean everything */
 			CommTasks.CleanBuffer();

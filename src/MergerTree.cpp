@@ -813,7 +813,8 @@ void SyncIndex()
 
 void FreeMergerTrees(int iNumCat)
 {
-	cout << "Freeing MergerTrees... " << endl;
+	if (locTask == 0)
+		cout << "Freeing MergerTrees... " << endl;
 
         for (auto thisMTree : locMTrees[0])
                 thisMTree.Clean();
