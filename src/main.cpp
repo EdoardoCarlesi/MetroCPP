@@ -263,12 +263,14 @@ int main(int argv, char **argc)
 				CleanTrees(iNumCat);
 
 			CommTasks.SyncOrphanHalos();
-			CommTasks.CleanBuffer();
-			ShiftHalosPartsGrids();
 
 			if (locTask == 0)
 				SettingsIO.WriteTree(iNumCat); 
 
+			/* Clean everything */
+			CommTasks.CleanBuffer();
+			ShiftHalosPartsGrids();
+			FreeMergerTrees(iNumCat);
 #else
 #ifndef ZOOM
 			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			

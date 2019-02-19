@@ -102,12 +102,18 @@ void MergerTree::Info()
 void MergerTree::Clean()
 {
 	for (int iC = 0; iC < nCommon.size(); iC++)
+	{
 		nCommon[iC].clear();
+		nCommon[iC].shrink_to_fit();
+	}
 
 	nCommon.clear();
+	nCommon.shrink_to_fit();
 
 	idProgenitor.clear();
+	idProgenitor.shrink_to_fit();
 	progHalo.clear();
+	progHalo.shrink_to_fit();
 };
 
 
@@ -802,6 +808,31 @@ void SyncIndex()
 			id2Index[1][locBuffHalos[iH].ID] = nLocHalos[1] + iH;	
 	}
 #endif
+}
+
+
+void FreeMergerTrees(int iNumCat)
+{
+	cout << "Freeing MergerTrees... " << endl;
+
+        for (auto thisMTree : locMTrees[0])
+                thisMTree.Clean();
+
+        locMTrees[0].clear();
+        locMTrees[0].shrink_to_fit();
+
+        for (auto thisMTree : locMTrees[1])
+                thisMTree.Clean();
+
+        locMTrees[1].clear();
+        locMTrees[1].shrink_to_fit();
+
+	for (auto thisMTree : locCleanTrees[iNumCat])
+		thisMTree.Clean();
+
+	locCleanTrees[iNumCat].clear();
+	locCleanTrees[iNumCat].shrink_to_fit();
+
 }
 
 

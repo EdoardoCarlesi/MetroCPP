@@ -92,6 +92,7 @@ void AssignProgenitor(void);
 void InitHaloTrees(void);
 void SyncIndex(void);
 void BuildTrees(void);
+void FreeMergerTrees(int);
 
 // Pairwise comparison of halos
 void FindProgenitors(int, int);

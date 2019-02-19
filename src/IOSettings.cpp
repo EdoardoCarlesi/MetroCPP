@@ -1065,7 +1065,6 @@ void IOSettings::WriteTree(int iThisCat)
                 }	// loop on merger tree
 		
 		fileOut.close();
-		locCleanTrees[iC].clear();
         }	// loop on iCatalog
 };
 
