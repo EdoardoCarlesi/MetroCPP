@@ -264,8 +264,8 @@ int main(int argv, char **argc)
 
 			CommTasks.SyncOrphanHalos();
 
-		//	if (locTask == 0)
-		//		SettingsIO.WriteTree(iNumCat); 
+			if (locTask == 0)
+				SettingsIO.WriteTree(iNumCat); 
 
 			/* Clean everything */
 			CommTasks.CleanBuffer();
