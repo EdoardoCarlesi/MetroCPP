@@ -59,6 +59,7 @@ vector<vector<vector<uint64_t>>> locBuffParts;
 #endif
 
 vector<Halo> locOrphHalos;
+vector<uint64_t> allOrphIDs;
 vector<vector<vector<uint64_t>>> locOrphParts;
 
 typedef struct Particle Particle;

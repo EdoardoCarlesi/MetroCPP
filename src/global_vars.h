@@ -70,6 +70,7 @@ extern vector<vector<vector<uint64_t>>> locBuffParts;
 #endif
 
 /* These vectors keep track of orphan halos for which no progenitor could be found (so far) */
+extern vector<uint64_t> allOrphIDs;
 extern vector<Halo> locOrphHalos;
 extern vector<vector<vector<uint64_t>>> locOrphParts;
 

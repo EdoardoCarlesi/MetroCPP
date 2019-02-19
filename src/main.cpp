@@ -244,7 +244,6 @@ int main(int argv, char **argc)
 				cout << "done in " << elapsed << "s. " << endl;
 			}
 #ifdef GATHER_TREES
-
 			iniTime = clock();
 			CommTasks.GatherMergerTrees(0);
 
@@ -262,11 +261,13 @@ int main(int argv, char **argc)
 			if (locTask == 0)
 				CleanTrees(iNumCat);
 
+			CommTasks.SyncOrphanHalos();
 			CommTasks.CleanBuffer();
-			ShiftHalosPartsGrids();
 
 			if (locTask == 0)
 				SettingsIO.WriteTree(iNumCat); 
+
+			ShiftHalosPartsGrids();
 #else
 #ifndef ZOOM
 			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			

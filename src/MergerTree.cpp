@@ -505,38 +505,20 @@ void CleanTrees(int iStep)
 	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 6;
 
 	if (locTask == 0)
-		cout << "Cleaning Merger Tree connections for " << nLocHalos[0] << " halos." << endl;
+		cout << "Cleaning Merger Tree connections for " << locMTrees[0].size() << " halos." << endl;
 
 #ifdef VERBOSE
 	if (locTask == 0)
 		cout << "nHalos " << locHalos[0].size() << ", nTrees: " << locMTrees[0].size() << endl; 
 #endif
 
-	//for (int iTree = 0; iTree < nLocHalos[0]; iTree++)
 	for (int iTree = 0; iTree < locMTrees[0].size(); iTree++)
 	{
-		uint64_t mainID = locHalos[0][iTree].ID;
+		uint64_t mainID = locMTrees[0][iTree].mainHalo.ID;
 		int nProgSize = locMTrees[0][iTree].idProgenitor.size();
 
 		MergerTree mergerTree;
-		mergerTree.mainHalo = locHalos[0][iTree];
-		mergerTree.isOrphan = locMTrees[0][iTree].isOrphan;
-	
-		/*
-		if (mergerTree.isOrphan)
-		{
-			nProgSize = 0;
-			mergerTree.idProgenitor.push_back(mainID);
-			mergerTree.progHalo.push_back(locHalos[0][iTree]);
-			
-			for (int iT = 0; iT < nPTypes; iT++)
-			{
-				mergerTree.nCommon[iT].resize(1);
-				mergerTree.nCommon[iT][0] = locHalos[0][iTree].nPart[iT];
-			}
-
-		} else {	// If the halo is not orphan, rank order its progenitors
-		*/
+		mergerTree.mainHalo = locMTrees[0][iTree].mainHalo;
 
 		/* At each step we only record the connections between halos in catalog 0 and catalog 1, without attempting at a
 		 * reconstruction of the full merger history. This will be done later. */
@@ -544,14 +526,15 @@ void CleanTrees(int iStep)
 		{
 			Halo progHalo;	
 			uint64_t progID = locMTrees[0][iTree].idProgenitor[iProg];
-			int jTree = thisMapTrees[progID]; //locMTrees[0][iTree].indexProgenitor[iProg];	// CHECK THIS OUT TODO FIXME why not nextMapTrees
 			uint64_t descID;
+	
+			/* 1-trees are on thisMap while 0-trees are on nextMap */
+			int jTree = thisMapTrees[progID]; 
 
 			if (jTree > locMTrees[1].size() || jTree < 0) 
 			{
 				cout << " ON TASK " << locTask << " jTree is outside the limits: " << jTree << endl; 
 			} else {
-				//descID = locMTrees[1][jTree].idProgenitor[0];	
 				descID = locMTrees[1][jTree].progHalo[0].ID;	
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
@@ -567,6 +550,7 @@ void CleanTrees(int iStep)
 			/* Check that the main halo is the likeliest descendant of its progenitor */
 			if (mainID == descID)
 			{
+				//cout << "main: " << mainID << " desc: " << descID << " , j:" << jTree << " , i:" << iTree << endl; 
 				mergerTree.idProgenitor.push_back(progID);
 				mergerTree.progHalo.push_back(progHalo);
 
@@ -574,12 +558,12 @@ void CleanTrees(int iStep)
 					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][iProg]);
 			}	// mainID = descID
 		}	// loop on progenitors
-	//} // isOrphan == false
 
 		/* In some cases, a subhalo disappears and its main progenitor turns out to be the host halo, 
 		 * In this case, the subhalo is not recorded among the orphan halos, since it does have a connection
 		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
 		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
+		//if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
 		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
 		{
 			int nLocOrphans = locOrphHalos.size();
@@ -599,7 +583,10 @@ void CleanTrees(int iStep)
 
 			/* Check if it's worth to continue tracking this orphan halo */
 			if (thisHalo.nOrphanSteps <= maxOrphanSteps)
-			{ 
+			{
+#ifdef GATHER_TREES
+				allOrphIDs.push_back(thisHalo.ID);
+#else
 				/* Update the container of local orphan halos */
 				locOrphHalos.push_back(thisHalo);
 
@@ -611,7 +598,7 @@ void CleanTrees(int iStep)
 				for (int iP = 0; iP < nPTypes; iP++)
 					copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
-
+#endif
 				mergerTree.isOrphan = true;
 				mergerTree.idProgenitor.push_back(thisHalo.ID);
 				mergerTree.progHalo.push_back(thisHalo);
@@ -622,7 +609,9 @@ void CleanTrees(int iStep)
 				nLocUntrack++;
 			}	
  
-		}	// if the tree has no progenitors  
+		} else {	// if the tree has no progenitors  
+			mergerTree.isOrphan = false;
+		}	
 
 		if (mergerTree.idProgenitor.size() > 1)	
 			mergerTree.SortByMerit();
@@ -635,12 +624,13 @@ void CleanTrees(int iStep)
 
 	/* Final statistics - sanity check */
 	int nTotOrphans = 0, nTotUntrack = 0, nLocOrphans = 0;
-	nLocOrphans = locOrphHalos.size();
 
 #ifdef GATHER_TREES
+	nLocOrphans = allOrphIDs.size();
 	nTotOrphans = nLocOrphans;
 	nTotUntrack = nLocUntrack;
 #else
+	nLocOrphans = locOrphHalos.size();
 	MPI_Reduce(&nLocOrphans,   &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&nLocUntrack,   &nTotUntrack, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 

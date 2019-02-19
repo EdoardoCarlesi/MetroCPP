@@ -290,7 +290,8 @@ void Communication::BufferSendRecv()
  */
 void Communication::GatherMergerTrees(int iMTree)
 {
-	int *sizeProgs = nullptr, *sizeMains = nullptr, *dispProgs = nullptr, *dispMains = nullptr, *sizePTProgs = nullptr, *dispPTProgs = nullptr; 
+	int *sizeProgs = nullptr, *sizeMains = nullptr, *dispProgs = nullptr, *dispMains = nullptr;
+	int *sizePTProgs = nullptr, *dispPTProgs = nullptr; 
 	int *recvTrackProgs = nullptr, *recvTrackNComm = nullptr;
 	int nSendProgs = 0, nSendMains = 0, nRecvProgs= 0, nRecvMains = 0;
 	Halo *recvMainHalos, *recvProgHalos;
@@ -412,7 +413,6 @@ void Communication::GatherMergerTrees(int iMTree)
 
 	if (locTask == 0)
 	{
-
 		int iTrack = 0, iComm = 0, iAppend = 0;	
 
 		for (int iMain = 0; iMain < nRecvMains; iMain++)
@@ -440,33 +440,86 @@ void Communication::GatherMergerTrees(int iMTree)
 			/* if 0 --> There is no buffer exchange on 0 so just add everything to locMTree[0] */
 			if (iMTree == 0)
 			{
-				locMTrees[0].push_back(thisTree);
-				thisMapTrees[thisTree.mainHalo.ID] = locMTrees[0].size()-1;
+				/* After the 1 --> 0 FindProgenitor() comparison thisMap refers to 1 and nextMap to 0 */
+				locMTrees[iMTree].push_back(thisTree);
+				nextMapTrees[thisTree.mainHalo.ID] = locMTrees[iMTree].size()-1;
 
 			/* Need to synchronize and update halos on the buffer */
 			} else if (iMTree == 1) {
-	
 				map<uint64_t, int>::iterator iter;
-				iter = nextMapTrees.find(thisTree.mainHalo.ID);
+				iter = thisMapTrees.find(thisTree.mainHalo.ID);
 	
 				/* This halo is already on the local buffer */
-				if (iter != nextMapTrees.end())
+				if (iter != thisMapTrees.end())
 				{
-					int thisIndex = nextMapTrees[thisTree.mainHalo.ID];
-					locMTrees[1][thisIndex].Append(thisTree);		
+					int thisIndex = thisMapTrees[thisTree.mainHalo.ID];
+					locMTrees[iMTree][thisIndex].Append(thisTree);		
+					locMTrees[iMTree][thisIndex].SortByMerit();		
 					iAppend++;
 				} else {
-					locMTrees[1].push_back(thisTree);
-					nextMapTrees[thisTree.mainHalo.ID] = locMTrees[1].size()-1;
+					locMTrees[iMTree].push_back(thisTree);
+					thisMapTrees[thisTree.mainHalo.ID] = locMTrees[1].size()-1;
 				}
-
 			}
 		}	// for iMain 
 				
-		cout << "Local MergerTree[" << iMTree << "] size: " << nLocHalos[1] << ", now: " << locMTrees[1].size() << " append: " << iAppend  << endl;
+		cout << "Local MergerTree[" << iMTree << "] size: " << nLocHalos[iMTree] << ", now: " 
+			<< locMTrees[iMTree].size() << " append: " << iAppend  << endl;
 	} 	// locTask == 0
 }
 
+/* Task 0 holds all the information about orphan halos. 
+ * We MPI_Bcast it to all tasks so that each task can keep track of its orphans at the next step */
+void Communication::SyncOrphanHalos()
+{
+	int nOrphIDs = 0, nLocOrphans = 0;
+
+	if (locTask == 0)
+		cout << "Synchronizing orphan halos across tasks ..." << endl;
+
+
+	if (locTask == 0)
+		nOrphIDs = allOrphIDs.size();	
+	else
+		nOrphIDs = 0;
+
+	MPI_Bcast(&nOrphIDs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	if (locTask != 0)
+		allOrphIDs.resize(nOrphIDs);
+
+	MPI_Bcast(&allOrphIDs[0], nOrphIDs * sizeof(uint64_t), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+	/* Each task looks for the orphan halo it holds */
+	for (auto const& thisOrphID: allOrphIDs)
+	{
+		int iTree = nextMapTrees[thisOrphID];
+
+		/* Only track halos that were originally assigned to this task */
+		if (iTree < nLocHalos[0])
+		{
+			Halo thisHalo = locHalos[0][iTree];
+			locOrphHalos.push_back(thisHalo);
+
+			/* Update the particle content */
+			locOrphParts.push_back(locParts[0][iTree]);
+			locOrphParts[nLocOrphans].resize(nPTypes);
+
+			/* Copy particle blocks divided by particle type */
+			for (int iP = 0; iP < nPTypes; iP++)
+				copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
+					back_inserter(locOrphParts[nLocOrphans][iP]));
+
+			nLocOrphans++;	
+		}
+	}
+	
+	allOrphIDs.clear();
+	allOrphIDs.shrink_to_fit();
+
+	if (locTask == 0)
+		cout << "Done." << endl;
+}
 
 
 /* 

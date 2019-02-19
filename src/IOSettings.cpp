@@ -1012,10 +1012,8 @@ void IOSettings::WriteTree(int iThisCat)
 
         for (int iC = iThisCat-1; iC < iThisCat; iC++)
         {
-		const char *strFnm;	//strFnm = (char *) calloc(4, sizeof(char));
+		const char *strFnm;	
 		strFnm = strSnaps[iC].c_str();
-		//sprintf(strFnm, "%03d", iC);
-		//sprintf(strFnm, "%03d", totTrees-iC);
 
 		if (runMode == 1)
 			outName = pathOutput + outPrefix + strFnm + "." + strCpu + ".restore." + outSuffix;
@@ -1027,9 +1025,6 @@ void IOSettings::WriteTree(int iThisCat)
 
                 if (locTask == 0)
                         cout << "Printing trees to file " << outName << endl;
-
-                //if (locTask == 0)
-		//	cout << "nHalos = " << nLocHalos[0] << " trees: " << locCleanTrees[iC].size() << endl;
 
 		if (locTask == 0)
 		{
@@ -1054,10 +1049,6 @@ void IOSettings::WriteTree(int iThisCat)
 				<< nTotPt 			<< " " 
 				<< thisTree.idProgenitor.size() << " "
 				<< orphan << endl;
-				//<< thisTree.mainHalo.nPart[iType] << " " 
-				//<< thisTree.mainHalo.X[0] << " " 
-				//<< thisTree.mainHalo.X[1] << " " 
-				//<< thisTree.mainHalo.X[2] << " " 
 
                         for (int iP = 0; iP < thisTree.idProgenitor.size(); iP++)
 			{
@@ -1070,17 +1061,12 @@ void IOSettings::WriteTree(int iThisCat)
 				fileOut	<< nTotPt 			<< " " 
                                 	<< progHalo.ID			<< " "
 					<< progHalo.nPart[iType] 	<< endl;
-					//fileOut	<< thisTree.nCommon[iType][iP]	<< " " 
-                                	//<< thisTree.idProgenitor[iP] 	<< " "
-                                	//<< progHalo.X[0]		 	<< " "
-                                	//<< progHalo.X[1]		 	<< " "
-                                	//<< progHalo.X[2]		 	<< " "
 			}
-                }
+                }	// loop on merger tree
 		
-                //cout << "Task=" << locTask << " " << idDescendant << " " << idProgenitor.size() << endl;
 		fileOut.close();
-        }
+		locCleanTrees[iC].clear();
+        }	// loop on iCatalog
 };
 
 
