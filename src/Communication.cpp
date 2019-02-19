@@ -463,8 +463,8 @@ void Communication::GatherMergerTrees(int iMTree)
 			}
 		}	// for iMain 
 				
-		cout << "Local MergerTree[" << iMTree << "] size: " << nLocHalos[iMTree] << ", now: " 
-			<< locMTrees[iMTree].size() << " append: " << iAppend  << endl;
+		//cout << "Local MergerTree[" << iMTree << "] size: " << nLocHalos[iMTree] << ", now: " 
+		//	<< locMTrees[iMTree].size() << " append: " << iAppend  << endl;
 	} 	// locTask == 0
 }
 
