@@ -269,8 +269,8 @@ int main(int argv, char **argc)
 
 			/* Clean everything */
 			CommTasks.CleanBuffer();
-			ShiftHalosPartsGrids();
 			FreeMergerTrees(iNumCat);
+			ShiftHalosPartsGrids();
 #else
 #ifndef ZOOM
 			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			
