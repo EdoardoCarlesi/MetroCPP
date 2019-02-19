@@ -10,7 +10,7 @@ rm ../tmp/*.tmp
 #cd .. ; cd bin/ ; mv MetroCPP MetroCPP-zoom ; cd ../scripts 
 
 #$mpiexec -n 12 ../bin/MetroCPP ../config/fullbox_leibniz.cfg	
-$mpiexec -n 2 ../bin/MetroCPP ../config/fullbox_neruda.cfg	
+$mpiexec -n 4 ../bin/MetroCPP ../config/fullbox_neruda.cfg	
 #$mpiexec -n 4 ../bin/MetroCPP ../config/fullbox_neruda.cfg	
 #$mpiexec -n 4 ../bin/MetroCPP ../config/fb_tmp.cfg
 #$mpiexec -n 3 ../bin/MetroCPP ../config/fullbox_laptop.cfg

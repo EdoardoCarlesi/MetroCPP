@@ -25,8 +25,8 @@ baseTreeMCPP = '/home/eduardo/CLUES/DATA/FullBox/trees/'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
-nSteps = 34
-nChunk = 30
+nSteps = 54
+nChunk = 24
 
 iSeedIni = 0
 iSeedEnd = 1
@@ -45,8 +45,9 @@ for iSeed in range(iSeedIni, iSeedEnd):
 	iSeedStr = '%02d' % iSeed
 	thisSubDir = iSeedStr 
 	thisTreePath = baseTreeMCPP + thisSubDir
-	rootFile = filePrefix + thisSubDir + '_'	
-	testFile = filePrefix + thisSubDir + '_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+	#rootFile = filePrefix + thisSubDir + '_'	
+	rootFile = filePrefix + thisSubDir + '_nobuff_'	
+	testFile = rootFile + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 	
 	print('Checking if folder %s exist. ' % thisTreePath )
 	print('Checking if file %s exists.' % (thisTreePath + testFile))

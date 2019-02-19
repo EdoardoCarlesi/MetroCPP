@@ -323,7 +323,7 @@ void Communication::GatherMergerTrees(int iMTree)
 		nSendMains = mainHalos.size();
 	}
 
-	cout << "On Task= " << locTask << " there are " << nSendProgs << " progenitors and " << nSendMains << " main halos. " << endl; 
+	//cout << "On Task= " << locTask << " there are " << nSendProgs << " progenitors and " << nSendMains << " main halos. " << endl; 
 
 	MPI_Reduce(&nSendMains, &nRecvMains, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&nSendProgs, &nRecvProgs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
