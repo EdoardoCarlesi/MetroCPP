@@ -506,6 +506,9 @@ void Communication::SyncOrphanHalos()
 			if (iTree < nLocHalos[0])
 			{
 				Halo thisHalo = locHalos[0][iTree];
+				thisHalo.isToken = true;
+				thisHalo.nOrphanSteps++;
+
 				locOrphHalos.push_back(thisHalo);
 
 				/* Update the particle content */

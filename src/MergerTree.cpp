@@ -508,7 +508,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 6;
+	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 6, nLocOrphans = 0; 
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << locMTrees[0].size() << " halos." << endl;
@@ -570,16 +570,12 @@ void CleanTrees(int iStep)
 		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
 		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
 		//if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
-		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
+		//if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
+		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) // && nProgSize > 0) 
 		{
-			int nLocOrphans = locOrphHalos.size();
 			Halo thisHalo = mergerTree.mainHalo;
 			thisHalo.nOrphanSteps++;
 			thisHalo.isToken = true;
-
-			/* We need to update this as well, since the halo was probably found to have a progenitor */
-			//locHalos[0][iTree].isToken = true;
-			//locHalos[0][iTree].nOrphanSteps++;
 
 			int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
 
@@ -610,7 +606,10 @@ void CleanTrees(int iStep)
 				mergerTree.progHalo.push_back(thisHalo);
 
 				for(int iT = 0; iT < nPTypes; iT++)
-					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].nCommon[iT][0]);
+					mergerTree.nCommon[iT].push_back(locMTrees[0][iTree].mainHalo.nPart[iT]);
+
+				nLocOrphans++;
+
 			} else {	// We stop following this orphan halo, too small and disconnected for too many steps
 				nLocUntrack++;
 			}	
@@ -629,7 +628,7 @@ void CleanTrees(int iStep)
 	}	// iTree for loop
 
 	/* Final statistics - sanity check */
-	int nTotOrphans = 0, nTotUntrack = 0, nLocOrphans = 0;
+	int nTotOrphans = 0, nTotUntrack = 0;
 
 #ifdef GATHER_TREES
 	nLocOrphans = allOrphIDs.size();
