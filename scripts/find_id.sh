@@ -6,8 +6,9 @@
 path=$1
 format=$2
 zoom=$3
-#cpus=''
-cpus='0000'
+#split=".z"
+split="_"
+
 tmp=`pwd`'/ahf.tmp'
 cd $path
 
@@ -26,9 +27,14 @@ fi
 for f_ahf in `ls *$cpus*$format`
 do
 	echo $f_ahf > $tmp
-	this_z=`grep -o _[0-9][0-9][0-9] $tmp | sed 's/_//g ' `
-	#this_z=`grep -o [0-9][0-9][0-9]'.z' $tmp | sed 's/\.z//g ' `
 
+if [ "$split" == "_" ]
+then
+	this_z=`grep -o _[0-9][0-9][0-9] $tmp | sed 's/_//g ' `
+elif [ "$split" == ".z" ]
+then
+	this_z=`grep -o [0-9][0-9][0-9]'.z' $tmp | sed 's/\.z//g ' `
+fi
 	echo $this_z
 done
 

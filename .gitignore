@@ -33,6 +33,7 @@ mpirun
 *.db
 bin/MetroCPP-all
 bin/MetroCPP-zoom
+bin/MetroCPP-Zoom
 config/lgf_2048.cfg
 config/fb_tmp.cfg
 config/lgf_tmp.cfg

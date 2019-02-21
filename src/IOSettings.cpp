@@ -107,7 +107,7 @@ void IOSettings::FindCatID()
 	string boolZoom = "false";
 #endif
 
-
+	//optionsSh = pathInput + " " + haloSuffix + " " + boolZoom + " " + splitStr; TODO
 	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
 
 	outputTmp = pathMetroCpp + tmpIdOut;
@@ -119,7 +119,6 @@ void IOSettings::FindCatID()
 		cout << "File " << outputTmp << " found. " << endl;
 
 	} else {
-
 		// Execute the bash script to find out the snapshot IDs. These are usually just the snapshot numbers, 
 		// but might change sometimes if there is a "hole" in between.
 		cout << inputSh << endl;

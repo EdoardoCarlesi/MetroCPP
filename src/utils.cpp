@@ -75,8 +75,7 @@ void CheckPath(string pathName)
 	{
 		cout << pathName << " not found. " << endl;
 		exit(0);
-	} /*else if (info.st_mode & S_IFDIR) {
-		cout << pathName << " found. " << endl;}*/
+	} 
 }
 
 

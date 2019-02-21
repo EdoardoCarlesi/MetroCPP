@@ -1,12 +1,13 @@
 #!/bin/bash
 
+resolution='8192'
 #resolution='4096'
-resolution='2048'
+#resolution='2048'
 
 MetroDir=/z/carlesi/CLUES/MetroC++/
 TemplCfg=$MetroDir'config/hestia_template.cfg'
 CfgTmp=$MetroDir'config/hestia_tmp.cfg'
-MetroExe=$MetroDir'bin/MetroCPP'
+MetroExe=$MetroDir'bin/MetroCPP-Zoom'
 MetroOut=$MetroDir'output/HESTIA/'$resolution'/'
 MetroTmp=$MetroDir'tmp/'
 

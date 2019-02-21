@@ -3,7 +3,7 @@
 MetroDir=/z/carlesi/CLUES/MetroC++/
 TemplCfg=$MetroDir'config/lgf_template.cfg'
 CfgTmp=$MetroDir'config/lgf_tmp.cfg'
-MetroExe=$MetroDir'bin/MetroCPP'
+MetroExe=$MetroDir'bin/MetroCPP-Zoom'
 MetroOut=/z/carlesi/STORE/LGF/trees/
 MetroTmp=$MetroDir'tmp/'
 ThisDir=/z/carlesi/STORE/LGF/catalogs/AHF/FIX/
@@ -16,7 +16,7 @@ cd ..
 make
 cd -
 
-for ThisRunNum in `ls $ThisDir | grep [0-1][0-9]'_'[0-9][1-9]`
+for ThisRunNum in `ls $ThisDir | grep [0-1][0-9]'_'[0-9][2-9]`
 do
 #echo $ThisRunNum
 RunNum[${iRun}]=$ThisRunNum iRun=$(expr "$iRun" + "1")
