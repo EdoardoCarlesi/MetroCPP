@@ -4,15 +4,19 @@ MetroDir=/z/carlesi/CLUES/MetroC++/
 TemplCfg=$MetroDir'config/lgf_template.cfg'
 CfgTmp=$MetroDir'config/lgf_tmp.cfg'
 MetroExe=$MetroDir'bin/MetroCPP'
-MetroOut=/z/carlesi/STORE/LGF/trees/metrocpp/
+MetroOut=/z/carlesi/STORE/LGF/trees/
 MetroTmp=$MetroDir'tmp/'
-ThisDir=/z/carlesi/STORE/LGF/catalogs/AHF/
+ThisDir=/z/carlesi/STORE/LGF/catalogs/AHF/FIX/
 
 MinSize=1024
 
 iRun=0
 
-for ThisRunNum in `ls $ThisDir | grep [0-9][0-9]'_'[0-9][0-9]`
+cd ..
+make
+cd -
+
+for ThisRunNum in `ls $ThisDir | grep [0-1][0-9]'_'[0-9][1-9]`
 do
 #echo $ThisRunNum
 RunNum[${iRun}]=$ThisRunNum iRun=$(expr "$iRun" + "1")

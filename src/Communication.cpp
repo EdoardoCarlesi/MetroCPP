@@ -290,11 +290,11 @@ void Communication::BufferSendRecv()
  */
 void Communication::GatherMergerTrees(int iMTree)
 {
+	int nSendProgs = 0, nSendMains = 0, nRecvProgs= 0, nRecvMains = 0;
 	int *sizeProgs = nullptr, *sizeMains = nullptr, *dispProgs = nullptr, *dispMains = nullptr;
 	int *sizePTProgs = nullptr, *dispPTProgs = nullptr; 
 	int *recvTrackProgs = nullptr, *recvTrackNComm = nullptr;
-	int nSendProgs = 0, nSendMains = 0, nRecvProgs= 0, nRecvMains = 0;
-	Halo *recvMainHalos, *recvProgHalos;
+	Halo *recvMainHalos = nullptr, *recvProgHalos = nullptr;
 	
 	/* These are useful only non non-master task */
 	vector<int> trackProgs, trackNComm;
@@ -462,9 +462,13 @@ void Communication::GatherMergerTrees(int iMTree)
 				}
 			}
 		}	// for iMain 
-				
-		//cout << "Local MergerTree[" << iMTree << "] size: " << nLocHalos[iMTree] << ", now: " 
-		//	<< locMTrees[iMTree].size() << " append: " << iAppend  << endl;
+	
+		/* Free memory on task 0 */
+		free(recvMainHalos); 
+		free(recvProgHalos); 
+		free(recvTrackProgs); 
+		free(recvTrackNCommon); 
+
 	} 	// locTask == 0
 }
 
