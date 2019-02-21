@@ -112,39 +112,32 @@ unsigned int NumLines(const char * fileName)
 
 void CleanMemory(int iCat)
 {
-
 	if (locTask ==0)
 		cout << "Cleaning memory for catalog " << iCat << endl;	
 
 	locMapParts[iCat].clear();
 
-	if (locHalos[iCat].size() > 0)
-	{
-		locHalos[iCat].clear();
-		locHalos[iCat].shrink_to_fit();
-	}
+	locHalos[iCat].clear();
+	locHalos[iCat].shrink_to_fit();
 
 	nLocHalos[iCat] = 0;
 
 	/* Clean the particles if not running in post processing mode only */
-	if (runMode == 0 || runMode == 2)
+	/* For catalog 1 this has most likely already been cleaned ... */
+	for (int iH = 0; iH < locParts[iCat].size(); iH++)
 	{
-		/* For catalog 1 this has most likely already been cleaned ... */
-		for (int iH = 0; iH < locParts[iCat].size(); iH++)
+		for (int iT = 0; iT < nPTypes; iT++)
 		{
-			for (int iT = 0; iT < nPTypes; iT++)
-			{
-				locParts[iCat][iH][iT].clear();
-				locParts[iCat][iH][iT].shrink_to_fit();
-			}
-				
-			locParts[iCat][iH].clear();
-			locParts[iCat][iH].shrink_to_fit();
+			locParts[iCat][iH][iT].clear();
+			locParts[iCat][iH][iT].shrink_to_fit();
 		}
-
-		locParts[iCat].clear();
-		locParts[iCat].shrink_to_fit();
+			
+		locParts[iCat][iH].clear();
+		locParts[iCat][iH].shrink_to_fit();
 	}
+
+	locParts[iCat].clear();
+	locParts[iCat].shrink_to_fit();
 
 	if (nextMapTrees.size() > 0)
 		nextMapTrees.clear();
@@ -274,7 +267,7 @@ void ShiftHalosPartsGrids()
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
 
-	CleanMemory(1);
+	//CleanMemory(1);
 
 #ifndef ZOOM	/* In ZOOM mode, there is no GRID and buffer communication, so we do not need to clean up this stuff. */
 

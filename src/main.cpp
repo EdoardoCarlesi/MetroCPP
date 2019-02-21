@@ -271,6 +271,15 @@ int main(int argv, char **argc)
 			CommTasks.CleanBuffer();
 			FreeMergerTrees(iNumCat);
 			ShiftHalosPartsGrids();
+
+			endTime = clock();
+			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
+
+			if (locTask == 0)
+			{
+				SettingsIO.WriteLog(iNumCat, elapsed);
+				cout << "Memory cleaning and tree writing done in " << elapsed << "s. " << endl;
+			}
 #else
 #ifndef ZOOM
 			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			

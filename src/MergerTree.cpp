@@ -569,9 +569,7 @@ void CleanTrees(int iStep)
 		 * In this case, the subhalo is not recorded among the orphan halos, since it does have a connection
 		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
 		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
-		//if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
-		//if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo && nProgSize > 0) 
-		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) // && nProgSize > 0) 
+		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) 
 		{
 			Halo thisHalo = mergerTree.mainHalo;
 			thisHalo.nOrphanSteps++;
