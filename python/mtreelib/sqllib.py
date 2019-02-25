@@ -72,7 +72,8 @@ class SQL_IO:
 				VALUES ('"""+ ID +"""', '""" + simuCode + """',  
 				'""" + haloPartsStr + """', '""" + haloIDsStr + """' );"""
 		self.cursor.execute(insertStr)
-
+	
+	'''
 	# Simple database query
 	def select_tree(self, ID):
 		selectStr = "SELECT * FROM halo WHERE haloID = %s " % str(ID)
@@ -110,6 +111,32 @@ class SQL_IO:
 		mergerTree.fill_mass_id(nps, ids)
 
 		return mergerTree
+	'''
+
+	# Simple database query
+	def select_tree(self, ID, columnName):
+		try:
+			thisStr = self.dataframe.loc[self.dataframe['haloID'] == ID, columnName].values[0].split(", ")
+			nStr = len(thisStr)
+
+			if columnName == 'allHaloIDs':
+				thisTree = np.zeros((nStr), dtype=np.ulonglong)
+			elif columnName == 'allNumPart':
+				thisTree = np.zeros((nStr), dtype=np.uint)
+
+			iTree = 0
+
+			for iStr in thisStr:
+				iStr.replace('u', '')
+				thisTree[iTree] = long(iStr)
+				#print iTree, iStr
+				iTree += 1
+
+			return thisTree
+		except:
+			#print(ID, ' not found')
+			return np.zeros((1))
+
 
 	# Close the database
 	def close(self):
