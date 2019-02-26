@@ -10,6 +10,7 @@
 *.tmp.*
 *.mtree
 *.pyc
+*.full_mtree
 job_metrocpp.sh
 clean.sh
 metro_cpp.*

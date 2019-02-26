@@ -16,7 +16,7 @@ cd ..
 make
 cd -
 
-for ThisRunNum in `ls $ThisDir | grep [0-1][0-9]'_'[0-9][2-9]`
+for ThisRunNum in `ls $ThisDir | grep [0-9][0-9]'_'[0-9][0-9]`
 do
 #echo $ThisRunNum
 RunNum[${iRun}]=$ThisRunNum iRun=$(expr "$iRun" + "1")
@@ -29,7 +29,7 @@ rm -rf $MetroTmp'/'*'.tmp'
 ncpu=1
 do_tree="true"
 iniRun=0
-totRun=1 #$iRun
+totRun=$iRun
 
 for (( iRun=$iniRun; iRun<$totRun; iRun++ ))
 do

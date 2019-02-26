@@ -17,22 +17,23 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 print('Testing Merger Tree python post-processing scripts')
 
 #baseTreeMCPP = '/z/carlesi/STORE/LGF/trees/metrocpp/'
-baseTreeMCPP = '/home/eduardo/CLUES/DATA/LGF/'
+#baseTreeMCPP = '/home/eduardo/CLUES/DATA/LGF/'
+baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/8192/'
 #suffTreeMCPP = 'mtree'
 suffTreeMCPP = 'mtree'
 
-nSnaps = 54	
-nSteps = 10
+nSnaps = 127
+nSteps = 127
 nChunk = 1
 
-iSeedIni = 0
-iSeedEnd = 1
-gSeedIni = 10
-gSeedEnd = 11
+iSeedIni = 17
+iSeedEnd = 18
+gSeedIni = 11
+gSeedEnd = 12
 
 # Save all the extracted trees into a database
 #thisDb = baseTreeMCPP + 'lgf_all_trees.db'
-thisDb = baseTreeMCPP + 'lgf_fb_trees.db'
+thisDb = baseTreeMCPP + 'hestia_trees.db'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)
@@ -56,9 +57,9 @@ for iSeed in range(iSeedIni, iSeedEnd):
 		#rootFile = thisTreePath + '/lgf_00_10_'	
 		#testFile = thisTreePath + '/lgf_00_10_' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 
-		thisTreePath = baseTreeMCPP + 'trees/00_06_00/'
-		rootFile = thisTreePath + '/lgf_00_06_00'	
-		testFile = thisTreePath + '/lgf_00_06_00' + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+		thisTreePath = baseTreeMCPP + thisSubDir + '/'
+		rootFile = thisTreePath	+ 'hestia_8192_17_11_'
+		testFile = rootFile + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 	
 		print(rootFile, testFile)
 
@@ -74,9 +75,14 @@ for iSeed in range(iSeedIni, iSeedEnd):
 			for thisTree in allTrees:
 				[tmp_m, tmp_id] = thisTree.get_mass_id()
 				newSql.insert_tree(tmp_id[0], thisSubDir, tmp_m, tmp_id)
+		
+				print(tmp_id[0], tmp_m)
 
 			end = timeit.default_timer()
 			print('Inserted %d trees in %f seconds.' % (len(allTrees), end - start))
+
+		else:
+			print(thisTreePath, testFile)
 
 # Now commit to the database and close
 newSql.cursor.execute('COMMIT')
