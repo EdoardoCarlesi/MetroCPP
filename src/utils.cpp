@@ -109,6 +109,51 @@ unsigned int NumLines(const char * fileName)
 };
 
 
+/* Check the size of globally allocated variables */
+void MemoryCheck(int iNum)
+{
+	int totPartMem0 = 0, totPartMem1 = 0, totCleanMem = 0;
+
+	for (int iH = 0; iH < locParts[0].size(); iH++)
+		for (int iT = 0; iT < nPTypes; iT++)
+			totPartMem0 += locParts[0][iH][iT].size();
+
+	for (int iH = 0; iH < locParts[1].size(); iH++)
+		for (int iT = 0; iT < nPTypes; iT++)
+			totPartMem1 += locParts[1][iH][iT].size();
+
+	for (int iC = 0; iC < locCleanTrees.size(); iC ++)
+		for (int iT = 0; iT < locCleanTrees[iC].size(); iT ++)
+				totCleanMem += sizeof(locCleanTrees[iC][iT]);
+
+
+	if (locTask == 0)
+	{
+		cout << "============================" << endl;
+		cout << "MemoryCheck on master task. " << endl;
+		cout << "thisMapTrees: " << thisMapTrees.size() << endl;
+		cout << "nextMapTrees: " << nextMapTrees.size() << endl;
+		cout << "locMapParts0: " << locMapParts[0].size() << endl;
+		cout << "locMapParts1: " << locMapParts[1].size() << endl;
+		cout << "locOrphParts: " << locOrphParts.size() << endl;
+		cout << "locBuffParts: " << locBuffParts.size() << endl;
+		cout << "locBuffHalos: " << locBuffHalos.size() << endl;
+		cout << "locMTrees[0]: " << locMTrees[0].size() << endl;
+		cout << "locMTrees[1]: " << locMTrees[1].size() << endl;
+		cout << "locCleanTree: " << totCleanMem << endl;
+		cout << "locHalos[0] : " << locHalos[0].size() << endl;
+		cout << "locHalos[1] : " << locHalos[1].size() << endl;
+		cout << "allOrphIDs  : " << allOrphIDs.size() << endl;
+		cout << "locParts[0] : " << locParts[0].size() << endl;
+		cout << "totParts[0] : " << totPartMem0 << endl;
+		cout << "totParts[1] : " << totPartMem1 << endl;
+		cout << "locParts[1] : " << locParts[1].size() << endl;
+		cout << "id2index    : " << id2Index.size() << endl;
+		cout << "============================" << endl;
+	}
+}
+
+
 
 void CleanMemory(int iCat)
 {
@@ -181,7 +226,7 @@ vector<string> SplitString (string strIn, string delim)
 	}
 
     return cleanResults;
-}
+};
 
 
 /* At each step, the old snapshot [1] is copied to the new [0] to avoid re-reading the 
@@ -267,7 +312,7 @@ void ShiftHalosPartsGrids()
 	locOrphHalos.clear();
 	locOrphHalos.shrink_to_fit();
 
-	//CleanMemory(1);
+	CleanMemory(1);
 
 #ifndef ZOOM	/* In ZOOM mode, there is no GRID and buffer communication, so we do not need to clean up this stuff. */
 

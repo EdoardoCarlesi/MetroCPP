@@ -508,7 +508,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 6, nLocOrphans = 0; 
+	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 10, nLocOrphans = 0; 
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << locMTrees[0].size() << " halos." << endl;
@@ -721,7 +721,6 @@ void InitHaloTrees()
 	id2Index.resize(2);
 	locHaloTrees.resize(nLocHalos[0]);
 
-	//for (int iH = 0; iH < locHalos[0].size(); iH++) 
 	for (int iH = 0; iH < locCleanTrees[0].size(); iH++) 
 	{
 		locHaloTrees[iH].mainHalo.resize(nSnapsUse); 
@@ -825,11 +824,11 @@ void FreeMergerTrees(int iNumCat)
         locMTrees[1].clear();
         locMTrees[1].shrink_to_fit();
 
-	for (auto thisMTree : locCleanTrees[iNumCat])
+	for (auto thisMTree : locCleanTrees[iNumCat-1])
 		thisMTree.Clean();
 
-	locCleanTrees[iNumCat].clear();
-	locCleanTrees[iNumCat].shrink_to_fit();
+	locCleanTrees[iNumCat-1].clear();
+	locCleanTrees[iNumCat-1].shrink_to_fit();
 
 }
 

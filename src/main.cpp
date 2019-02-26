@@ -136,7 +136,7 @@ int main(int argv, char **argc)
 		/* This is a global variable */
 		iUseCat = 0;
 
-#ifdef ZOOM	/* TODO: ZOOM mode could be just ran serially... but this implies lots of code re-writing. 
+#ifdef ZOOM	/* TODO: ZOOM mode could be just run in serial mode ... but this implies lots of code re-writing. 
 		 * So let it run with only one task instead. */
 		if (totTask > 1)
 		{
@@ -208,12 +208,11 @@ int main(int argv, char **argc)
 #endif
 	
 			if (locTask == 0)
-				cout << "Finding halo progentors, forwards..." << flush ;
+				cout << "Finding halo progentors, forwards..." << flush;
 
 			iniTime = clock();
 		
-			/* Forward halo connections
-			 * This function also allocates the MergerTrees */
+			/* Forward halo connections. This function also allocates the MergerTrees */
 			FindProgenitors(0, 1);
 			MPI_Barrier(MPI_COMM_WORLD);
 
@@ -227,7 +226,7 @@ int main(int argv, char **argc)
 			}
 
 			if (locTask == 0)
-				cout << "Finding halo progentors, backwards..." << flush ;
+				cout << "Finding halo progentors, backwards..." << flush;
 
 			iniTime = clock();
 	
@@ -243,9 +242,17 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "done in " << elapsed << "s. " << endl;
 			}
-#ifdef GATHER_TREES
-			iniTime = clock();
 
+			iniTime = clock();
+#ifdef GATHER_TREES
+#ifdef ZOOM
+			if (locTask == 0)
+			{
+				cout << "GATHER_TREES only works without the ZOOM directive. Please re-compile without choosing ZOOM or GATHER_TREES."
+				exit(0);
+			}
+#endif
+			/* Gather all merger trees on the master task - this ensures buffer halos are correctly accounted for */
 			CommTasks.GatherMergerTrees(0);
 			CommTasks.GatherMergerTrees(1);
 	
@@ -259,31 +266,19 @@ int main(int argv, char **argc)
 			}
 
 			iniTime = clock();
+
 			if (locTask == 0)
 				CleanTrees(iNumCat);
-
+			
+			/* Orphans will be found on the master task only, so we need to assign them to their parent task for tracking in the next step. */
 			CommTasks.SyncOrphanHalos();
 
 			if (locTask == 0)
 				SettingsIO.WriteTree(iNumCat); 
-
-			/* Clean everything */
-			CommTasks.CleanBuffer();
-			FreeMergerTrees(iNumCat);
-			ShiftHalosPartsGrids();
-
-			endTime = clock();
-			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
-
-			if (locTask == 0)
-			{
-				SettingsIO.WriteLog(iNumCat, elapsed);
-				cout << "Memory cleaning and tree writing done in " << elapsed << "s. " << endl;
-			}
 #else
-#ifndef ZOOM
-			/* Before cleaning the tree, we need to sync the trees for buffer halos which are shared among different tasks */			
-			iniTime = clock();
+#ifndef ZOOM		/* If not gathering the trees, each task holds its part of the halo catalog, which needs to be synchronized on the buffer.
+			 * FIXME: This is leaking somewhere and the sync is not working correctly. 
+			 * Better always use the GATHER_TREES option instead */
 			CommTasks.SyncMergerTreeBuffer();
 			MPI_Barrier(MPI_COMM_WORLD);
 	
@@ -296,17 +291,18 @@ int main(int argv, char **argc)
 				cout << "Merger Tree buffer synchronized in " << elapsed << "s. " << endl;
 			}
 #endif
+			/* These operations are common for ZOOM and non-gather-trees mode */
 			iniTime = clock();
 			CleanTrees(iNumCat);
 
-#ifndef ZOOM
-			/* Now shift the halo catalog from 1 to 0, and clean the buffers 
-			 * There are no halos on the buffer in ZOOM mode, so skip this. */
+			SettingsIO.WriteTree(iNumCat); 	
+			MPI_Barrier(MPI_COMM_WORLD);
+#endif	/* GATHER_TREES */
+
+#ifndef ZOOM		/* There are no halos on the buffer in ZOOM mode, so we skip this if ZOOM is defined. */
 			CommTasks.CleanBuffer();
 #endif
 			ShiftHalosPartsGrids();
-			SettingsIO.WriteTree(iNumCat); 	
-			MPI_Barrier(MPI_COMM_WORLD);
 
 			endTime = clock();
 			elapsed = double(endTime - iniTime) / CLOCKS_PER_SEC;
@@ -316,7 +312,12 @@ int main(int argv, char **argc)
 				SettingsIO.WriteLog(iNumCat, elapsed);
 				cout << "Memory cleared and Merger Trees written in " << elapsed << "s. " << endl;
 			}
-#endif	// GATHER_TREES
+
+			/* This cleans all the locMTree and locCleanTrees */
+			FreeMergerTrees(iNumCat);
+
+			/* Dump some information on the memory allocated on the various structures */
+			MemoryCheck(iNumCat);
 
 		}	/* Finish: the trees have now been built for this step */
 
@@ -330,7 +331,7 @@ int main(int argv, char **argc)
 	}	/* If running the tree and / or post processing mode only */
 	
 	/* Load in trees & halo catalogs 
-	 * Post-processing mode is not enabled for the moment. */
+	 * TODO: Post-processing mode is not enabled for the moment. */
 	if (runMode == 1 || runMode == 2)
 	{
 		if (locTask == 0)
@@ -344,8 +345,7 @@ int main(int argv, char **argc)
 		MPI_Finalize();
 		exit(0);
 
-		// TODO:
-		/* The following code is a template for what should be done in the post-processing 
+		/* TODO: The following code is a template for what should be done in the post-processing 
 		 * mode, reading in halos & mtree files and then smoothing the mass functions and 
 		 * interpolating for the position and mass of the missing halos. 
 		 * Some of the functions are working but the core is still under construction. */
@@ -370,7 +370,7 @@ int main(int argv, char **argc)
 			iUseCat = 1;
 			SettingsIO.ReadHalos();
 
-			// TODO: At this point we should fix halo masses and position using some interpolation scheme
+			/* TODO: At this point we should fix halo masses and position using some interpolation scheme */
 
 #ifndef ZOOM
 			/* In FULLBOX mode, we need to assign halos to the grid nodes and identify
@@ -391,11 +391,8 @@ int main(int argv, char **argc)
 			ShiftHalosPartsGrids();
 		}
 
-		// TODO: once the MAHs have been computed, we need to smooth over 
-		/* Proceed with smoothing & interpolating the MAH of single halos */
-		/*
-			 
-		*/
+		/* TODO: Proceed with smoothing & interpolating the MAH of single halos, replacing token/orphan halos and so on.
+		 * FIXME: This stuff will be most likely just implemented in the python post-processing routines */
 	}
 
 	MPI_Finalize();

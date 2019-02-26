@@ -40,6 +40,8 @@ void CheckPath(string);
 
 void InitLocVariables(void);
 
+void MemoryCheck(int);
+
 void CleanMemory(int);
 
 void ShiftHalosPartsGrids(void);

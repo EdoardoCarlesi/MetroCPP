@@ -45,11 +45,6 @@ Grid GlobalGrid[2];
 vector<vector<MergerTree>> locMTrees;
 vector<vector<MergerTree>> locCleanTrees;
 vector<HaloTree> locHaloTrees;
-
-/* We keep track of the orphan halos to synchronize them afterwards */
-vector<int> orphanHaloIndex;	// Global index
-
-vector<vector<Halo>> allHalos;
 vector<vector<Halo>> locHalos;
 vector<vector<vector<vector<uint64_t>>>> locParts;
 

@@ -89,9 +89,6 @@ extern size_t locHalosSize[2];
 extern int minPartCmp;
 extern int minPartHalo;
 
-// We keep track of the orphan halos to synchronize them afterwards
-extern vector<int> orphanHaloIndex;
-
 extern int nPTypes;
 extern int nTotHalos[2];
 extern int nLocHalos[2];
