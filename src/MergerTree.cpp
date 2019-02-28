@@ -86,15 +86,16 @@ void MergerTree::Append(MergerTree mTree)
 
 void MergerTree::Info()
 {
-	cout << "Task=" << locTask << " " << mainHalo.ID << " " << idProgenitor.size() << endl;
+	cout << "Task=" << locTask << " " << mainHalo.ID << " " << idProgenitor.size() << " nPart: " << mainHalo.nPart[1] << endl;
 
+	/*
 	if (isOrphan)
 		for (int iP = 0; iP < idProgenitor.size(); iP++)
 			cout << " ID= " << idProgenitor[iP] << endl;
 	else
-		for (int iC = 1; iC < nPTypes; iC++)
-		for (int iP = 0; iP < idProgenitor.size(); iP++)
-			cout << iP << ",  " << iC << " ID= " << idProgenitor[iP] << " nPartComm=" << nCommon[iC][iP] <<  " nProg: " << idProgenitor.size() << endl;
+	*/
+	for (int iP = 0; iP < idProgenitor.size(); iP++)
+		cout << iP << " ID= " << idProgenitor[iP] << " nPartComm=" << nCommon[1][iP] <<  " nPart: " << progHalo[iP].nPart[1] << endl;
 };
 
 

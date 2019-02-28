@@ -371,7 +371,7 @@ void Communication::GatherMergerTrees(int iMTree)
 	MPI_Gatherv(&trackProgs[0], nSendMains, MPI_INT, recvTrackProgs, sizeMains, dispMains, MPI_INT, 0, MPI_COMM_WORLD);
 
 	/* Particles shared by each progenitor */
-	MPI_Gatherv(&trackProgs[0], nSendProgs * nPTypes, MPI_INT, recvTrackNComm, sizePTProgs, dispPTProgs, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gatherv(&trackNComm[0], nSendProgs * nPTypes, MPI_INT, recvTrackNComm, sizePTProgs, dispPTProgs, MPI_INT, 0, MPI_COMM_WORLD);
 
 	if (locTask == 0)
 	{
@@ -442,13 +442,21 @@ void Communication::GatherMergerTrees(int iMTree)
 			} else if (iMTree == 1) {
 				map<uint64_t, int>::iterator iter;
 				iter = thisMapTrees.find(thisTree.mainHalo.ID);
-	
+
 				/* This halo is already on the local buffer */
 				if (iter != thisMapTrees.end())
 				{
 					int thisIndex = thisMapTrees[thisTree.mainHalo.ID];
+					
+					//if (locMTrees[iMTree][thisIndex].progHalo.size() > 0)	
+					//locMTrees[iMTree][thisIndex].Info();	
+
 					locMTrees[iMTree][thisIndex].Append(thisTree);		
 					locMTrees[iMTree][thisIndex].SortByMerit();		
+
+					//if (locMTrees[iMTree][thisIndex].progHalo.size() > 1)	
+					//	locMTrees[iMTree][thisIndex].Info();	
+
 					iAppend++;
 				} else {
 					locMTrees[iMTree].push_back(thisTree);

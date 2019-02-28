@@ -6,8 +6,8 @@
 path=$1
 format=$2
 zoom=$3
-split=".z"
-#split="_"
+#split=".z"
+split="_"
 
 tmp=`pwd`'/ahf.tmp'
 cd $path

@@ -1053,13 +1053,17 @@ void IOSettings::WriteTree(int iThisCat)
 			{
 				Halo progHalo = thisTree.progHalo[iP];
 
-				int nTotPt = 0;
+				int nTotPt = 0, nTotComm = 0;
+		
 				for (int iA = 0; iA < nPTypes; iA++)
 					nTotPt += progHalo.nPart[iA];
 
-				fileOut	<< nTotPt 			<< " " 
-                                	<< progHalo.ID			<< " "
-					<< progHalo.nPart[iType] 	<< endl;
+				for (int iA = 0; iA < nPTypes; iA++)
+					nTotComm += thisTree.nCommon[iA][iP];
+
+				fileOut	<< nTotPt 		<< " " 
+                                	<< progHalo.ID		<< " "
+					<< nTotComm	 	<< endl;
 			}
                 }	// loop on merger tree
 		
