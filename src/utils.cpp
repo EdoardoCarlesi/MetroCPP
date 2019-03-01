@@ -136,8 +136,10 @@ void MemoryCheck(int iNum)
 		cout << "locMapParts0: " << locMapParts[0].size() << endl;
 		cout << "locMapParts1: " << locMapParts[1].size() << endl;
 		cout << "locOrphParts: " << locOrphParts.size() << endl;
+#ifndef ZOOM
 		cout << "locBuffParts: " << locBuffParts.size() << endl;
 		cout << "locBuffHalos: " << locBuffHalos.size() << endl;
+#endif
 		cout << "locMTrees[0]: " << locMTrees[0].size() << endl;
 		cout << "locMTrees[1]: " << locMTrees[1].size() << endl;
 		cout << "locCleanTree: " << totCleanMem << endl;
