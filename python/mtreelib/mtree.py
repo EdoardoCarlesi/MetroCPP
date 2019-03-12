@@ -21,8 +21,89 @@ class DescendantProgenitor:
 		self.descNProg = descNProg
 
 
-
 class MTree:
+        'Basic Merger tree class for the database'
+
+        # How many snapshots is our merger tree composed of (upper limit)
+        nSteps = 0
+
+        # Main halo ID at z = 0. We use strings as we will be using dictionaries all along to connect these objects
+        mainID = '123123123123123123123'
+
+        # Time, expansion factor and redshift
+        t = np.zeros((0))
+        a = np.zeros((0))
+        z = np.zeros((0))
+
+        # Main branch halo: number of particles, main halo ID and number of descendants
+        mainBranchID = []
+        mainBranchNPart = np.full((0), 0)
+        mainBranchNProg = np.full((0), 0)
+
+        # Keep track of the steps at which the halo was lost and replaced by a token instead
+        isToken = np.full((0), False)
+
+        # Initialize the Merger Tree by its (expected) number of steps
+        def __init__(self, n, ID):
+                self.mainID = ID
+                self.nSteps = n
+                self.z = np.zeros((n))
+                self.a = np.zeros((n))
+                self.t = np.zeros((n))
+                self.mainBranchID = [''] * n
+                self.mainBranchNPart = np.full((n), 0)
+                self.mainBranchNProg = np.full((n), 0)
+                self.isToken = np.full((n), False)
+
+       	def fill_mass_id(self, nps, ids):
+                for iM in range(0 , self.nSteps):
+                        self.mainBranchNPart[iM] = nps[iM]
+                        self.mainBranchID[iM] = ids[iM]
+
+        def get_mass_id(self):
+                return [self.mainBranchNPart, self.mainBranchID]
+
+        # Print the number of particles and mass ID corresponding 
+        def print_mass_id(self):
+                for iM in range(0, self.nSteps):
+                        print("%s %d" % (self.mainBranchID[iM], self.mainBranchNPart[iM]))
+
+        # Return the normalized (z=0) mass across all history
+        def norm_mass(self):
+                norm_mass = []
+                m_zero = self.mainBranchNPart[0]
+
+                return self.mainBranchNPart[:]/m_zero
+
+        # Add the descendant progenitor pairs to the next step
+        def update_desc_prog(self, iStep, dP):
+                self.mainBranchID[iStep] = dP.descID
+                self.mainBranchNPart[iStep] = dP.descNPart
+                self.mainBranchNProg[iStep] = dP.descNProg
+
+        # Read & implement the steps from an expansion factor file
+        def init_a(self, file_name):
+                self.a = read_a(file_name)
+
+        # Read & implement the steps from a redshift file
+        def init_z(self, file_name):
+                self.z = read_z(file_name)
+
+        # Print the number of particles and mass ID corresponding 
+        def dump_to_file_mass_id(self):
+                f_name = 'halo_' + self.mainID + '.full_tree'
+                f_out = open(f_name, 'w')
+
+                for iM in range(0, self.nSteps):
+                        line = "%s %d" % (self.mainBranchID[iM], self.mainBranchNPart[iM]) + '\n'
+                        #print(line, file=f_out)
+                        #print(line)
+                        f_out.write(line)
+
+
+
+
+class MergerTree:
 	# Major merger
 	MM = 0
 
@@ -45,9 +126,11 @@ class MTree:
 		self.MM = 0
 		self.FT = 0
 		self.nSteps = nSteps
-		self.nPart = readPart #np.zeros((nSteps))
+		self.nPart = readPart 
 		self.nPartNorm = np.zeros((nSteps))
 		self.nPartSmooth = np.zeros((nSteps))
+
+		print(readPart)
 
 		nNorm = float(self.nPart[0])
 
@@ -120,6 +203,13 @@ class MTree:
 			#print(iPts, iSmooth, self.nPartSmooth[iPts], self.nPartNorm[iPts])
 
 		return self.nPartSmooth
+
+	def print_tree(self):
+		
+		tree_out = 'halo_' + str(ID)
+
+#		for i_step in range(0, self.nSteps):
+
 
 	def info(self):
 		print('MTree with: %d steps' % self.nSteps)
