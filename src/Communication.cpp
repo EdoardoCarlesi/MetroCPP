@@ -272,7 +272,8 @@ void Communication::BufferSendRecv()
 
 	/* Now assign the halos on the buffer to the respective nodes */
 	for (int iH = 0; iH < locBuffHalos.size(); iH++)
-		GlobalGrid[iUseCat].AssignToGrid(locBuffHalos[iH].X, -iH-1);	// iH is negative - this is used for halos on the buffer, the -1 is added to avoid overlap with halo num 0
+		GlobalGrid[iUseCat].AssignToGrid(locBuffHalos[iH].X, -iH-1);	// iH is negative - this is used for halos on the buffer, 
+										// the -1 is added to avoid overlap with halo num 0
 
 #ifdef VERBOSE
 	cout << "Gathered " << locBuffHalos.size() << " halos in the buffer on task=" << locTask << endl;
@@ -284,10 +285,9 @@ void Communication::BufferSendRecv()
 };
 
 
-/* 
- * Once the merger trees are built, we need to communicate the results 
- * TODO: maybe do MPI allgather only for 1 and keep it split among tasks?
- */
+/* Once the merger trees are built, we gather the results on the master task.
+ * This way we make sure that halos on the buffer scattered among multiple tasks 
+ * are correctly syncronized and accounted for. */
 void Communication::GatherMergerTrees(int iMTree)
 {
 	int nSendProgs = 0, nSendMains = 0, nRecvProgs= 0, nRecvMains = 0;
@@ -323,8 +323,7 @@ void Communication::GatherMergerTrees(int iMTree)
 		nSendMains = mainHalos.size();
 	}
 
-	//cout << "On Task= " << locTask << " there are " << nSendProgs << " progenitors and " << nSendMains << " main halos. " << endl; 
-
+	/* First communicate how many main branch haloes are there and how many progenitors */
 	MPI_Reduce(&nSendMains, &nRecvMains, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&nSendProgs, &nRecvProgs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
@@ -354,17 +353,15 @@ void Communication::GatherMergerTrees(int iMTree)
 		nSendMains = 0;
 		dispProgs[0] = 0;
 		dispMains[0] = 0;
+		sizePTProgs[0] = 0;
+		dispPTProgs[0] = 0;
 
 		for (int iT = 1; iT < totTask; iT++)
 		{
 			dispProgs[iT] = dispProgs[iT -1] + sizeProgs[iT -1];
 			dispMains[iT] = dispMains[iT -1] + sizeMains[iT -1];
-			//cout << iT << " " << dispMains[iT] << endl;
-		}
 
-		/* Correct for number of particle types */
-		for (int iT = 0; iT < totTask; iT++)
-		{
+			/* Correct the sizes for number of particle types */
 			dispPTProgs[iT] = dispProgs[iT] * nPTypes;
 			sizePTProgs[iT] = sizeProgs[iT] * nPTypes;
 		}
@@ -374,7 +371,7 @@ void Communication::GatherMergerTrees(int iMTree)
 	MPI_Gatherv(&trackProgs[0], nSendMains, MPI_INT, recvTrackProgs, sizeMains, dispMains, MPI_INT, 0, MPI_COMM_WORLD);
 
 	/* Particles shared by each progenitor */
-	MPI_Gatherv(&trackProgs[0], nSendProgs * nPTypes, MPI_INT, recvTrackNComm, sizePTProgs, dispPTProgs, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Gatherv(&trackNComm[0], nSendProgs * nPTypes, MPI_INT, recvTrackNComm, sizePTProgs, dispPTProgs, MPI_INT, 0, MPI_COMM_WORLD);
 
 	if (locTask == 0)
 	{
@@ -407,10 +404,7 @@ void Communication::GatherMergerTrees(int iMTree)
 		free(sizePTProgs); free(dispPTProgs);
 	}
 
-	/*
-	 * Update the merger tree maps on the main task 
-	 * 						*/	
-
+	 /* Update the merger tree maps on the main task  */
 	if (locTask == 0)
 	{
 		int iTrack = 0, iComm = 0, iAppend = 0;	
@@ -448,13 +442,21 @@ void Communication::GatherMergerTrees(int iMTree)
 			} else if (iMTree == 1) {
 				map<uint64_t, int>::iterator iter;
 				iter = thisMapTrees.find(thisTree.mainHalo.ID);
-	
+
 				/* This halo is already on the local buffer */
 				if (iter != thisMapTrees.end())
 				{
 					int thisIndex = thisMapTrees[thisTree.mainHalo.ID];
+					
+					//if (locMTrees[iMTree][thisIndex].progHalo.size() > 0)	
+					//locMTrees[iMTree][thisIndex].Info();	
+
 					locMTrees[iMTree][thisIndex].Append(thisTree);		
 					locMTrees[iMTree][thisIndex].SortByMerit();		
+
+					//if (locMTrees[iMTree][thisIndex].progHalo.size() > 1)	
+					//	locMTrees[iMTree][thisIndex].Info();	
+
 					iAppend++;
 				} else {
 					locMTrees[iMTree].push_back(thisTree);
@@ -467,7 +469,7 @@ void Communication::GatherMergerTrees(int iMTree)
 		free(recvMainHalos); 
 		free(recvProgHalos); 
 		free(recvTrackProgs); 
-		free(recvTrackNCommon); 
+		free(recvTrackNComm); 
 
 	} 	// locTask == 0
 }
@@ -698,8 +700,6 @@ void Communication::SyncMergerTreeBuffer()
 
 	int iProg = 0, iComm = 0;
 	
-	//for (int iT = 0; iT < totBuffRecvComm.size(); iT++)
-
 	/* Now synchronize the connections of the halos on the buffer */
 	for (int iH = 0; iH < totBuffRecvDescID.size(); iH++)
 	{	
@@ -720,19 +720,11 @@ void Communication::SyncMergerTreeBuffer()
 				iComm++;
 			}
 
-			//if (locTask == 0)
-			//	cout << iH << ", " << descID << ", " << jH << "/ " << nProgs << " : " << iProg << ", " << thisProg.ID 
-			//	<< " " << locMTrees[1][thisIndex].nCommon[1][jH] << endl; //", " << descID << 
-		
 			iProg++;
 		}
 
 		if (locMTrees[1][thisIndex].progHalo.size() > 1)
-		{
 			locMTrees[1][thisIndex].SortByMerit();
-		//	if (locTask == 0)
-		//	locMTrees[1][thisIndex].Info();
-		}
 	}
 
 	/**/

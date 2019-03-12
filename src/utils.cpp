@@ -109,42 +109,82 @@ unsigned int NumLines(const char * fileName)
 };
 
 
+/* Check the size of globally allocated variables */
+void MemoryCheck(int iNum)
+{
+	int totPartMem0 = 0, totPartMem1 = 0, totCleanMem = 0;
+
+	for (int iH = 0; iH < locParts[0].size(); iH++)
+		for (int iT = 0; iT < nPTypes; iT++)
+			totPartMem0 += locParts[0][iH][iT].size();
+
+	for (int iH = 0; iH < locParts[1].size(); iH++)
+		for (int iT = 0; iT < nPTypes; iT++)
+			totPartMem1 += locParts[1][iH][iT].size();
+
+	for (int iC = 0; iC < locCleanTrees.size(); iC ++)
+		for (int iT = 0; iT < locCleanTrees[iC].size(); iT ++)
+				totCleanMem += sizeof(locCleanTrees[iC][iT]);
+
+
+	if (locTask == 0)
+	{
+		cout << "============================" << endl;
+		cout << "MemoryCheck on master task. " << endl;
+		cout << "thisMapTrees: " << thisMapTrees.size() << endl;
+		cout << "nextMapTrees: " << nextMapTrees.size() << endl;
+		cout << "locMapParts0: " << locMapParts[0].size() << endl;
+		cout << "locMapParts1: " << locMapParts[1].size() << endl;
+		cout << "locOrphParts: " << locOrphParts.size() << endl;
+#ifndef ZOOM
+		cout << "locBuffParts: " << locBuffParts.size() << endl;
+		cout << "locBuffHalos: " << locBuffHalos.size() << endl;
+#endif
+		cout << "locMTrees[0]: " << locMTrees[0].size() << endl;
+		cout << "locMTrees[1]: " << locMTrees[1].size() << endl;
+		cout << "locCleanTree: " << totCleanMem << endl;
+		cout << "locHalos[0] : " << locHalos[0].size() << endl;
+		cout << "locHalos[1] : " << locHalos[1].size() << endl;
+		cout << "allOrphIDs  : " << allOrphIDs.size() << endl;
+		cout << "locParts[0] : " << locParts[0].size() << endl;
+		cout << "totParts[0] : " << totPartMem0 << endl;
+		cout << "totParts[1] : " << totPartMem1 << endl;
+		cout << "locParts[1] : " << locParts[1].size() << endl;
+		cout << "id2index    : " << id2Index.size() << endl;
+		cout << "============================" << endl;
+	}
+}
+
+
 
 void CleanMemory(int iCat)
 {
-
 	if (locTask ==0)
 		cout << "Cleaning memory for catalog " << iCat << endl;	
 
 	locMapParts[iCat].clear();
 
-	if (locHalos[iCat].size() > 0)
-	{
-		locHalos[iCat].clear();
-		locHalos[iCat].shrink_to_fit();
-	}
+	locHalos[iCat].clear();
+	locHalos[iCat].shrink_to_fit();
 
 	nLocHalos[iCat] = 0;
 
 	/* Clean the particles if not running in post processing mode only */
-	if (runMode == 0 || runMode == 2)
+	/* For catalog 1 this has most likely already been cleaned ... */
+	for (int iH = 0; iH < locParts[iCat].size(); iH++)
 	{
-		/* For catalog 1 this has most likely already been cleaned ... */
-		for (int iH = 0; iH < locParts[iCat].size(); iH++)
+		for (int iT = 0; iT < nPTypes; iT++)
 		{
-			for (int iT = 0; iT < nPTypes; iT++)
-			{
-				locParts[iCat][iH][iT].clear();
-				locParts[iCat][iH][iT].shrink_to_fit();
-			}
-				
-			locParts[iCat][iH].clear();
-			locParts[iCat][iH].shrink_to_fit();
+			locParts[iCat][iH][iT].clear();
+			locParts[iCat][iH][iT].shrink_to_fit();
 		}
-
-		locParts[iCat].clear();
-		locParts[iCat].shrink_to_fit();
+			
+		locParts[iCat][iH].clear();
+		locParts[iCat][iH].shrink_to_fit();
 	}
+
+	locParts[iCat].clear();
+	locParts[iCat].shrink_to_fit();
 
 	if (nextMapTrees.size() > 0)
 		nextMapTrees.clear();
@@ -188,7 +228,7 @@ vector<string> SplitString (string strIn, string delim)
 	}
 
     return cleanResults;
-}
+};
 
 
 /* At each step, the old snapshot [1] is copied to the new [0] to avoid re-reading the 
