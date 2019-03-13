@@ -27,15 +27,13 @@ nSnaps = 127
 nSteps = 127
 nChunk = 1
 
-iSeedIni = 17
-iSeedEnd = 18
-gSeedIni = 11
-gSeedEnd = 12
+iSeedIni = 17; iSeedEnd = 18; gSeedIni = 11; gSeedEnd = 12; thisRun = '17_11'
+#iSeedIni = 37; iSeedEnd = 38; gSeedIni = 11; gSeedEnd = 12; thisRun = '37_11'
 
 # Save all the extracted trees into a database
 #thisDb = baseTreeMCPP + 'lgf_n500_trees.db'
 #thisDb = baseTreeMCPP + 'hestia_trees_test.db'
-thisDb = baseTreeMCPP + 'hestia_trees.db'
+thisDb = baseTreeMCPP + 'hestia_trees_' + thisRun + '.db'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)
