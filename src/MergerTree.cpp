@@ -21,9 +21,9 @@
  * the merger trees.
  */
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <math.h>
 #include <map>
 
@@ -31,6 +31,8 @@
 #include "Halo.h"
 #include "utils.h"
 #include "global_vars.h"
+
+#define absMaxOrphanSteps 13
 
 using namespace std;
 
@@ -509,7 +511,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 10, nLocOrphans = 0; 
+	int thisIndex = 0, nLocUntrack = 0, nLocOrphans = 0; 
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << locMTrees[0].size() << " halos." << endl;

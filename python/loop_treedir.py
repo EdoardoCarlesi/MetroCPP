@@ -18,8 +18,8 @@ print('Testing Merger Tree python post-processing scripts')
 
 #baseTreeMCPP = '/z/carlesi/STORE/LGF/trees/metrocpp/'
 #baseTreeMCPP = '/home/eduardo/CLUES/DATA/LGF/trees/'
-baseTreeMCPP = '/home/eduardo/CLUES/DATA/HESTIA/8192/trees/'
-#baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/8192/'
+#baseTreeMCPP = '/home/eduardo/CLUES/DATA/HESTIA/8192/trees/'
+baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/4096/'
 #suffTreeMCPP = 'mtree'
 suffTreeMCPP = 'mtree'
 
@@ -27,13 +27,17 @@ nSnaps = 127
 nSteps = 127
 nChunk = 1
 
-iSeedIni = 17; iSeedEnd = 18; gSeedIni = 11; gSeedEnd = 12; thisRun = '17_11'
+#iSeedIni = 17; iSeedEnd = 18; gSeedIni = 11; gSeedEnd = 12; thisRun = '17_11'
 #iSeedIni = 37; iSeedEnd = 38; gSeedIni = 11; gSeedEnd = 12; thisRun = '37_11'
+thisDb = baseTreeMCPP + 'hestia_trees_' + thisRun + '.db'
+
+
+iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; thisRun = '17_11'
+thisDb = baseTreeMCPP + 'hestia_trees_4096.db'
 
 # Save all the extracted trees into a database
 #thisDb = baseTreeMCPP + 'lgf_n500_trees.db'
 #thisDb = baseTreeMCPP + 'hestia_trees_test.db'
-thisDb = baseTreeMCPP + 'hestia_trees_' + thisRun + '.db'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)

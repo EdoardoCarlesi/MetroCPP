@@ -316,8 +316,10 @@ int main(int argv, char **argc)
 			/* This cleans all the locMTree and locCleanTrees */
 			FreeMergerTrees(iNumCat);
 
+#ifdef VERBOSE
 			/* Dump some information on the memory allocated on the various structures */
 			MemoryCheck(iNumCat);
+#endif
 
 		}	/* Finish: the trees have now been built for this step */
 
