@@ -118,6 +118,7 @@ extern int runMode;
 
 // Track orphan halos to a maximum of these steps
 extern int facOrphanSteps;	
+extern int maxOrphanSteps;
 
 extern int nSnapsUse;
 extern int nSnaps;

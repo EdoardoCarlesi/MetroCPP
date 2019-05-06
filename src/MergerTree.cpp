@@ -32,7 +32,6 @@
 #include "utils.h"
 #include "global_vars.h"
 
-#define absMaxOrphanSteps 13
 
 using namespace std;
 
@@ -578,14 +577,14 @@ void CleanTrees(int iStep)
 			thisHalo.nOrphanSteps++;
 			thisHalo.isToken = true;
 
-			int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
+			int locMaxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
 
 			/* Upper limit on the total number of steps an halo can be tracked */
-			if (maxOrphanSteps > absMaxOrphanSteps)		
-				maxOrphanSteps = absMaxOrphanSteps;
+			if (locMaxOrphanSteps > maxOrphanSteps)		
+				locMaxOrphanSteps = maxOrphanSteps;
 
 			/* Check if it's worth to continue tracking this orphan halo */
-			if (thisHalo.nOrphanSteps <= maxOrphanSteps)
+			if (thisHalo.nOrphanSteps <= locMaxOrphanSteps)
 			{
 #ifdef GATHER_TREES
 				allOrphIDs.push_back(thisHalo.ID);
