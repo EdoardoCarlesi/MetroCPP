@@ -210,6 +210,7 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "nChunks")		nChunks = stoi(arg[1]);
 	else if (arg[0] == "nGrid")		nGrid = stoi(arg[1]);
 	else if (arg[0] == "facOrphanSteps")	facOrphanSteps = stoi(arg[1]);
+	else if (arg[0] == "maxOrphanSteps")	maxOrphanSteps = stoi(arg[1]);
 	else if (arg[0] == "minPartHalo")	minPartHalo = stoi(arg[1]);
 	else if (arg[0] == "minPartCmp")	minPartCmp = stoi(arg[1]);
 	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
