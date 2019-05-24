@@ -129,7 +129,7 @@ void MemoryCheck(int iNum)
 
 	if (locTask == 0)
 	{
-		cout << "============================" << endl;
+		cout << "\n============================" << endl;
 		cout << "MemoryCheck on master task. " << endl;
 		cout << "thisMapTrees: " << thisMapTrees.size() << endl;
 		cout << "nextMapTrees: " << nextMapTrees.size() << endl;
