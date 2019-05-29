@@ -21,9 +21,9 @@
  * the merger trees.
  */
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <math.h>
 #include <map>
 
@@ -31,6 +31,7 @@
 #include "Halo.h"
 #include "utils.h"
 #include "global_vars.h"
+
 
 using namespace std;
 
@@ -507,7 +508,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, nLocUntrack = 0, absMaxOrphanSteps = 10, nLocOrphans = 0; 
+	int thisIndex = 0, nLocUntrack = 0, nLocOrphans = 0; 
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << locMTrees[0].size() << " halos." << endl;
@@ -574,14 +575,14 @@ void CleanTrees(int iStep)
 			thisHalo.nOrphanSteps++;
 			thisHalo.isToken = true;
 
-			int maxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
+			int locMaxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
 
 			/* Upper limit on the total number of steps an halo can be tracked */
-			if (maxOrphanSteps > absMaxOrphanSteps)		
-				maxOrphanSteps = absMaxOrphanSteps;
+			if (locMaxOrphanSteps > maxOrphanSteps)		
+				locMaxOrphanSteps = maxOrphanSteps;
 
 			/* Check if it's worth to continue tracking this orphan halo */
-			if (thisHalo.nOrphanSteps <= maxOrphanSteps)
+			if (thisHalo.nOrphanSteps <= locMaxOrphanSteps)
 			{
 #ifdef GATHER_TREES
 				allOrphIDs.push_back(thisHalo.ID);

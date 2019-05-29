@@ -12,12 +12,21 @@ RunNum[1]="45_17"
 RunNum[2]="55_02"
 RunNum[3]="34_13"
 
+#00_06  01_12  09_18  17_10  17_13  34_13  37_11  45_17  55_02  62_14  64_14
+RunNum[4]="01_12"
+RunNum[5]="09_18"
+RunNum[6]="17_10"
+RunNum[7]="17_13"
+RunNum[8]="37_11"
+RunNum[9]="62_14"
+RunNum[10]="64_14"
+
 resolution='2048'
 
 ncpu=1
 
-iniRun=0
-totRun=4
+iniRun=4
+totRun=11
 
 iniSub=0
 totSub=10

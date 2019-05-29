@@ -99,6 +99,8 @@ int minPartHalo;
 int runMode;
 int nGrid;
 int facOrphanSteps;
+int maxOrphanSteps;
+
 int nTreeChunks;
 int nLocChunks;
 int nChunks;

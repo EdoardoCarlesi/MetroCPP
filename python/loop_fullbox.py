@@ -26,10 +26,13 @@ suffTreeMCPP = 'mtree'
 
 nSnaps = 54	
 nSteps = 54
-nChunk = 24
+nChunk = 1
+#nChunk = 24
 
 iSeedIni = 0
-iSeedEnd = 1
+iSeedEnd = 2
+
+iTree = 0
 
 # Loop on the large scale seed codes
 for iSeed in range(iSeedIni, iSeedEnd):
@@ -46,7 +49,9 @@ for iSeed in range(iSeedIni, iSeedEnd):
 	thisSubDir = iSeedStr 
 	thisTreePath = baseTreeMCPP + thisSubDir
 	#rootFile = filePrefix + thisSubDir + '_'	
-	rootFile = filePrefix + thisSubDir + '_nobuff_'	
+	#rootFile = filePrefix + thisSubDir + '_nobuff_'	
+	#rootFile = filePrefix + '00_nobuff_'	
+	rootFile = filePrefix + thisSubDir + '_gather_'	
 	testFile = rootFile + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 	
 	print('Checking if folder %s exist. ' % thisTreePath )
@@ -63,11 +68,17 @@ for iSeed in range(iSeedIni, iSeedEnd):
 		# Store all the trees inside a database
 		for thisTree in allTrees:
 			[tmp_m, tmp_id] = thisTree.get_mass_id()
-			newSql.insert_tree(tmp_id[0], thisSubDir, tmp_m, tmp_id)
+
+			if tmp_m[0] > 500:
+				newSql.insert_tree(tmp_id[0], thisSubDir, tmp_m, tmp_id)
+				iTree += 1
 
 		end = timeit.default_timer()
-		print('Inserted %d trees in %f seconds.' % (len(allTrees), end - start))
+		print('Inserted %d trees in %f seconds.' % (iTree, end - start))
 
-	# Now commit to the database and close
-	newSql.cursor.execute('COMMIT')
-	newSql.close()
+	try: 
+		# Now commit to the database and close
+		newSql.cursor.execute('COMMIT')
+		newSql.close()
+	except:
+		'Do nothing'

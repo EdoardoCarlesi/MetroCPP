@@ -213,6 +213,7 @@ int main(int argv, char **argc)
 			iniTime = clock();
 		
 			/* Forward halo connections. This function also allocates the MergerTrees */
+			MemoryCheck(iNumCat);
 			FindProgenitors(0, 1);
 			MPI_Barrier(MPI_COMM_WORLD);
 
@@ -280,6 +281,7 @@ int main(int argv, char **argc)
 			 * FIXME: This is leaking somewhere and the sync is not working correctly. 
 			 * Better always use the GATHER_TREES option instead */
 			CommTasks.SyncMergerTreeBuffer();
+			MemoryCheck(iNumCat);
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();
@@ -316,8 +318,10 @@ int main(int argv, char **argc)
 			/* This cleans all the locMTree and locCleanTrees */
 			FreeMergerTrees(iNumCat);
 
+#ifdef VERBOSE
 			/* Dump some information on the memory allocated on the various structures */
 			MemoryCheck(iNumCat);
+#endif
 
 		}	/* Finish: the trees have now been built for this step */
 

@@ -11,7 +11,8 @@ from mtreelib.mtree import *
 import os
 
 box_size = 100000.0
-base_path = '/z/carlesi/CLUES/MetroC++/output/HESTIA/8192/'
+#base_path = '/z/carlesi/CLUES/MetroC++/output/HESTIA/8192/'
+base_path = '/home/eduardo/CLUES/DATA/HESTIA/'
 this_db='hestia_trees.db'
 
 tot_files = 1
@@ -26,7 +27,7 @@ columnReadID = 'allHaloIDs'
 columnReadPT = 'allNumPart'
 
 # Read the halo IDs at z=0
-id_file_name='/store/erebos/nil/HESTIA/ANALYSIS/8192_GAL_FOR/dwarfs_17_11.txt'
+id_file_name='/home/eduardo/CLUES/DATA/dwarfs_17_11.txt'
 id_file = open(id_file_name, 'r')
 id_data = id_file.read().splitlines()
 
@@ -53,7 +54,6 @@ for this_id in all_ids[0:3]:
 
 	this_file_name = 'halo_' + str(this_id) + '.full_mtree'
 	this_file = open(this_file_name, 'w')
-
 
 	if valid_tree[0].size > 40:
 		iValid +=1 
