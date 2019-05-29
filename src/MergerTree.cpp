@@ -240,8 +240,6 @@ void MergerTree::SortByMerit()
 	tmpIdx.shrink_to_fit();
 	tmpProgHalo.clear();
 	tmpProgHalo.shrink_to_fit();
-#ifdef TEST
-#endif
 };
 
 	       /****************************************************************************
@@ -588,6 +586,21 @@ void CleanTrees(int iStep)
 #ifdef GATHER_TREES
 				allOrphIDs.push_back(thisHalo.ID);
 #else
+
+#ifdef ZOOM
+#ifdef FOCUS_TREES	
+			float focusRadius = 5000.0
+			float focusCenter[3];
+
+			focusCenter[0] = 50000.0;
+			focusCenter[1] = 50000.0;
+			focusCenter[2] = 50000.0;
+
+			/* We only really care about the trees if they are within some region */
+			if (thisHalo.Distance(focusCenter) < focusRadius)
+			{
+#endif
+#endif
 				/* Update the container of local orphan halos */
 				locOrphHalos.push_back(thisHalo);
 
@@ -599,6 +612,11 @@ void CleanTrees(int iStep)
 				for (int iP = 0; iP < nPTypes; iP++)
 					copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
+#ifdef ZOOM
+#ifdef FOCUS_TREES
+			}
+#endif
+#endif
 #endif
 				mergerTree.isOrphan = true;
 				mergerTree.idProgenitor.push_back(thisHalo.ID);
