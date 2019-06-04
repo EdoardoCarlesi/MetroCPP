@@ -253,6 +253,7 @@ void ShiftHalosPartsGrids()
 	for (auto thisOrphHalo : locOrphHalos) 
 		locHalos[0].push_back(thisOrphHalo);
 
+	/* Now copy all the particle structures from 1 ---> 0 */
 	if (runMode == 0 || runMode == 2)
 	{ 
 		locParts[0].resize(nLocHalos[0]);
@@ -282,6 +283,7 @@ void ShiftHalosPartsGrids()
 		locParts[1].clear();
 		locParts[1].shrink_to_fit();
 
+		/* Keep track of orphan halo particle content also in the following steps */
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
 			int locPartIndex = iO + nLocHalos[0];
@@ -290,14 +292,44 @@ void ShiftHalosPartsGrids()
 
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
+#ifndef COMPRESS_ORPHANS	
 				locParts[0][locPartIndex][iT].swap(locOrphParts[iO][iT]);
-
+#endif
 				for (auto const& partID : locParts[0][locPartIndex][iT])
 				{
 					Particle thisParticle;
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
                                 	thisParticle.type   = iT;
+
+				/* If this compile flag is switched on, we only track a subset of the particles of the orphan halos 
+				 * to avoid memory overload */
+#ifdef COMPRESS_ORPHANS	
+					/* Temporarily define all the variables here */
+					float nTrackFac = 0.85;
+					int nPartTmp = 0;
+					int nPartFloor = 1000;
+					int nPartStart  = locParts[0][locPartIndex][iT].size();
+					int nPartTrack = (int) nPartStart * nTrackFac;
+						
+					/* Change the number of particles */
+					if (nPartTrack > nPartFloor && nPartStart > nPartFloor)
+					{
+						locHalos[0][locPartIndex].nPart[iT] = nPartTrack;
+					} else {
+						/* Do not change the number of particles if it is below the threshold */
+						nPartTrack = nPartStart;
+					}
+					
+					/* Only add a reduced number of particles */
+					if (nPartTmp < nPartTrack)
+					{
+						locParts[0][locPartIndex][iT].push_back(partID);
+                                		locMapParts[0][partID].push_back(thisParticle);
+						nPartTmp++;
+					}
+#else
                                 	locMapParts[0][partID].push_back(thisParticle);
+#endif
 				}
 			}
 

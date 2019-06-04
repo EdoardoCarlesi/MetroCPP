@@ -1,3 +1,5 @@
+scripts/test_fullbox.sh
+scripts/test_zoom.sh
 *hestia*
 *jour*
 *.swp
