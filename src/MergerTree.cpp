@@ -546,7 +546,7 @@ void CleanTrees(int iStep)
 			}
 
 			/* Sanity check */
-			if (descID == 0 && progHalo.nPart[1] > minPartHalo)
+			if (descID == 0 && progHalo.nAllPart() > minPartHalo)
 			{
 				//locMTrees[1][jTree].Info(); 
 				cout << "OnTask= " << locTask << ": WARNING, progen. ID: " << progID << " has no descID: " << descID 
@@ -587,9 +587,6 @@ void CleanTrees(int iStep)
 #ifdef GATHER_TREES
 				allOrphIDs.push_back(thisHalo.ID);
 #else
-
-#ifdef ZOOM
-#endif
 				/* Update the container of local orphan halos */
 				locOrphHalos.push_back(thisHalo);
 
@@ -601,8 +598,6 @@ void CleanTrees(int iStep)
 				for (int iP = 0; iP < nPTypes; iP++)
 					copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
-#ifdef ZOOM
-#endif
 #endif
 				mergerTree.isOrphan = true;
 				mergerTree.idProgenitor.push_back(thisHalo.ID);
@@ -641,7 +636,6 @@ void CleanTrees(int iStep)
 	nLocOrphans = locOrphHalos.size();
 	MPI_Reduce(&nLocOrphans,   &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&nLocUntrack,   &nTotUntrack, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
 #endif
 
 	if (locTask == 0)

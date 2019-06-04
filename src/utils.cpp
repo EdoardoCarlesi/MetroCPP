@@ -168,8 +168,7 @@ void CleanMemory(int iCat)
 
 	nLocHalos[iCat] = 0;
 
-	/* Clean the particles if not running in post processing mode only */
-	/* For catalog 1 this has most likely already been cleaned ... */
+	/* Clean the particle content */
 	for (int iH = 0; iH < locParts[iCat].size(); iH++)
 	{
 		for (int iT = 0; iT < nPTypes; iT++)
@@ -234,7 +233,6 @@ vector<string> SplitString (string strIn, string delim)
  * input halo & particle files. */
 void ShiftHalosPartsGrids()
 {
-
 	CleanMemory(0);
 	
 	if (locTask == 0)
@@ -285,8 +283,27 @@ void ShiftHalosPartsGrids()
 
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
-#ifndef COMPRESS_ORPHANS	
+#ifndef COMPRESS_ORPHANS
 				locParts[0][locPartIndex][iT].swap(locOrphParts[iO][iT]);
+#else	
+				/* Define the relevant variables for the compress orphans here */
+				float nTrackFac = 0.85;
+				int nPartTmp = 0;
+				int nPartFloor = 1000;
+				int nPartStart = locHalos[0][locPartIndex].nPart[1];
+				int nPartTrack = (int) (nPartStart * nTrackFac);
+
+				/* Change the number of particles */
+				if (nPartTrack > nPartFloor && nPartStart > nPartFloor)
+				{
+					locHalos[0][locPartIndex].nPart[iT] = nPartTrack;
+				} else {
+					/* Do not change the number of particles if it is below the threshold */
+					nPartTrack = nPartStart;
+				}
+				
+				//if (nPartStart > 0)
+				//	cout << iO << ", Start: " << nPartStart << ", Track: " << nPartTrack << endl;
 #endif
 				for (auto const& partID : locParts[0][locPartIndex][iT])
 				{
@@ -294,39 +311,24 @@ void ShiftHalosPartsGrids()
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
                                 	thisParticle.type   = iT;
 
-				/* If this compile flag is switched on, we only track a subset of the particles of the orphan halos 
-				 * to avoid memory overload */
 #ifdef COMPRESS_ORPHANS	
-					/* Temporarily define all the variables here */
-					float nTrackFac = 0.85;
-					int nPartTmp = 0;
-					int nPartFloor = 1000;
-					int nPartStart  = locParts[0][locPartIndex][iT].size();
-					int nPartTrack = (int) nPartStart * nTrackFac;
-						
-					/* Change the number of particles */
-					if (nPartTrack > nPartFloor && nPartStart > nPartFloor)
-					{
-						locHalos[0][locPartIndex].nPart[iT] = nPartTrack;
-					} else {
-						/* Do not change the number of particles if it is below the threshold */
-						nPartTrack = nPartStart;
-					}
-					
-					/* Only add a reduced number of particles */
+					/* Only add a subset of the total number of particles */
 					if (nPartTmp < nPartTrack)
 					{
 						locParts[0][locPartIndex][iT].push_back(partID);
                                 		locMapParts[0][partID].push_back(thisParticle);
 						nPartTmp++;
 					}
-			
-					cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", nPart: " << nPartStart << ", nPartNew: " 
-						<< nPartTrack << ", tmp: " << nPartTmp << endl;
 #else
                                 	locMapParts[0][partID].push_back(thisParticle);
 #endif
 				}
+			
+#ifdef COMPRESS_ORPHANS	
+				//if (nPartStart > 0 && iT == 1)
+				//	cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", nPart: " << nPartStart << ", nPartNew: " 
+				//		<< nPartTrack << ", tmp: " << nPartTmp << endl;
+#endif
 			}
 
 			locOrphParts[iO].clear();

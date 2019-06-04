@@ -78,7 +78,7 @@ int main(int argv, char **argc)
 	{
 		cout << endl;
 		cout << "\t\t**************************************************" << endl;
-		cout << "\t\t*       METROC++ (MErger TRees On C++) v0.1      *" << endl;
+		cout << "\t\t*       METROC++ (MErger TRees On C++) v0.2      *" << endl;
 		cout << "\t\t*    Copyright (C) Edoardo Carlesi, 2018-2019    *" << endl;
 		cout << "\t\t* This program comes with ABSOLUTELY NO WARRANTY *" << endl;
 	        cout << "\t\t* This is free software, and you are welcome to  *" << endl;
