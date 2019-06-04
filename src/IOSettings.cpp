@@ -201,8 +201,12 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	if (arg[0] == "boxSize") 		boxSize = stof(arg[1]);
 	else if (arg[0] == "haloSuffix") 	haloSuffix = arg[1];
 	else if (arg[0] == "partSuffix") 	partSuffix = arg[1];
+	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "haloPrefix") 	haloPrefix = arg[1];
 	else if (arg[0] == "partPrefix") 	partPrefix = arg[1];
+	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
+	else if (arg[0] == "cpuString")		cpuString = arg[1];
+	else if (arg[0] == "splitString")	splitString = arg[1];
 	else if (arg[0] == "pathMetroCpp") 	pathMetroCpp = arg[1];
 	else if (arg[0] == "pathInput") 	pathInput = arg[1];
 	else if (arg[0] == "inputFormat") 	inputFormat = arg[1];
@@ -213,47 +217,23 @@ void IOSettings::InitFromCfgFile(vector<string> arg)
 	else if (arg[0] == "maxOrphanSteps")	maxOrphanSteps = stoi(arg[1]);
 	else if (arg[0] == "minPartHalo")	minPartHalo = stoi(arg[1]);
 	else if (arg[0] == "minPartCmp")	minPartCmp = stoi(arg[1]);
-	else if (arg[0] == "outPrefix")		outPrefix = arg[1];
-	else if (arg[0] == "outSuffix")		outSuffix = arg[1];
 	else if (arg[0] == "pathOutput")	pathOutput = arg[1];
-	else if (arg[0] == "runMode")		runMode = stoi(arg[1]);
 	else if (arg[0] == "nTreeChunks")	nTreeChunks = stoi(arg[1]);
 	else if (arg[0] == "cosmologicalModel")	cosmologicalModel = arg[1];
-	else if (arg[0] == "pathTree") {
-		pathTree = arg[1];	
-			if (pathTree == "pathOutput")
-			{
-				if (pathOutput == "")
-				{
-					if (locTask == 0)
-						cout << "ERROR: treeOutput = pathOutput, but pathOutput is not yet defined.\n";
-
-					MPI_Finalize();
-					exit(0);
-				} else {
-					pathTree = pathOutput;
-				}
-			}
-	} else {
-		cout << "Arg= " << arg[0] << " does not exist." << endl;
-	}
-
-	//if (arg.size() > 0)
-	//	cout << arg[0] << " = " << arg[1] << endl;
+	else cout << "Arg= " << arg[0] << " is useless or redundant and will be ignored." << endl;
 
 	/* Just issue a warning here, in case some parameter has not been set correctly. */
 	if (arg[1] == "" && locTask == 0)
 		cout << "WARNING " << arg[0] << " has not been set correctly in the config file." << endl;
  
 #ifndef ZOOM
-
 	if (arg[0] == "nGrid" && locTask == 0)
 		if (nGrid < 1)
 		{
 			cout << "ERROR: " << endl; 
-			cout << "Cannot run with parameter 'nGrid = 0' in Full Box mode. Set nGrid to a positive int value in the configuration file." << endl;
+			cout << "Cannot run with parameter 'nGrid = 0' in Full Box mode." << endl;
+			cout << "Please set nGrid to a positive int value in the configuration file." << endl;
 			cout << "Exiting program..." << endl;
-			MPI_Finalize();
 			exit(0);
 		}
 #endif
@@ -306,13 +286,7 @@ void IOSettings::FindCatZ()
 	string cleanTmp;
 	string lineIn;
 
-#ifdef ZOOM
-	string boolZoom = "true";
-#else
-	string boolZoom = "false";
-#endif
-
-	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
+	optionsSh = pathInput + " " + haloSuffix + " " + cpuString;
 	outputTmp = pathMetroCpp + tmpZOut;
 	inputSh = pathMetroCpp + findZsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;	
@@ -366,13 +340,7 @@ void IOSettings::FindCatN()
 	string lineIn;
 	string cleanTmp;
 
-#ifdef ZOOM
-	string boolZoom = "true";
-#else
-	string boolZoom = "false";
-#endif
-
-	optionsSh = pathInput + " " + haloSuffix + " " + boolZoom;
+	optionsSh = pathInput + " " + haloSuffix + " " + cpuString + " " + splitString;
 
 	outputTmp = pathMetroCpp + tmpNOut;
 	inputSh = pathMetroCpp + findNsh + " " + optionsSh + " > " + outputTmp;
@@ -500,7 +468,6 @@ void IOSettings::DistributeFilesAmongTasks(void)
 		partFiles[iF].resize(nLocChunks);
 #endif
 
-		//for (int jF = 0; jF < nLocChunks + nLocRemind; jF++)
 		for (int jF = 0; jF < nLocChunks; jF++)
 		{
 #ifdef ZOOM
@@ -660,11 +627,7 @@ void IOSettings::ReadParticles(void)
 				iTmpParts++;
 				iLocParts++;
 
-//#ifdef ZOOM
 				if (iTmpParts == nPartHalo)
-//#else
-//				if (iTmpParts == locHalos[iUseCat][iLocHalos].nPart[0])
-//#endif
 				{	
 
 					/* Sort the ordered IDs */
@@ -1014,11 +977,7 @@ void IOSettings::WriteTree(int iThisCat)
         {
 		const char *strFnm;	
 		strFnm = strSnaps[iC].c_str();
-
-		if (runMode == 1)
-			outName = pathOutput + outPrefix + strFnm + "." + strCpu + ".restore." + outSuffix;
-		else
-			outName = pathOutput + outPrefix + strFnm + "." + strCpu + "." + outSuffix;
+		outName = pathOutput + outPrefix + strFnm + "." + strCpu + "." + outSuffix;
 
 		ofstream fileOut;
 		fileOut.open(outName);

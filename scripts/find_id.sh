@@ -5,20 +5,11 @@
 
 path=$1
 format=$2
-zoom=$3
-
-split=".z"
-#split="_"
+cpus=$3
+split=$4 
 
 tmp=`pwd`'/ahf.tmp'
 cd $path
-
-if [ "$zoom" == "true" ]
-then
- 	cpus='.'
-else
-	cpus='.0000.'
-fi
 
 if [ -f "$tmp_out" ]
 then

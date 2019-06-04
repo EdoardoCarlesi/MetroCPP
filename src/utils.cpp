@@ -126,7 +126,6 @@ void MemoryCheck(int iNum)
 		for (int iT = 0; iT < locCleanTrees[iC].size(); iT ++)
 				totCleanMem += sizeof(locCleanTrees[iC][iT]);
 
-
 	if (locTask == 0)
 	{
 		cout << "\n============================" << endl;
@@ -235,11 +234,6 @@ vector<string> SplitString (string strIn, string delim)
  * input halo & particle files. */
 void ShiftHalosPartsGrids()
 {
-	if (runMode == 1 || runMode == 2)
-	{
-		id2Index[0].clear();
-		id2Index[0].swap(id2Index[1]);
-	}
 
 	CleanMemory(0);
 	
@@ -254,7 +248,6 @@ void ShiftHalosPartsGrids()
 		locHalos[0].push_back(thisOrphHalo);
 
 	/* Now copy all the particle structures from 1 ---> 0 */
-	if (runMode == 0 || runMode == 2)
 	{ 
 		locParts[0].resize(nLocHalos[0]);
 		nLocParts[0] = nLocParts[1];
@@ -327,6 +320,9 @@ void ShiftHalosPartsGrids()
                                 		locMapParts[0][partID].push_back(thisParticle);
 						nPartTmp++;
 					}
+			
+					cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", nPart: " << nPartStart << ", nPartNew: " 
+						<< nPartTrack << ", tmp: " << nPartTmp << endl;
 #else
                                 	locMapParts[0][partID].push_back(thisParticle);
 #endif
@@ -339,7 +335,7 @@ void ShiftHalosPartsGrids()
 
 		locOrphParts.clear();
 		locOrphParts.shrink_to_fit();
-	}	// runMode 0 or 2
+	}	
 
 	/* Now free and reset the orphan halo trackers */
 	nLocHalos[0] += locOrphHalos.size();
@@ -366,23 +362,20 @@ void ShiftHalosPartsGrids()
 	locBuffHalos.clear();
 	locBuffHalos.shrink_to_fit();
 	
-	if (runMode == 0 || runMode == 2)
+	for (int iP = 0; iP < locBuffParts.size(); iP++)
 	{
-		for (int iP = 0; iP < locBuffParts.size(); iP++)
+		for (int iT = 0; iT < nPTypes; iT++)
 		{
-			for (int iT = 0; iT < nPTypes; iT++)
-			{
-				locBuffParts[iP][iT].clear();
-				locBuffParts[iP][iT].shrink_to_fit();
-			}
-	
-			locBuffParts[iP].clear();
-			locBuffParts[iP].shrink_to_fit();
+			locBuffParts[iP][iT].clear();
+			locBuffParts[iP][iT].shrink_to_fit();
 		}
 	
-		locBuffParts.clear();
-		locBuffParts.shrink_to_fit();
+		locBuffParts[iP].clear();
+		locBuffParts[iP].shrink_to_fit();
 	}
+	
+	locBuffParts.clear();
+	locBuffParts.shrink_to_fit();
 #endif
 
 	if (locTask == 0)

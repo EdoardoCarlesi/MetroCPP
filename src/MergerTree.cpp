@@ -569,13 +569,13 @@ void CleanTrees(int iStep)
 		 * In this case, the subhalo is not recorded among the orphan halos, since it does have a connection
 		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
 		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
-		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) 
+		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nAllPart() > minPartHalo) 
 		{
 			Halo thisHalo = mergerTree.mainHalo;
 			thisHalo.nOrphanSteps++;
 			thisHalo.isToken = true;
 
-			int locMaxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
+			int locMaxOrphanSteps = 1 + int (thisHalo.nAllPart() / facOrphanSteps);
 
 			/* Upper limit on the total number of steps an halo can be tracked */
 			if (locMaxOrphanSteps > maxOrphanSteps)		
@@ -589,18 +589,6 @@ void CleanTrees(int iStep)
 #else
 
 #ifdef ZOOM
-#ifdef FOCUS_TREES	
-			float focusRadius = 5000.0
-			float focusCenter[3];
-
-			focusCenter[0] = 50000.0;
-			focusCenter[1] = 50000.0;
-			focusCenter[2] = 50000.0;
-
-			/* We only really care about the trees if they are within some region */
-			if (thisHalo.Distance(focusCenter) < focusRadius)
-			{
-#endif
 #endif
 				/* Update the container of local orphan halos */
 				locOrphHalos.push_back(thisHalo);
@@ -614,9 +602,6 @@ void CleanTrees(int iStep)
 					copy(locParts[0][iTree][iP].begin(), locParts[0][iTree][iP].end(), 
 						back_inserter(locOrphParts[nLocOrphans][iP]));
 #ifdef ZOOM
-#ifdef FOCUS_TREES
-			}
-#endif
 #endif
 #endif
 				mergerTree.isOrphan = true;

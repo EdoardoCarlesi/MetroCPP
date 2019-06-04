@@ -100,24 +100,6 @@ int main(int argv, char **argc)
 	
 	}
 
-	if (runMode == 0)
-		strRunMode = " ---> Merger tree computation.\n";
-	else if (runMode == 1)	
-		strRunMode = " ---> Post processing.\n";
-	else if (runMode == 2)
-		strRunMode = " ---> Merger tree computation and post processing.\n";
-	else {
-		if (locTask == 0)
-		{
-			cout << "RunMode unknown. Choose 0, 1 or 2.\nExiting program..." << endl;
-			MPI_Finalize();
-			exit(0);
-		}
-	};
-
-	if (locTask == 0)
-		cout << "Running the code in mode: " << runMode << strRunMode << endl;
-
 	if (NPTYPES < 2 && locTask == 0)
 	{
 		cout << "\t\t==== WARNING ====" << endl;
@@ -125,10 +107,10 @@ int main(int argv, char **argc)
 		cout << "NPTYPES needs to be set > 2 for the code to function properly." << endl;
 		cout << "Exiting..." << endl;
 		cout << "\t\t=================\n" << endl;
-	}	
+	}
+	
+		/* Ready? Go! */
 
-	/* If running in MTree only or MTree + Postprocessing */
-	if (runMode == 0 || runMode == 2)
 	{
 		/* Overrides the config file settings */
 		nTreeChunks = totTask;
@@ -213,7 +195,6 @@ int main(int argv, char **argc)
 			iniTime = clock();
 		
 			/* Forward halo connections. This function also allocates the MergerTrees */
-			MemoryCheck(iNumCat);
 			FindProgenitors(0, 1);
 			MPI_Barrier(MPI_COMM_WORLD);
 
@@ -281,7 +262,7 @@ int main(int argv, char **argc)
 			 * FIXME: This is leaking somewhere and the sync is not working correctly. 
 			 * Better always use the GATHER_TREES option instead */
 			CommTasks.SyncMergerTreeBuffer();
-			MemoryCheck(iNumCat);
+
 			MPI_Barrier(MPI_COMM_WORLD);
 	
 			endTime = clock();
@@ -331,73 +312,7 @@ int main(int argv, char **argc)
 		/* Sending the signal to close the log file */
 		SettingsIO.WriteLog(-1, 0.0);
 		CleanMemory(0);
-
-	}	/* If running the tree and / or post processing mode only */
-	
-	/* Load in trees & halo catalogs 
-	 * TODO: Post-processing mode is not enabled for the moment. */
-	if (runMode == 1 || runMode == 2)
-	{
-		if (locTask == 0)
-		{
-			cout << "\t=====================   ERROR   =======================" << endl;
-			cout << "\t= Run mode type 1 & 2 are not enabled yet.            =" << endl; 
-			cout << "\t= The code is working in runMode=0 only. Exiting...   =" << endl; 
-			cout << "\t=======================================================" << endl; 
-		}	
-		
-		MPI_Finalize();
-		exit(0);
-
-		/* TODO: The following code is a template for what should be done in the post-processing 
-		 * mode, reading in halos & mtree files and then smoothing the mass functions and 
-		 * interpolating for the position and mass of the missing halos. 
-		 * Some of the functions are working but the core is still under construction. */
-	
-		iNumCat = 0;	iUseCat = 0;
-
-		SettingsIO.ReadHalos();
-		InitHaloTrees();
-#ifndef ZOOM
-		/* Communicate grid info across all tasks */
-		CommTasks.BroadcastAndGatherGrid();
-#endif
-		for (iNumCat = 1; iNumCat < nSnapsUse; iNumCat++)
-		{
-			/* Initialize descendant halos */
-			iUseCat = 0;			
-
-			SyncIndex();
-			SettingsIO.ReadTrees();
-			AssignDescendant();
-
-			iUseCat = 1;
-			SettingsIO.ReadHalos();
-
-			/* TODO: At this point we should fix halo masses and position using some interpolation scheme */
-
-#ifndef ZOOM
-			/* In FULLBOX mode, we need to assign halos to the grid nodes and identify
-		         * the halos on the buffer, which then need to be communicated */
-			CommTasks.BroadcastAndGatherGrid();
-			GlobalGrid[1].FindBufferNodes(GlobalGrid[0].locNodes);	
-			CommTasks.BufferSendRecv();
-#endif
-			/* Read the following snapshot and assign the progenitors consistently */
-			SyncIndex();
-			AssignProgenitor();
-			BuildTrees();
-
-#ifndef ZOOM
-			CommTasks.CleanBuffer();
-#endif
-			SettingsIO.WriteTree(iNumCat); 	
-			ShiftHalosPartsGrids();
-		}
-
-		/* TODO: Proceed with smoothing & interpolating the MAH of single halos, replacing token/orphan halos and so on.
-		 * FIXME: This stuff will be most likely just implemented in the python post-processing routines */
-	}
+	}	
 
 	MPI_Finalize();
 	

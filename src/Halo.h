@@ -50,11 +50,11 @@ public:
 	int nSub;
 	
 	// Total number of particles is set to normal types +1
-	int nPart[NPTYPES+1];	// TODO remove the +1 
+	int nPart[NPTYPES];	
 
 	uint64_t ID, hostID;
 
-	// TODO: implement a function to return ALL the particle numbers when called, do not save this number into nPart
+	// Use a function to return ALL the particle numbers when called, do not save this number into nPart
 	int nAllPart();
 
 	// Compute the halo distance from a given point
