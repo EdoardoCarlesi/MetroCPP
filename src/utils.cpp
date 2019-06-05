@@ -283,9 +283,7 @@ void ShiftHalosPartsGrids()
 
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
-#ifndef COMPRESS_ORPHANS
-				locParts[0][locPartIndex][iT].swap(locOrphParts[iO][iT]);
-#else	
+#ifdef COMPRESS_ORPHANS
 				/* Define the relevant variables for the compress orphans here */
 				float nTrackFac = 0.85;
 				int nPartTmp = 0;
@@ -302,8 +300,6 @@ void ShiftHalosPartsGrids()
 					nPartTrack = nPartStart;
 				}
 				
-				//if (nPartStart > 0)
-				//	cout << iO << ", Start: " << nPartStart << ", Track: " << nPartTrack << endl;
 #endif
 				for (auto const& partID : locParts[0][locPartIndex][iT])
 				{
@@ -320,15 +316,10 @@ void ShiftHalosPartsGrids()
 						nPartTmp++;
 					}
 #else
+					locParts[0][locPartIndex][iT].push_back(partID);
                                 	locMapParts[0][partID].push_back(thisParticle);
 #endif
 				}
-			
-#ifdef COMPRESS_ORPHANS	
-				//if (nPartStart > 0 && iT == 1)
-				//	cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", nPart: " << nPartStart << ", nPartNew: " 
-				//		<< nPartTrack << ", tmp: " << nPartTmp << endl;
-#endif
 			}
 
 			locOrphParts[iO].clear();

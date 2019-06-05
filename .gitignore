@@ -36,6 +36,7 @@ mpirun
 *.swo
 *.out
 *.db
+python/4096/
 bin/MetroCPP-all
 bin/MetroCPP-zoom
 bin/MetroCPP-Zoom
