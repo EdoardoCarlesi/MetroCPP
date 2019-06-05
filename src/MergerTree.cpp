@@ -241,8 +241,6 @@ void MergerTree::SortByMerit()
 	tmpIdx.shrink_to_fit();
 	tmpProgHalo.clear();
 	tmpProgHalo.shrink_to_fit();
-#ifdef TEST
-#endif
 };
 
 	       /****************************************************************************
@@ -548,7 +546,7 @@ void CleanTrees(int iStep)
 			}
 
 			/* Sanity check */
-			if (descID == 0 && progHalo.nPart[1] > minPartHalo)
+			if (descID == 0 && progHalo.nAllPart() > minPartHalo)
 			{
 				//locMTrees[1][jTree].Info(); 
 				cout << "OnTask= " << locTask << ": WARNING, progen. ID: " << progID << " has no descID: " << descID 
@@ -571,13 +569,13 @@ void CleanTrees(int iStep)
 		 * In this case, the subhalo is not recorded among the orphan halos, since it does have a connection
 		 * and shared particles in the forward loop. Here we check again that this subhalo is not the main 
 		 * descendent of a progenitor host, and record it among the orphan halos to be tracked */
-		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nPart[1] > minPartHalo) 
+		if (mergerTree.idProgenitor.size() == 0 && mergerTree.mainHalo.nAllPart() > minPartHalo) 
 		{
 			Halo thisHalo = mergerTree.mainHalo;
 			thisHalo.nOrphanSteps++;
 			thisHalo.isToken = true;
 
-			int locMaxOrphanSteps = 1 + int (thisHalo.nPart[1] / facOrphanSteps);
+			int locMaxOrphanSteps = 1 + int (thisHalo.nAllPart() / facOrphanSteps);
 
 			/* Upper limit on the total number of steps an halo can be tracked */
 			if (locMaxOrphanSteps > maxOrphanSteps)		
@@ -638,7 +636,6 @@ void CleanTrees(int iStep)
 	nLocOrphans = locOrphHalos.size();
 	MPI_Reduce(&nLocOrphans,   &nTotOrphans, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Reduce(&nLocUntrack,   &nTotUntrack, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
 #endif
 
 	if (locTask == 0)

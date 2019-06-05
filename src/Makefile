@@ -1,6 +1,6 @@
 # Makefile for METRO C++ 
 # MErger TRees On C++
-# Edoardo Carlesi 2018
+# Edoardo Carlesi 2018, 2019
 
 include ../Makefile.config
 
@@ -8,8 +8,9 @@ include ../Makefile.config
 #CXXFLAGS += -g -O0           # debug mode
 CXXFLAGS += -O3 -std=c++11 -fpermissive               # normal mode
 #CXXFLAGS += -Wunused-result -Wsign-compare -Wunused-but-set-variable
-EXEC = MetroCPP
-EXEC_T = test
+
+EXEC=MetroCPP
+EXEC_T=test
 
 #=============================================================================#
 
@@ -32,7 +33,7 @@ OBJS  =  $(SOURCE:.cpp=.o)
 
 .PHONY: all clean
 
-all : 	MetroCPP
+all : 	$(EXEC)
 
 MetroCPP : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OPT) -o $(EXEC) main.cpp $(OBJS) $(LDFLAGS) $(LDLIBS)

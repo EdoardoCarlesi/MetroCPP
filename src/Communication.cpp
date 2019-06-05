@@ -173,9 +173,7 @@ void Communication::BufferSendRecv()
 	 * 		MPI_Pack & exchange particle buffers
 	 */
 
-	if (runMode == 0 || runMode == 2)	// Exchange particles only if running in mode 0 or 2	(i.e. building the raw trees from scratch)
 	{
-
 		/* Local particles to be sent will be mpi-packed into this buffer */
 		buffSendParts = (void *) malloc(buffSendSizeParts);
 
@@ -266,7 +264,7 @@ void Communication::BufferSendRecv()
 			
 			iBuffTotHalo++;
 		}
-	}	/* runMode == 0 */
+	}	
 
 }	/* Loop on all the send/recv tasks */
 

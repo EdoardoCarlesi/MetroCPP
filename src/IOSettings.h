@@ -52,6 +52,9 @@ public:
 	string outPrefix;
 	string outSuffix;
 
+	string cpuString;	
+	string splitString;
+
 	string catFormat;
 	string pathMetroCpp;	// Where the program is installed
 	string pathInput;	// Folder containing all the halo/particle catalogs	//TODO allow for different folders

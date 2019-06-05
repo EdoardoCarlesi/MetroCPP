@@ -3,16 +3,9 @@
 
 path=$1
 format=$2
-zoom=$3
-cpus='0000'
-cd $path
+cpus=$3
 
-if [ "$zoom" == "true" ]
-then
- 	cpus='.'
-else
-	cpus='.0000.'
-fi
+cd $path
 
 n_snaps=`ls *$cpus*$format | wc -l`
 
