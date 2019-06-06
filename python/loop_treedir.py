@@ -29,13 +29,16 @@ nSteps = 127
 nChunk = 1
 
 # Print to file all halos with a z=0 particle content above this value
-partThreshold = 1000
+partThreshold = 250
 
 #iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; 
-iSeedIni = 2; iSeedEnd = 9; gSeedIni = 0; gSeedEnd = 20; 
+iSeedIni = 0; iSeedEnd = 10; gSeedIni = 0; gSeedEnd = 17; 
 
 # All the trees will be stored inside this database
 thisDb = baseTreeMCPP + 'hestia_trees_4096.db'
+
+# The individual mtrees for each z=0 halo will be printed here
+outPath = '/z/carlesi/CLUES/MetroC++/output/4096/'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)
@@ -78,7 +81,8 @@ for iSeed in range(iSeedIni, iSeedEnd):
 
                                 # Print to ASCII File
 				if tmp_m[0] > partThreshold:
-					thisTree.dump_to_file_mass_id()
+					thisOutPath = outPath + thisSubDir + '/'
+					thisTree.dump_to_file_mass_id(thisOutPath, thisSubDir)
 
 			end = timeit.default_timer()
 			print('Inserted %d trees in %f seconds.' % (len(allTrees), end - start))
