@@ -21,7 +21,10 @@ printAscii = True
 #baseTreeMCPP = '/home/eduardo/CLUES/DATA/HESTIA/8192/trees/'
 
 # This is assuming an input .mtree file structure like: hestia_RESOLUTION_XX_XX.0.mtree
-baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/4096/'; baseRootFile = 'hestia_4096_'
+#resolution = '4096'
+resolution = '8192'
+baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/'+resolution+'/'
+baseRootFile = 'hestia_'+resolution+'_'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 127
@@ -32,13 +35,15 @@ nChunk = 1
 partThreshold = 250
 
 #iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; 
-iSeedIni = 0; iSeedEnd = 10; gSeedIni = 0; gSeedEnd = 17; 
+iSeedIni = 0; iSeedEnd = 40; gSeedIni = 0; gSeedEnd = 20; 
 
 # All the trees will be stored inside this database
-thisDb = baseTreeMCPP + 'hestia_trees_4096.db'
+thisDb = baseTreeMCPP + 'hestia_trees_' + resolution + '.db'
 
 # The individual mtrees for each z=0 halo will be printed here
-outPath = '/z/carlesi/CLUES/MetroC++/output/4096/'
+outPath = '/z/carlesi/CLUES/MetroC++/output/'+resolution+'/'
+
+dwPath = '/store/erebos/nil/HESTIA/ANALYSIS/'+resolution+'_GAL_FOR/'
 
 # Initialize the database and begin transaction. This avoids to commit at every step and speeds up the program
 newSql = SQL_IO(thisDb, nSteps)
@@ -66,6 +71,13 @@ for iSeed in range(iSeedIni, iSeedEnd):
 
 		# If this path exists then extract the merger tree therein
 		if os.path.isdir(thisTreePath) and os.path.isfile(testFile):
+			# List of dwarf galaxies
+			dwList = dwPath + 'dwarfs_' + thisSubDir + '.txt'
+
+			print(dwList)
+			# Read the list of dwarf galaxies to be tracked
+			dwIDs = read_dwarfs(dwList)	
+	
 			readFiles = ReadSettings(rootFile, suffTreeMCPP, nChunk, nSnaps, nSteps)
 			allTrees = readFiles.read_trees()
 		
@@ -76,13 +88,19 @@ for iSeed in range(iSeedIni, iSeedEnd):
 			for thisTree in allTrees:
 				[tmp_m, tmp_id] = thisTree.get_mass_id()
 
+				# TODO only save trees above a certain threshold!!!!
                                 # Save all the trees inside the DB
 				newSql.insert_tree(tmp_id[0], thisSubDir, tmp_m, tmp_id)
+				idKey = str(tmp_id[0])
 
-                                # Print to ASCII File
+				# Print those halos whose IDs are in the Dwarf Galaxy list ONLY
+				#if idKey in dwIDs.keys():
 				if tmp_m[0] > partThreshold:
+			#		print('Found key: ', idKey)
 					thisOutPath = outPath + thisSubDir + '/'
 					thisTree.dump_to_file_mass_id(thisOutPath, thisSubDir)
+				#else:
+				#	print('Could not find key: ', idKey)
 
 			end = timeit.default_timer()
 			print('Inserted %d trees in %f seconds.' % (len(allTrees), end - start))
