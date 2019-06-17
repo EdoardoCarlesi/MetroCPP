@@ -281,43 +281,58 @@ void ShiftHalosPartsGrids()
 			locParts[0].resize(locPartIndex+1); 
 			locParts[0][locPartIndex].resize(nPTypes);
 
+#ifdef COMPRESS_ORPHANS	
+			/* Temporarily define all the variables here */
+			float nTrackFac = 0.85;
+			int nPartTmp = 0;
+			int nPartFloor = 1000;
+			
+			int nPartStart  = locHalos[0][locPartIndex].nPart[1];
+			int nPartTrack = (int) nPartStart * nTrackFac;
+						
+			/* Change the number of particles everywhere consistently */
+			if (nPartTrack > nPartFloor && nPartStart > nPartFloor)
+			{
+				/* Track ONLY DM and ONLY high-res */
+				locHalos[0][locPartIndex].nPart[0] = 0; 
+				locHalos[0][locPartIndex].nPart[1] = nPartTrack;
+
+				/* What if nopart type is saved?
+				locHalos[0][locPartIndex].nPart[2] = 0;
+				locHalos[0][locPartIndex].nPart[3] = 0; 
+				locHalos[0][locPartIndex].nPart[4] = 0; 
+				locHalos[0][locPartIndex].nPart[5] = 0; */
+			} else {
+			/* Do not change the number of particles if it is below the threshold */
+				nPartTrack = nPartStart;
+			}
+
+			if (nPartTrack > 1500)
+				cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", haloID " << locHalos[0][locPartIndex].ID
+					<< ", nPart: " << nPartStart << ", nPartNew: " << nPartTrack << ", OrphStep:" 
+						<< locHalos[0][locPartIndex].nOrphanSteps << endl;
+#endif
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
-#ifdef COMPRESS_ORPHANS
-				/* Define the relevant variables for the compress orphans here */
-				float nTrackFac = 0.85;
-				int nPartTmp = 0;
-				int nPartFloor = 1000;
-				int nPartStart = locHalos[0][locPartIndex].nPart[1];
-				int nPartTrack = (int) (nPartStart * nTrackFac);
-
-				/* Change the number of particles */
-				if (nPartTrack > nPartFloor && nPartStart > nPartFloor)
-				{
-					locHalos[0][locPartIndex].nPart[iT] = nPartTrack;
-				} else {
-					/* Do not change the number of particles if it is below the threshold */
-					nPartTrack = nPartStart;
-				}
-				
-#endif
-				for (auto const& partID : locParts[0][locPartIndex][iT])
+//				for (auto const& partID : locParts[0][locPartIndex][iT])
+				for (auto const& partID : locOrphParts[iO][iT])
 				{
 					Particle thisParticle;
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
                                 	thisParticle.type   = iT;
 
 #ifdef COMPRESS_ORPHANS	
-					/* Only add a subset of the total number of particles */
+					/* Reduce the number of particles being tracked */
 					if (nPartTmp < nPartTrack)
 					{
 						locParts[0][locPartIndex][iT].push_back(partID);
-                                		locMapParts[0][partID].push_back(thisParticle);
+        	                        	locMapParts[0][partID].push_back(thisParticle);
 						nPartTmp++;
 					}
 #else
+					/* Track all the particles */
 					locParts[0][locPartIndex][iT].push_back(partID);
-                                	locMapParts[0][partID].push_back(thisParticle);
+        	                        locMapParts[0][partID].push_back(thisParticle);
 #endif
 				}
 			}

@@ -18,8 +18,12 @@ f_out_code = sys.argv[4]
 
 # Number of steps in the tree file
 n_step = sys.argv[5]
+# argv[6] is the file path - do not use
 
-f_err_log = f_out_path + 'treecheck_' + f_type + '_' + f_out_code + '_err.log'
+# Zoom level of the code
+resolution = sys.argv[7]
+
+f_err_log = f_out_path + 'treecheck_' + f_type + '_' + f_out_code + '_' + resolution + '_err.log'
 f_err = open(f_err_log, 'a')
 
 # This parameter defines a discontinous / suspicious MF

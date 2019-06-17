@@ -21,8 +21,8 @@ printAscii = True
 #baseTreeMCPP = '/home/eduardo/CLUES/DATA/HESTIA/8192/trees/'
 
 # This is assuming an input .mtree file structure like: hestia_RESOLUTION_XX_XX.0.mtree
-#resolution = '4096'
-resolution = '8192'
+resolution = '4096'
+#resolution = '8192'
 baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/'+resolution+'/'
 baseRootFile = 'hestia_'+resolution+'_'
 suffTreeMCPP = 'mtree'
@@ -35,7 +35,7 @@ nChunk = 1
 partThreshold = 250
 
 #iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; 
-iSeedIni = 0; iSeedEnd = 40; gSeedIni = 0; gSeedEnd = 20; 
+iSeedIni = 17; iSeedEnd = 30; gSeedIni = 0; gSeedEnd = 20; 
 
 # All the trees will be stored inside this database
 thisDb = baseTreeMCPP + 'hestia_trees_' + resolution + '.db'

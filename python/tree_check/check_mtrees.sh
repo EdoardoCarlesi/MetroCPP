@@ -24,6 +24,6 @@ n_lines=`wc -l $this_file`
 echo $this_file $n_lines
 
 # Now loop on all the trees 
-python3 analyze_tree.py $this_file $format $out_path $this_run $n_lines
+python3 analyze_tree.py $this_file $format $out_path $this_run $n_lines $resolution
 
 done
