@@ -283,9 +283,9 @@ void ShiftHalosPartsGrids()
 
 #ifdef COMPRESS_ORPHANS	
 			/* Temporarily define all the variables here */
-			float nTrackFac = 0.85;
+			float nTrackFac = 0.9;
 			int nPartTmp = 0;
-			int nPartFloor = 1000;
+			int nPartFloor = 1500;
 			
 			int nPartStart  = locHalos[0][locPartIndex].nPart[1];
 			int nPartTrack = (int) nPartStart * nTrackFac;
@@ -307,7 +307,7 @@ void ShiftHalosPartsGrids()
 				nPartTrack = nPartStart;
 			}
 
-			if (nPartTrack > 1500)
+			if (nPartTrack > 5000)
 				cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", haloID " << locHalos[0][locPartIndex].ID
 					<< ", nPart: " << nPartStart << ", nPartNew: " << nPartTrack << ", OrphStep:" 
 						<< locHalos[0][locPartIndex].nOrphanSteps << endl;
