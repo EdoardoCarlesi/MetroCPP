@@ -35,7 +35,7 @@ nChunk = 1
 partThreshold = 250
 
 #iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; 
-iSeedIni = 37; iSeedEnd = 38; gSeedIni = 11; gSeedEnd = 20; 
+iSeedIni = 17; iSeedEnd = 38; gSeedIni = 11; gSeedEnd = 12; 
 
 # All the trees will be stored inside this database
 thisDb = baseTreeMCPP + 'hestia_trees_' + resolution + '.db'

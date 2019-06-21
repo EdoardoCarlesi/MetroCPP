@@ -285,7 +285,7 @@ void ShiftHalosPartsGrids()
 			/* Temporarily define all the variables here */
 			float nTrackFac = 0.9;
 			int nPartTmp = 0;
-			int nPartFloor = 1500;
+			int nPartFloor = 2500;
 			
 			int nPartStart  = locHalos[0][locPartIndex].nPart[1];
 			int nPartTrack = (int) nPartStart * nTrackFac;
