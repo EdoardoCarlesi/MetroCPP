@@ -5,14 +5,7 @@
 
 path=$1
 format=$2
-zoom=$3
-
-if [ "$zoom" == "true" ]
-then
- 	cpus='.'
-else
-	cpus='.0000.'
-fi
+cpus=$3
 
 tmp=`pwd`'/ahf.tmp'
 cd $path

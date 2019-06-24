@@ -60,6 +60,16 @@ Halo::~Halo()
 };
 
 
+int Halo::nAllPart(void){
+	int nAllPart = 0;
+
+	for (int iP = 0; iP < NPTYPES; iP++)
+		nAllPart += nPart[iP];
+
+	return nAllPart;
+};
+
+
 float Halo::Distance(float *Pos)
 {
 	int iX = 0;

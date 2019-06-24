@@ -113,11 +113,9 @@ extern float locVmax;
 
 extern string cosmologicalModel;
 
-/* These int values are being read from the configuration file */
-extern int runMode;
-
 // Track orphan halos to a maximum of these steps
 extern int facOrphanSteps;	
+extern int maxOrphanSteps;
 
 extern int nSnapsUse;
 extern int nSnaps;

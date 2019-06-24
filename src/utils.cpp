@@ -126,18 +126,19 @@ void MemoryCheck(int iNum)
 		for (int iT = 0; iT < locCleanTrees[iC].size(); iT ++)
 				totCleanMem += sizeof(locCleanTrees[iC][iT]);
 
-
 	if (locTask == 0)
 	{
-		cout << "============================" << endl;
+		cout << "\n============================" << endl;
 		cout << "MemoryCheck on master task. " << endl;
 		cout << "thisMapTrees: " << thisMapTrees.size() << endl;
 		cout << "nextMapTrees: " << nextMapTrees.size() << endl;
 		cout << "locMapParts0: " << locMapParts[0].size() << endl;
 		cout << "locMapParts1: " << locMapParts[1].size() << endl;
 		cout << "locOrphParts: " << locOrphParts.size() << endl;
+#ifndef ZOOM
 		cout << "locBuffParts: " << locBuffParts.size() << endl;
 		cout << "locBuffHalos: " << locBuffHalos.size() << endl;
+#endif
 		cout << "locMTrees[0]: " << locMTrees[0].size() << endl;
 		cout << "locMTrees[1]: " << locMTrees[1].size() << endl;
 		cout << "locCleanTree: " << totCleanMem << endl;
@@ -167,8 +168,7 @@ void CleanMemory(int iCat)
 
 	nLocHalos[iCat] = 0;
 
-	/* Clean the particles if not running in post processing mode only */
-	/* For catalog 1 this has most likely already been cleaned ... */
+	/* Clean the particle content */
 	for (int iH = 0; iH < locParts[iCat].size(); iH++)
 	{
 		for (int iT = 0; iT < nPTypes; iT++)
@@ -233,12 +233,6 @@ vector<string> SplitString (string strIn, string delim)
  * input halo & particle files. */
 void ShiftHalosPartsGrids()
 {
-	if (runMode == 1 || runMode == 2)
-	{
-		id2Index[0].clear();
-		id2Index[0].swap(id2Index[1]);
-	}
-
 	CleanMemory(0);
 	
 	if (locTask == 0)
@@ -251,7 +245,7 @@ void ShiftHalosPartsGrids()
 	for (auto thisOrphHalo : locOrphHalos) 
 		locHalos[0].push_back(thisOrphHalo);
 
-	if (runMode == 0 || runMode == 2)
+	/* Now copy all the particle structures from 1 ---> 0 */
 	{ 
 		locParts[0].resize(nLocHalos[0]);
 		nLocParts[0] = nLocParts[1];
@@ -280,22 +274,66 @@ void ShiftHalosPartsGrids()
 		locParts[1].clear();
 		locParts[1].shrink_to_fit();
 
+		/* Keep track of orphan halo particle content also in the following steps */
 		for (int iO = 0; iO < locOrphHalos.size(); iO++)
 		{
 			int locPartIndex = iO + nLocHalos[0];
 			locParts[0].resize(locPartIndex+1); 
 			locParts[0][locPartIndex].resize(nPTypes);
 
+#ifdef COMPRESS_ORPHANS	
+			/* Temporarily define all the variables here */
+			float nTrackFac = 0.9;
+			int nPartTmp = 0;
+			int nPartFloor = 2500;
+			
+			int nPartStart  = locHalos[0][locPartIndex].nPart[1];
+			int nPartTrack = (int) nPartStart * nTrackFac;
+						
+			/* Change the number of particles everywhere consistently */
+			if (nPartTrack > nPartFloor && nPartStart > nPartFloor)
+			{
+				/* Track ONLY DM and ONLY high-res */
+				locHalos[0][locPartIndex].nPart[0] = 0; 
+				locHalos[0][locPartIndex].nPart[1] = nPartTrack;
+
+				/* What if nopart type is saved?
+				locHalos[0][locPartIndex].nPart[2] = 0;
+				locHalos[0][locPartIndex].nPart[3] = 0; 
+				locHalos[0][locPartIndex].nPart[4] = 0; 
+				locHalos[0][locPartIndex].nPart[5] = 0; */
+			} else {
+			/* Do not change the number of particles if it is below the threshold */
+				nPartTrack = nPartStart;
+			}
+
+			if (nPartTrack > 5000)
+				cout << "OrphHalo: " << iO << ", index: " << locPartIndex << ", haloID " << locHalos[0][locPartIndex].ID
+					<< ", nPart: " << nPartStart << ", nPartNew: " << nPartTrack << ", OrphStep:" 
+						<< locHalos[0][locPartIndex].nOrphanSteps << endl;
+#endif
 			for (int iT = 0; iT < nPTypes; iT++)
 			{
-				locParts[0][locPartIndex][iT].swap(locOrphParts[iO][iT]);
-
-				for (auto const& partID : locParts[0][locPartIndex][iT])
+//				for (auto const& partID : locParts[0][locPartIndex][iT])
+				for (auto const& partID : locOrphParts[iO][iT])
 				{
 					Particle thisParticle;
  	                	        thisParticle.haloID = locOrphHalos[iO].ID;
                                 	thisParticle.type   = iT;
-                                	locMapParts[0][partID].push_back(thisParticle);
+
+#ifdef COMPRESS_ORPHANS	
+					/* Reduce the number of particles being tracked */
+					if (nPartTmp < nPartTrack)
+					{
+						locParts[0][locPartIndex][iT].push_back(partID);
+        	                        	locMapParts[0][partID].push_back(thisParticle);
+						nPartTmp++;
+					}
+#else
+					/* Track all the particles */
+					locParts[0][locPartIndex][iT].push_back(partID);
+        	                        locMapParts[0][partID].push_back(thisParticle);
+#endif
 				}
 			}
 
@@ -305,7 +343,7 @@ void ShiftHalosPartsGrids()
 
 		locOrphParts.clear();
 		locOrphParts.shrink_to_fit();
-	}	// runMode 0 or 2
+	}	
 
 	/* Now free and reset the orphan halo trackers */
 	nLocHalos[0] += locOrphHalos.size();
@@ -332,23 +370,20 @@ void ShiftHalosPartsGrids()
 	locBuffHalos.clear();
 	locBuffHalos.shrink_to_fit();
 	
-	if (runMode == 0 || runMode == 2)
+	for (int iP = 0; iP < locBuffParts.size(); iP++)
 	{
-		for (int iP = 0; iP < locBuffParts.size(); iP++)
+		for (int iT = 0; iT < nPTypes; iT++)
 		{
-			for (int iT = 0; iT < nPTypes; iT++)
-			{
-				locBuffParts[iP][iT].clear();
-				locBuffParts[iP][iT].shrink_to_fit();
-			}
-	
-			locBuffParts[iP].clear();
-			locBuffParts[iP].shrink_to_fit();
+			locBuffParts[iP][iT].clear();
+			locBuffParts[iP][iT].shrink_to_fit();
 		}
 	
-		locBuffParts.clear();
-		locBuffParts.shrink_to_fit();
+		locBuffParts[iP].clear();
+		locBuffParts[iP].shrink_to_fit();
 	}
+	
+	locBuffParts.clear();
+	locBuffParts.shrink_to_fit();
 #endif
 
 	if (locTask == 0)
