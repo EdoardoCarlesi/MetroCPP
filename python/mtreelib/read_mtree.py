@@ -156,6 +156,8 @@ def read_z(fileZ):
 	nLines = 0 # Read the number of file lines
 	z = np.zeros((nLines))
 	
+	
+
 	return z
 
 
@@ -182,3 +184,19 @@ def read_z_t(fileZT):
 	
 	return z_t
 
+def read_dwarfs(fileDw):
+	dwIDs = dict()
+	fDw = open(fileDw, 'r')
+              
+	dwLines = fDw.read().splitlines()
+
+	for line in dwLines:
+		if line[0] != '#' and line[0] != '0':
+			thisLine = line.split()
+			thisID = str(thisLine[0])
+			thisN = int(thisLine[2])
+			dwIDs[thisID] = thisN
+			#print(thisID, thisN)
+		else:
+			print(line)
+	return dwIDs

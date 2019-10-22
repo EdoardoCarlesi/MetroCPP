@@ -254,7 +254,7 @@ void MergerTree::SortByMerit()
 
 void FindProgenitors(int iOne, int iTwo)
 {
-	int nLoopHalos[2], iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0, nLocUntrack = 0; 
+	int nLoopHalos[2]; 
 
 	/* Loop also on the buffer halos, in the backward loop only! */
 	if (iOne == 1)
@@ -391,12 +391,13 @@ void FindProgenitors(int iOne, int iTwo)
 	}
 };		/* End of the find progenitor function in full box mode */
 
-#else		 /* The Find Progenitors function in ZOOM MODE is different than the standard one */
 
+#else		 /* ---------> ZOOM MODE <------------ */
+
+
+/* The Find Progenitors function in ZOOM MODE is different than the standard one */
 void FindProgenitors(int iOne, int iTwo)
 {
-	int iOldOrphans = 0, iFixOrphans = 0, nLocOrphans = 0, nLocTrees = 0, nLocUntrack = 0; 
-
 	locMTrees[iOne].clear();
 	locMTrees[iOne].shrink_to_fit();
 	locMTrees[iOne].resize(nLocHalos[iOne]);
@@ -508,7 +509,7 @@ void InitTrees(int nUseCat)
 /* This function compares the forward/backward connections to determine the unique descendant of each halo */
 void CleanTrees(int iStep)
 {
-	int thisIndex = 0, nLocUntrack = 0, nLocOrphans = 0; 
+	int thisIndex = 0, nLocUntrack = 0, nLocOrphans = 0, nLocFix = 0; 
 
 	if (locTask == 0)
 		cout << "Cleaning Merger Tree connections for " << locMTrees[0].size() << " halos." << endl;
@@ -530,7 +531,7 @@ void CleanTrees(int iStep)
 		 * reconstruction of the full merger history. This will be done later. */
 		for (int iProg = 0; iProg < nProgSize; iProg++)
 		{
-			Halo progHalo;	
+			Halo progHalo, descHalo;	
 			uint64_t progID = locMTrees[0][iTree].idProgenitor[iProg];
 			uint64_t descID;
 	
@@ -542,6 +543,7 @@ void CleanTrees(int iStep)
 				cout << " ON TASK " << locTask << " jTree is outside the limits: " << jTree << endl; 
 			} else {
 				descID = locMTrees[1][jTree].progHalo[0].ID;	
+				descHalo = locMTrees[1][jTree].progHalo[0];	
 				progHalo = locMTrees[1][jTree].mainHalo;
 			}
 
@@ -608,12 +610,17 @@ void CleanTrees(int iStep)
 
 				nLocOrphans++;
 
-			} else {	// We stop following this orphan halo, too small and disconnected for too many steps
+			} else {	/* We stop following this orphan halo, too small and disconnected for too many steps */
 				nLocUntrack++;
 			}	
  
-		} else {	// if the tree has no progenitors  
+		} else {	/* else, the tree has a progenitor and everything is cool */
 			mergerTree.isOrphan = false;
+
+			if (mergerTree.mainHalo.isToken == true)
+				nLocFix += 1;
+
+
 		}	
 
 		if (mergerTree.idProgenitor.size() > 1)	
@@ -623,7 +630,7 @@ void CleanTrees(int iStep)
 			locCleanTrees[iStep-1].push_back(mergerTree);
 
 		mergerTree.Clean();
-	}	// iTree for loop
+	}	/* for loop on the iTree variable */
 
 	/* Final statistics - sanity check */
 	int nTotOrphans = 0, nTotUntrack = 0;
@@ -640,7 +647,7 @@ void CleanTrees(int iStep)
 
 	if (locTask == 0)
 		cout << "The total number of orphan halos after cleaning the connections is: " << nTotOrphans
-			<< " while " << nTotUntrack << " will be untracked. "  << endl;
+			<< " while " << nTotUntrack << " will be untracked; " << nLocFix <<  " have been reconnected. "  << endl;
 };
 
 
