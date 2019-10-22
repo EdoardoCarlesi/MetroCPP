@@ -90,7 +90,7 @@ class MTree:
                 self.z = read_z(file_name)
 
         # Print the number of particles and mass ID corresponding 
-        def dump_to_file_mass_id(self):
+        def dump_to_mass_id(self):
                 f_name = 'halo_' + self.mainID + '.full_tree'
                 f_out = open(f_name, 'w')
 
@@ -98,6 +98,14 @@ class MTree:
                         line = "%s %d" % (self.mainBranchID[iM], self.mainBranchNPart[iM]) + '\n'
                         #print(line, file=f_out)
                         #print(line)
+                        f_out.write(line)
+
+        def dump_to_file_mass_id(self, f_name):
+                #f_name = 'halo_' + self.mainID + '.full_tree'
+                f_out = open(f_name, 'w')
+
+                for iM in range(0, self.nSteps):
+                        line = "%s %d" % (self.mainBranchID[iM], self.mainBranchNPart[iM]) + '\n'
                         f_out.write(line)
 
 

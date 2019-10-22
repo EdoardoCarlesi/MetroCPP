@@ -7,9 +7,9 @@ import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-''' 
-	loop_treedir.py
-	Extract trees and store them into a database
+'''
+        loop_treedir.py
+        Extract trees and store them into a database
 '''
 
 print('Testing Merger Tree python post-processing scripts')
@@ -17,22 +17,22 @@ print('Testing Merger Tree python post-processing scripts')
 printAscii = True
 #printAscii = False
 
+# This is assuming an input .mtree file structure like: hestia_RESOLUTION_XX_XX.0.mtree
 #baseTreeMCPP = '/z/carlesi/STORE/LGF/trees/metrocpp/'
 #baseTreeMCPP = '/home/eduardo/CLUES/DATA/HESTIA/8192/trees/'
-
-# This is assuming an input .mtree file structure like: hestia_RESOLUTION_XX_XX.0.mtree
-baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/4096/'; baseRootFile = 'hestia_4096_'
+#baseTreeMCPP = '/z/carlesi/CLUES/MetroC++/output/HESTIA/4096/'; baseRootFile = 'hestia_4096_'
+baseTreeMCPP = '/home/eduardo/CLUES/DATA/trees/4096/'; baseRootFile = 'out_'
 suffTreeMCPP = 'mtree'
 
-nSnaps = 127
-nSteps = 127
+nSnaps = 55
+nSteps = 54
 nChunk = 1
 
 # Print to file all halos with a z=0 particle content above this value
 partThreshold = 1000
 
-#iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; 
-iSeedIni = 2; iSeedEnd = 9; gSeedIni = 0; gSeedEnd = 20; 
+#iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20;
+iSeedIni = 37; iSeedEnd = 38; gSeedIni = 0; gSeedEnd = 10;
 
 # All the trees will be stored inside this database
 thisDb = baseTreeMCPP + 'hestia_trees_4096.db'
@@ -44,48 +44,53 @@ newSql.cursor.execute('BEGIN TRANSACTION')
 
 # Loop on the large scale seed codes
 for iSeed in range(iSeedIni, iSeedEnd):
-	iSeedStr = '%02d' % iSeed
+    iSeedStr = '%02d' % iSeed
+    iSeedStr = iSeedStr + '_11'
 
-	# Loop on the small scale seed codes
-	for gSeed in range(gSeedIni, gSeedEnd):
-		gSeedStr = '%02d' % gSeed
-		
-		thisSubDir = iSeedStr + '_' + gSeedStr
-		thisTreePath = baseTreeMCPP + thisSubDir + '/'
+    # Loop on the small scale seed codes
+    for gSeed in range(gSeedIni, gSeedEnd):
+        gSeedStr = '%02d' % gSeed
 
-		# General file structure
-		rootFile = thisTreePath + baseRootFile + thisSubDir + '_'	
-		
-		# We need to set a default test file to check whether the directory contains some actual stuff
-		testFile = rootFile + '%03d' % nSnaps + '.0.' + suffTreeMCPP
+        #thisSubDir = iSeedStr + '_' + gSeedStr
+        thisSubDir = iSeedStr + '/' + gSeedStr
+        thisTreePath = baseTreeMCPP + thisSubDir + '/'
 
-		#print(rootFile, testFile)
+        print(thisTreePath)
 
-		# If this path exists then extract the merger tree therein
-		if os.path.isdir(thisTreePath) and os.path.isfile(testFile):
-			readFiles = ReadSettings(rootFile, suffTreeMCPP, nChunk, nSnaps, nSteps)
-			allTrees = readFiles.read_trees()
-		
-			start = timeit.default_timer()
-			print('Adding %s to database %s.' % (thisSubDir, thisDb))
+        # General file structure
+        #rootFile = thisTreePath + baseRootFile + thisSubDir + '_'
+        rootFile = thisTreePath + baseRootFile
 
-			# Store all the trees inside a database
-			for thisTree in allTrees:
-				[tmp_m, tmp_id] = thisTree.get_mass_id()
+        # We need to set a default test file to check whether the directory contains some actual stuff
+        testFile = rootFile + '%03d' % nSnaps + '.0.' + suffTreeMCPP
 
-                                # Save all the trees inside the DB
-				newSql.insert_tree(tmp_id[0], thisSubDir, tmp_m, tmp_id)
+        print(rootFile, testFile)
 
-                                # Print to ASCII File
-				if tmp_m[0] > partThreshold:
-					thisTree.dump_to_file_mass_id()
+        # If this path exists then extract the merger tree therein
+        if os.path.isdir(thisTreePath) and os.path.isfile(testFile):
+            readFiles = ReadSettings(rootFile, suffTreeMCPP, nChunk, nSnaps, nSteps)
+            allTrees = readFiles.read_trees()
 
-			end = timeit.default_timer()
-			print('Inserted %d trees in %f seconds.' % (len(allTrees), end - start))
+            start = timeit.default_timer()
+            print('Adding %s to database %s.' % (thisSubDir, thisDb))
 
-		else:
-			'Do nothing'
-			#print('Files not found: ', rootFile, testFile)
+            # Store all the trees inside a database
+            for thisTree in allTrees:
+                [tmp_m, tmp_id] = thisTree.get_mass_id()
+
+                # Save all the trees inside the DB
+                newSql.insert_tree(tmp_id[0], thisSubDir, tmp_m, tmp_id)
+
+                # Print to ASCII File
+                if tmp_m[0] > partThreshold:
+                    thisTree.dump_to_file_mass_id()
+
+            end = timeit.default_timer()
+            print('Inserted %d trees in %f seconds.' % (len(allTrees), end - start))
+
+        else:
+            'Do nothing'
+            #print('Files not found: ', rootFile, testFile)
 
 # Now commit to the database and close
 newSql.cursor.execute('COMMIT')

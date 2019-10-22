@@ -1,5 +1,8 @@
 scripts/test_fullbox.sh
 scripts/test_zoom.sh
+config/loop_template_4096.cfg
+python/loop_treedir.py.bak
+scripts/loop_4096.sh
 *hestia*
 *jour*
 *.swp
