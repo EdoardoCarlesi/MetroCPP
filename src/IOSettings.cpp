@@ -39,6 +39,9 @@
 #include "spline.h"
 #include "global_vars.h"
 
+#ifdef IDADD
+#define idADD 1000000000
+#endif
 
 using namespace std;
 
@@ -596,6 +599,11 @@ void IOSettings::ReadParticles(void)
 			} else if (iLine == 1) {
 
 		        	sscanf(lineRead, "%u %lu", &nPartHalo, &locHaloID);
+#ifdef IDADD
+				if (locHaloID < idADD)
+					locHaloID += idADD;
+#endif
+
 #ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 #endif
@@ -891,7 +899,7 @@ void IOSettings::ReadTrees()
 
 void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 {
-	float dummy, vHalo;
+	float dummy, vHalo, dummyID;
 	unsigned int tmpNpart, nGas = 0, nStar = 0;
 
 	/* AHF file structure:
@@ -914,7 +922,7 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f ",
  
-			&halo->ID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
+			&dummyID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
 			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 				// 11
 			&halo->rVir, &dummy, &halo->rsNFW, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
 			&halo->L[0], &halo->L[1], &halo->L[2],									// 24
@@ -924,6 +932,12 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
 
+#ifdef IDADD
+	if (dummyID < idADD)
+		dummyID += dummyID;
+#endif
+
+	halo->ID = dummyID;
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
 
