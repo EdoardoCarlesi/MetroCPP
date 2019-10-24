@@ -550,9 +550,10 @@ void CleanTrees(int iStep)
 			/* Sanity check */
 			if (descID == 0 && progHalo.nAllPart() > minPartHalo)
 			{
-				//locMTrees[1][jTree].Info(); 
-				cout << "OnTask= " << locTask << ": WARNING, progen. ID: " << progID << " has no descID: " << descID 
-					<< " | " << iTree << " " << jTree << endl;
+				//locMTrees[1][jTree].Info();
+				// TODO with gas simulations there is something weird going on here... check what it is!
+				//cout << "OnTask= " << locTask << ": WARNING, progen. ID: " << progID << " has no descID: " << descID 
+				//	<< " | " << iTree << " " << jTree << endl;
 			}
 
 			/* Check that the main halo is the likeliest descendant of its progenitor */
