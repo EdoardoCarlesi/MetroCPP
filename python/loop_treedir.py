@@ -26,12 +26,12 @@ resolution='4096'
 baseTreeMCPP = '/home/eduardo/CLUES/DATA/trees/' + resolution + '/'; baseRootFile = 'out_'
 suffTreeMCPP = 'mtree'
 
-nSnaps = 55
+nSteps = 54
 
 if resolution == '2048':
     nSnaps = 54
 if resolution == '4096':
-    nSteps = 55
+    nSnaps = 55
 
 nChunk = 1
 
