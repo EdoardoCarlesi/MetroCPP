@@ -171,12 +171,23 @@ void CleanMemory(int iCat)
 	/* Clean the particle content */
 	for (int iH = 0; iH < locParts[iCat].size(); iH++)
 	{
-		for (int iT = 0; iT < nPTypes; iT++)
+		//cout << "Halo: " << iH << endl;
+
+		//for (int iT = 0; iT < nPTypes; iT++)
+		for (int iT = 0; iT < locParts[iCat][iH].size(); iT++)
 		{
+			//cout << "iT " << iT << " size: " << locParts[iCat][iH].size() << endl;
+			//cout << "iT " << iT << " " << locParts[iCat][iH][iT].size() << endl;
 			locParts[iCat][iH][iT].clear();
 			locParts[iCat][iH][iT].shrink_to_fit();
+
+		//	try{
+		//	} catch (const std::exception&) {
+		//		cout << "Problem with halo " << iH << " ptype: " << iT << endl; 
+			//}
 		}
-			
+	/*
+	*/		
 		locParts[iCat][iH].clear();
 		locParts[iCat][iH].shrink_to_fit();
 	}
@@ -254,7 +265,7 @@ void ShiftHalosPartsGrids()
 		{
 			locParts[0][iH].resize(nPTypes);
 
-			for (int iT = 0; iT < nPTypes; iT++)
+			for (int iT = 0; iT < locParts[1][iH].size(); iT++)
 			{
 				locParts[0][iH][iT].swap(locParts[1][iH][iT]);
 
