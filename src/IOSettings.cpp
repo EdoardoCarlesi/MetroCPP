@@ -39,6 +39,9 @@
 #include "spline.h"
 #include "global_vars.h"
 
+#ifdef IDADD
+#define idADD 1000000000
+#endif
 
 using namespace std;
 
@@ -221,6 +224,13 @@ void IOSettings::CheckStatus()
 	cout << "boxSize     = " << boxSize << endl;
 	cout << "pathMetro   = " << pathMetroCpp << endl;
 	cout << "pathInput   = " << pathInput << endl;
+
+	for (int i=0; i<5; i++)
+	{
+		locHalos[0][i].Info();
+		locHalos[1][i].Info();
+		cout << locParts[0][i].size() <<  " type " << locParts[0][i][0].size() << endl;
+	}
 }
 
 
@@ -596,6 +606,11 @@ void IOSettings::ReadParticles(void)
 			} else if (iLine == 1) {
 
 		        	sscanf(lineRead, "%u %lu", &nPartHalo, &locHaloID);
+#ifdef IDADD
+				if (locHaloID < idADD)
+					locHaloID += idADD;
+#endif
+
 #ifdef ZOOM
 			if (locHalos[iUseCat][iLocHalos].ID == locHaloID)
 #endif
@@ -735,7 +750,12 @@ void IOSettings::ReadHalos()
 		
 			if (lineRead[0] != lineHead[0])
 			{
+#ifdef AHF_CB
+				ReadLineAHF_CB(lineRead, &tmpHalos[iTmpHalos]);
+#else
 				ReadLineAHF(lineRead, &tmpHalos[iTmpHalos]);
+#endif
+
 				nPartHalo = tmpHalos[iTmpHalos].nPart[nPTypes];	// All particle types!
 #ifndef ZOOM
 				// Assign halo to its nearest grid point - assign the absolute local index number
@@ -892,7 +912,9 @@ void IOSettings::ReadTrees()
 void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 {
 	float dummy, vHalo;
-	unsigned int tmpNpart, nGas = 0, nStar = 0;
+	unsigned int tmpNpart = 0, nGas = 0, nStar = 0;
+	//uint64_t dummyID;
+	int dummyID;
 
 	/* AHF file structure:
 	   ID(1)  hostHalo(2)     numSubStruct(3) Mvir(4) npart(5)        Xc(6)   Yc(7)   Zc(8)   VXc(9)  VYc(10) VZc(11) 
@@ -907,14 +929,14 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	   Ebx_star(76)    Eby_star(77)    Ebz_star(78)    Ecx_star(79)    Ecy_star(80)    Ecz_star(81)    Ekin_star(82)Epot_star(83) */
 
 	/* Col:		    1   2    3  4  5  6  7  8  9 10 11 */
-	sscanf(lineRead, "%lu  %lu  %d %f %d \
+	sscanf(lineRead, "%lu  %d   %d %f %d \
 			  %f   %f   %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f ",
  
-			&halo->ID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
+			&halo->ID,   &dummyID, &halo->nSub, &halo->mTot, &tmpNpart, 
 			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 				// 11
 			&halo->rVir, &dummy, &halo->rsNFW, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
 			&halo->L[0], &halo->L[1], &halo->L[2],									// 24
@@ -924,6 +946,96 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
 
+/*
+#ifdef IDADD
+	if (dummyID < idADD)
+		dummyID = dummyID + idADD;
+#endif
+
+	halo->ID = dummyID;
+*/
+
+#ifdef NOPTYPE
+	halo->nPart[0] = 0;
+	halo->nPart[1] = tmpNpart;
+	
+	/*if (tmpNpart > 10000)
+	{ cout << lineRead << endl;
+		cout << halo->ID << " " << tmpNpart << endl;}*/
+#else
+	halo->nPart[0] = nGas;
+	halo->nPart[1] = tmpNpart - nGas - nStar;
+
+	if (nPTypes > 2)
+	{
+		halo->nPart[2] = 0;
+		
+		if (nPTypes > 3)
+		{
+			halo->nPart[3] = 0;
+		
+			if (nPTypes > 4)
+			{
+				halo->nPart[4] = nStar;
+					
+					if (nPTypes > 5)
+					{
+						halo->nPart[5] = 0;
+					}
+			}
+		}
+	}
+#endif
+	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
+	vHalo = VectorModule(halo->V);
+
+	if (vHalo > locVmax)
+		locVmax = vHalo;
+};
+
+#ifdef AHF_CB
+// TODO!!!!!! Enable a different output format --> CB format does not have halo IDs, which is problematic for the MergerTree algorithm
+void IOSettings::ReadLineAHF_CB(const char * lineRead, Halo *halo, int lineID)
+{
+	float dummy, vHalo, dummyID;
+	unsigned int tmpNpart, nGas = 0, nStar = 0;
+
+	/* AHF file structure:
+	 npart(1)       fMhires(2)      Xc(3)   Yc(4)   Zc(5)   VXc(6)  VYc(7)  VZc(8)  Mvir(9) Rvir(10)        Vmax(11)        Rmax(12)
+  	 sigV(13)        lambda(14)      Lx(15)  Ly(16)  Lz(17)  a(18)   Eax(19) Eay(20) Eaz(21) b(22)   
+	 Ebx(23) Eby(24) Ebz(25) c(26)   Ecx(27) Ecy(28) Ecz(29) ovdens(30)      Redge(31)       
+	 nbins(32)       Ekin(33)        Epot(34)        mbp_offset(35)  com_offset(36)  r2(37)  lambdaE(38)     
+	 v_esc(39)       Phi0(40)        n_gas(41)       M_gas(42)       lambda_gas(43)  Lx_gas(44)      Ly_gas(45)      Lz_gas(46)      
+	a_gas(47)       Eax_gas(48)     Eay_gas(49)     Eaz_gas(50)     b_gas(51)       Ebx_gas(52)     Eby_gas(53)     Ebz_gas(54)     
+	 c_gas(55)       Ecx_gas(56)     Ecy_gas(57)     Ecz_gas(58)     Ekin_gas(59)    Epot_gas(60)    lambdaE_gas(61) 
+	 n_star(62)      M_star(63)      lambda_star(64) Lx_star(65)     Ly_star(66)     Lz_star(67)     a_star(68)      
+	Eax_star(69)    Eay_star(70)    Eaz_star(71)    b_star(72)      Ebx_star(73)    Eby_star(74)    Ebz_star(75)    c_star(76)      
+	 Ecx_star(77)    Ecy_star(78)    Ecz_star(79)    Ekin_star(80)   Epot_star(81)   lambdaE_star(82) */
+
+	/* Col:		    1   2    3  4  5  6  7  8  9 10 11 */
+	sscanf(lineRead, "%d  %d  %d %f %d \
+			  %f   %f   %f %f %f %f \
+			  %f   %f   %f %f %f %f %f %f %f %f \
+			  %f   %f   %f \
+			  %f   %f   %f %f %f %f %f %f %f %f \
+			  %f   %f   %f %f %f %f %f %f %f %f ",
+ 
+			&dummyID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
+			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 				// 11
+			&halo->rVir, &dummy, &halo->rsNFW, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
+			&halo->L[0], &halo->L[1], &halo->L[2],									// 24
+			&dummy, &dummy, &dummy, &dummy,   &dummy, &dummy, &dummy, &dummy, &dummy, &dummy,			// 34
+			&dummy, &dummy, &dummy, &halo->fMhires, &dummy, &dummy, &dummy, &dummy, &halo->cNFW, &dummy);		 // 44
+
+	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
+	nGas = 0; nStar = 0;
+
+#ifdef IDADD
+	if (dummyID < idADD)
+		dummyID += dummyID;
+#endif
+
+	halo->ID = dummyID;
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
 
@@ -953,6 +1065,7 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	if (vHalo > locVmax)
 		locVmax = vHalo;
 };
+#endif
 
 
 

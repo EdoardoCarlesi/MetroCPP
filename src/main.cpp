@@ -130,12 +130,13 @@ int main(int argv, char **argc)
 #endif
 		/* Read particles and catalogs */
 		SettingsIO.ReadHalos();
-		SettingsIO.ReadParticles();	
 
 #ifdef VERBOSE
-		if (locTask == 0)
-			SettingsIO.CheckStatus();
+		//if (locTask == 0)
+		//	SettingsIO.CheckStatus();
 #endif
+
+		SettingsIO.ReadParticles();	
 
 #ifndef ZOOM
 		/* Now every task knows which subvolumes of the box belong to which task */
@@ -311,7 +312,11 @@ int main(int argv, char **argc)
 	
 		/* Sending the signal to close the log file */
 		SettingsIO.WriteLog(-1, 0.0);
-		CleanMemory(0);
+		try {
+			CleanMemory(0);
+		} catch (const std::exception&) {
+			cout << "Possible error while cleaning memory." << endl;
+		}
 	}	
 
 	MPI_Finalize();
