@@ -28,14 +28,14 @@ baseRootFile = 'hestia_'+resolution+'_'
 suffTreeMCPP = 'mtree'
 
 nSnaps = 127
-nSteps = 127
+nSteps = 126
 nChunk = 1
 
 # Print to file all halos with a z=0 particle content above this value
 partThreshold = 250
 
-#iSeedIni = 0; iSeedEnd = 2; gSeedIni = 0; gSeedEnd = 20; 
-iSeedIni = 17; iSeedEnd = 38; gSeedIni = 11; gSeedEnd = 12; 
+iSeedIni = 0; iSeedEnd = 60; gSeedIni = 0; gSeedEnd = 20; 
+#iSeedIni = 17; iSeedEnd = 38; gSeedIni = 11; gSeedEnd = 12; 
 
 # All the trees will be stored inside this database
 thisDb = baseTreeMCPP + 'hestia_trees_' + resolution + '.db'
