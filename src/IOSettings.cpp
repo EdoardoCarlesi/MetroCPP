@@ -224,6 +224,13 @@ void IOSettings::CheckStatus()
 	cout << "boxSize     = " << boxSize << endl;
 	cout << "pathMetro   = " << pathMetroCpp << endl;
 	cout << "pathInput   = " << pathInput << endl;
+
+	for (int i=0; i<5; i++)
+	{
+		locHalos[0][i].Info();
+		locHalos[1][i].Info();
+		cout << locParts[0][i].size() <<  " type " << locParts[0][i][0].size() << endl;
+	}
 }
 
 
@@ -904,8 +911,10 @@ void IOSettings::ReadTrees()
 
 void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 {
-	float dummy, vHalo, dummyID;
-	unsigned int tmpNpart, nGas = 0, nStar = 0;
+	float dummy, vHalo;
+	unsigned int tmpNpart = 0, nGas = 0, nStar = 0;
+	//uint64_t dummyID;
+	int dummyID;
 
 	/* AHF file structure:
 	   ID(1)  hostHalo(2)     numSubStruct(3) Mvir(4) npart(5)        Xc(6)   Yc(7)   Zc(8)   VXc(9)  VYc(10) VZc(11) 
@@ -920,14 +929,14 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	   Ebx_star(76)    Eby_star(77)    Ebz_star(78)    Ecx_star(79)    Ecy_star(80)    Ecz_star(81)    Ekin_star(82)Epot_star(83) */
 
 	/* Col:		    1   2    3  4  5  6  7  8  9 10 11 */
-	sscanf(lineRead, "%lu  %lu  %d %f %d \
+	sscanf(lineRead, "%lu  %d   %d %f %d \
 			  %f   %f   %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f \
 			  %f   %f   %f %f %f %f %f %f %f %f \
 			  %f   %f   %f %f %f %f %f %f %f %f ",
  
-			&dummyID, &halo->hostID, &halo->nSub, &halo->mTot, &tmpNpart, 
+			&halo->ID,   &dummyID, &halo->nSub, &halo->mTot, &tmpNpart, 
 			&halo->X[0], &halo->X[1], &halo->X[2], &halo->V[0], &halo->V[1], &halo->V[2], 				// 11
 			&halo->rVir, &dummy, &halo->rsNFW, &dummy, &dummy, &halo->vMax, &dummy, &halo->sigV, &halo->lambda, &dummy, // 21
 			&halo->L[0], &halo->L[1], &halo->L[2],									// 24
@@ -937,12 +946,23 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 	/* Particle numbers were not allocated correctly sometimes, so let's reset them carefully */
 	nGas = 0; nStar = 0;
 
+/*
 #ifdef IDADD
 	if (dummyID < idADD)
-		dummyID += dummyID;
+		dummyID = dummyID + idADD;
 #endif
 
 	halo->ID = dummyID;
+*/
+
+#ifdef NOPTYPE
+	halo->nPart[0] = 0;
+	halo->nPart[1] = tmpNpart;
+	
+	/*if (tmpNpart > 10000)
+	{ cout << lineRead << endl;
+		cout << halo->ID << " " << tmpNpart << endl;}*/
+#else
 	halo->nPart[0] = nGas;
 	halo->nPart[1] = tmpNpart - nGas - nStar;
 
@@ -965,7 +985,7 @@ void IOSettings::ReadLineAHF(const char * lineRead, Halo *halo)
 			}
 		}
 	}
-
+#endif
 	/* Compute max velocity and sub box edges while reading the halo file ---> this is used to compute the buffer zones */
 	vHalo = VectorModule(halo->V);
 
