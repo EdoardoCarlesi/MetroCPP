@@ -10,6 +10,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 '''
         loop_treedir.py
         Extract trees and store them into a database
+	Also dump those files to an ASCII File
 '''
 
 print('Testing Merger Tree python post-processing scripts')
@@ -26,18 +27,15 @@ resolution='4096'
 baseTreeMCPP = '/home/eduardo/CLUES/DATA/trees/' + resolution + '/'; baseRootFile = 'out_'
 suffTreeMCPP = 'mtree'
 
-<<<<<<< HEAD
 nSnaps = 127
 nSteps = 126
-=======
 nSteps = 54
 
 if resolution == '2048':
     nSnaps = 54
-if resolution == '4096':
-    nSnaps = 55
+#if resolution == '4096':
+#    nSnaps = 55
 
->>>>>>> ee8a49a50d9b46059c392e41d6993ee37b515e3f
 nChunk = 1
 
 # Print to file all halos with a z=0 particle content above this value

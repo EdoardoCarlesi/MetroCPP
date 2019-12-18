@@ -1092,7 +1092,7 @@ void IOSettings::WriteTree(int iThisCat)
 		if (locTask == 0)
 		{
 			fileOut << "# ID host(1)   N particles host(2)   Num. progenitors(3)  Orphan[0=no, 1=yes](4)" << endl;
-			fileOut << "# Common DM particles (1)   ID progenitor(2)   Num. particles(3)" << endl;
+			fileOut << "# Total particles (1)   ID progenitor(2)   Particles in common (3)" << endl;
 		} 
 
                 for (int iM = 0; iM < locCleanTrees[iC].size(); iM++)
