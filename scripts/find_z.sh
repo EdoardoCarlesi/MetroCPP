@@ -6,6 +6,7 @@
 path=$1
 format=$2
 cpus=$3
+prefix=$4
 
 tmp=`pwd`'/ahf.tmp'
 cd $path

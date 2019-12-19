@@ -1,12 +1,13 @@
 #!/bin/bash
 # Find the redshift of a given halo catalog. 
 #			     snap cpu redshift
-# Expecting format:  anyname_XXX.XXXX.zX.XXX.AHF_halos
+# Expecting format:  prefix_XXX.XXXX.zX.XXX.AHF_halos
 
 path=$1
 format=$2
 cpus=$3
 split=$4 
+prefix=$5
 
 tmp=`pwd`'/ahf.tmp'
 cd $path
@@ -16,7 +17,7 @@ then
 	rm $tmp_out
 fi
 
-for f_ahf in `ls *$cpus*$format`
+for f_ahf in `ls $prefix*$cpus*$format`
 do
 	echo $f_ahf > $tmp
 

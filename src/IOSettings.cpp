@@ -244,7 +244,7 @@ void IOSettings::FindCatID()
 	string lineIn;
 	string cleanTmp;
 
-	optionsSh = pathInput + " " + haloSuffix + " " + cpuString + " " + splitString;
+	optionsSh = pathInput + " " + haloSuffix + " " + cpuString + " " + splitString + " " + haloPrefix;
 
 	outputTmp = pathMetroCpp + tmpIdOut;
 	inputSh = pathMetroCpp + findIDsh + " " + optionsSh + " > " + outputTmp;
@@ -288,7 +288,7 @@ void IOSettings::FindCatZ()
 	string cleanTmp;
 	string lineIn;
 
-	optionsSh = pathInput + " " + haloSuffix + " " + cpuString;
+	optionsSh = pathInput + " " + haloSuffix + " " + cpuString + " " + haloPrefix;
 	outputTmp = pathMetroCpp + tmpZOut;
 	inputSh = pathMetroCpp + findZsh + " " + optionsSh + " > " + outputTmp;
 	cout << inputSh << endl;	
@@ -478,6 +478,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 			if (locTask == 0)
 			{	
 				haloFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".z" + charZ + "." + haloSuffix;
+				//cout << "TEST " << haloFiles[iF][0] << " chunks: " << nLocChunks << endl;
 
 				ifstream haloExists(haloFiles[iF][jF]);
 				if (haloExists.fail())
@@ -494,6 +495,7 @@ void IOSettings::DistributeFilesAmongTasks(void)
 				}
 
 				partFiles[iF][0] = pathInput + haloPrefix + strSnaps[iF] + ".z" + charZ + "." + partSuffix;
+				//cout << "---------> TEST " << partFiles[iF][0] << endl;
 
 				ifstream partExists(partFiles[iF][jF]);
 				if (partExists.fail())
